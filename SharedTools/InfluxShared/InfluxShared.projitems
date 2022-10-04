@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>5d304db9-4a8e-453f-89e1-34a74f91e0ef</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>InfluxShared</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)FileObjects\A2L.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FileObjects\BasicItemInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FileObjects\ChannelDescriptor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FileObjects\BLF.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FileObjects\DataTransformer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FileObjects\DBC.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FileObjects\DoubleData.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FileObjects\DoubleDataCollection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FileObjects\ItemConversion.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FileObjects\LDF.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FileObjects\ObjectLibrary.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FileObjects\ProcessingRules.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FileObjects\ProcessingRulesCollection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FileObjects\ReferenceCollection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FileObjects\TraceFile.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Generic\Bytes.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Generic\DateUtility.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Generic\PinObj.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Generic\Structures.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\ArrayHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\EnumHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\FileStreamHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\Integers.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\LinqHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\MathHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\PathHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\ReflectionsHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\StringHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\TripleDESHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Interfaces\IStorage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Objects\BinaryData.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Objects\DiskStorage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Objects\MemoryStorage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Objects\TripleDESFileStream.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Objects\FileSizeFormatProvider.cs" />
+  </ItemGroup>
+</Project>

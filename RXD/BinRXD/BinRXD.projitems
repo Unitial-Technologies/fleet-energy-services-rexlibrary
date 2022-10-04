@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>30d6e0c6-5e82-4ffc-b4ca-c4d671e26c53</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>RXD</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Base\PreBufferCollection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Base\RXEncryption.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinAccelerometer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinConfigFTP.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinConfigMobile.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinConfigS3.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinDAQ.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinDAQItem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinDaqFile.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinGNSSInterface.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinGNSSMessage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinGyro.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinInternalParameter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinLEDStatus.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinLinInterface.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinLinMessage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DataRecords\RecLinTrace.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DataRecords\RecPreBuffer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Base\J1939.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Base\MultiFrameData.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Base\RXD.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Base\BlockCollection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Base\RXDataReader.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Base\XmlHandler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinADC.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinBaseStatic.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinCanInterface.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinCanError.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinCanMessage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinCondition.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinConfig.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinConstant.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinCounter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinCustom.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinDigitalIn.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinDigitalOut.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinFooter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinJ1939DM.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinTimer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinTrigger.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinUsbInterface.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinUsbMessage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinVariableAggregation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\PropertyCollection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\PropertyData.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinRationalFormula.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinHeader.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinSDInterface.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinSDMessage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinCanSignal.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinArithmetic.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinSwitch.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DataRecords\RecBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DataRecords\RecCanTraceError.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DataRecords\RecCanTrace.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Base\MultiFrameCollection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DataRecords\RecMessage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DataRecords\RecHeader.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DataRecords\RecordCollection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DataRecords\RecRaw.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\DoubleDataHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Objects\ITraceObj.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SharedObjects\CanIdentifier.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Objects\TraceCollection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Objects\TraceRow.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)SharedObjects\" />
+  </ItemGroup>
+</Project>

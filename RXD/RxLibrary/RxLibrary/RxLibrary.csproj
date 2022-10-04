@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>bin\Debug</OutputPath>
+  </PropertyGroup>
+
+  <Import Project="..\..\BinRXD\BinRXD.projitems" Label="Shared" />
+
+  <Import Project="..\..\..\MDF4xx\MDF4xx\MDF4xx.projitems" Label="Shared" />
+
+  <Import Project="..\..\..\Matlab\MatlabFile\MatlabFile.projitems" Label="Shared" />
+
+  <Import Project="..\..\..\SharedTools\InfluxShared\InfluxShared.projitems" Label="Shared" />
+
+  <Import Project="..\..\..\DbcParser\DbcParser.projitems" Label="Shared" />
+
+  <ItemGroup>
+    <Compile Remove="Objects\**" />
+    <EmbeddedResource Remove="Objects\**" />
+    <None Remove="Objects\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\..\SharedTools\Shared\Helpers\DataHelper.cs" Link="SharedObjects\DataHelper.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DotNetZip.NetStandard" Version="1.12.0" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="SharedObjects\" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+ <PropertyGroup>
+    <RuntimeIdentifiers>win10-x64;linux-x64</RuntimeIdentifiers>
+ </PropertyGroup>
+
+    <ItemGroup> 
+	<Reference Include="RxLibrary">
+	     <HintPath>RxLibrary/RxLibrary.dll</HintPath> 
+	    <SpecificVersion>False</SpecificVersion>
+	</Reference>
+    <Reference Include="DotNetZip, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>RxLibrary/DotNetZip.dll</HintPath>
+    </Reference>
+    </ItemGroup>
+
+
+</Project>

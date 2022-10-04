@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>bc796a4e-2f4e-441f-be3b-3bf8c11c5b6f</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>MatlabFile</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Base\Matlab.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Data\Header.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Base\MCollection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Data\MElement.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Data\MType.cs" />
+  </ItemGroup>
+</Project>

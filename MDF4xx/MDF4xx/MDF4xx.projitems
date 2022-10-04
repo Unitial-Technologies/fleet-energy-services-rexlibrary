@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>432f235e-6775-4749-a2ef-827359bab8e5</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>MDF4xx</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\ATBlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\ToDo\CABlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\CCBlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\CGBlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\CHBlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\CNBlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\DGBlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\DIBlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\ToDo\DLBlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\DTBlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\ToDo\DVBlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\DZBlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\EVBlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\FHBlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\HDBlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\HeaderSection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\HLBlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\IDBlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\ToDo\LDBlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\MDBlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BaseBlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\CCBlockConvert.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Frames\BaseDataFrameStatic.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Frames\CAN_DataFrame.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Frames\BaseDataFrame.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Frames\CAN_ErrorFrame.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Frames\LIN_ChecksumErrorFrame.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Frames\LIN_DataFrame.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Frames\LIN_TransmissionErrorFrame.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Frames\MessageFrame.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\BlockBuilder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\BlockCollection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\ToDo\RDBlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\ToDo\RIBlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\ToDo\RVBlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\SDBlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\SIBlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\SRBlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\TXBlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\MDF.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\XmlTemplate.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)Blocks\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Blocks\" />
+  </ItemGroup>
+</Project>

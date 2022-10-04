@@ -1,0 +1,47 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32407.343
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AWSLambdaFileConvert", "Demo\AWS_Lambda\AWSLambdaFileConvert.csproj", "{A7C032D2-27CC-4525-A094-FD7D6418BA31}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "BinRXD", "RXD\BinRXD\BinRXD.shproj", "{30D6E0C6-5E82-4FFC-B4CA-C4D671E26C53}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "InfluxShared", "SharedTools\InfluxShared\InfluxShared.shproj", "{5D304DB9-4A8E-453F-89E1-34A74F91E0EF}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "MDF4xx", "MDF4xx\MDF4xx\MDF4xx.shproj", "{432F235E-6775-4749-A2EF-827359BAB8E5}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "MatlabFile", "Matlab\MatlabFile\MatlabFile.shproj", "{BC796A4E-2F4E-441F-BE3B-3BF8C11C5B6F}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "DbcParser", "DbcParser\DbcParser.shproj", "{CBD41CAC-6CD2-42DA-951E-6ADE1D8657D0}"
+EndProject
+Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		RXD\BinRXD\BinRXD.projitems*{30d6e0c6-5e82-4ffc-b4ca-c4d671e26c53}*SharedItemsImports = 13
+		MDF4xx\MDF4xx\MDF4xx.projitems*{432f235e-6775-4749-a2ef-827359bab8e5}*SharedItemsImports = 13
+		SharedTools\InfluxShared\InfluxShared.projitems*{5d304db9-4a8e-453f-89e1-34a74f91e0ef}*SharedItemsImports = 13
+		DbcParser\DbcParser.projitems*{a7c032d2-27cc-4525-a094-fd7d6418ba31}*SharedItemsImports = 5
+		Matlab\MatlabFile\MatlabFile.projitems*{a7c032d2-27cc-4525-a094-fd7d6418ba31}*SharedItemsImports = 5
+		MDF4xx\MDF4xx\MDF4xx.projitems*{a7c032d2-27cc-4525-a094-fd7d6418ba31}*SharedItemsImports = 5
+		RXD\BinRXD\BinRXD.projitems*{a7c032d2-27cc-4525-a094-fd7d6418ba31}*SharedItemsImports = 5
+		SharedTools\InfluxShared\InfluxShared.projitems*{a7c032d2-27cc-4525-a094-fd7d6418ba31}*SharedItemsImports = 5
+		Matlab\MatlabFile\MatlabFile.projitems*{bc796a4e-2f4e-441f-be3b-3bf8c11c5b6f}*SharedItemsImports = 13
+		DbcParser\DbcParser.projitems*{cbd41cac-6cd2-42da-951e-6ade1d8657d0}*SharedItemsImports = 13
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A7C032D2-27CC-4525-A094-FD7D6418BA31}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7C032D2-27CC-4525-A094-FD7D6418BA31}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7C032D2-27CC-4525-A094-FD7D6418BA31}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7C032D2-27CC-4525-A094-FD7D6418BA31}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {125BCBFE-3981-4ED4-9463-6ABB54831DF9}
+	EndGlobalSection
+EndGlobal

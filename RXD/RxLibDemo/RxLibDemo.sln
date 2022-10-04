@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31205.134
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxLibDemo", "RxLibDemo.csproj", "{F0120D61-5503-4BC4-A4BD-ECAA63EA9D80}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RxLibrary", "..\RxLibrary\RxLibrary\RxLibrary.csproj", "{6D351408-FE42-4D43-B72F-45356AA6D530}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "InfluxShared", "..\..\SharedTools\InfluxShared\InfluxShared.shproj", "{5D304DB9-4A8E-453F-89E1-34A74F91E0EF}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "MatlabFile", "..\..\Matlab\MatlabFile\MatlabFile.shproj", "{BC796A4E-2F4E-441F-BE3B-3BF8C11C5B6F}"
+EndProject
+Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		..\..\SharedTools\InfluxShared\InfluxShared.projitems*{5d304db9-4a8e-453f-89e1-34a74f91e0ef}*SharedItemsImports = 13
+		..\..\Matlab\MatlabFile\MatlabFile.projitems*{6d351408-fe42-4d43-b72f-45356aa6d530}*SharedItemsImports = 5
+		..\..\MDF4xx\MDF4xx\MDF4xx.projitems*{6d351408-fe42-4d43-b72f-45356aa6d530}*SharedItemsImports = 5
+		..\BinRXD\BinRXD.projitems*{6d351408-fe42-4d43-b72f-45356aa6d530}*SharedItemsImports = 5
+		..\..\SharedTools\InfluxShared\InfluxShared.projitems*{6d351408-fe42-4d43-b72f-45356aa6d530}*SharedItemsImports = 5
+		..\..\Matlab\MatlabFile\MatlabFile.projitems*{bc796a4e-2f4e-441f-be3b-3bf8c11c5b6f}*SharedItemsImports = 13
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F0120D61-5503-4BC4-A4BD-ECAA63EA9D80}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F0120D61-5503-4BC4-A4BD-ECAA63EA9D80}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F0120D61-5503-4BC4-A4BD-ECAA63EA9D80}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F0120D61-5503-4BC4-A4BD-ECAA63EA9D80}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D351408-FE42-4D43-B72F-45356AA6D530}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D351408-FE42-4D43-B72F-45356AA6D530}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D351408-FE42-4D43-B72F-45356AA6D530}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D351408-FE42-4D43-B72F-45356AA6D530}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7ED9C4C9-E858-4772-B861-1292AB2836A4}
+	EndGlobalSection
+EndGlobal
