@@ -10,6 +10,6 @@
   "configuration": "Release",
   "function-runtime": "dotnet6",
   "function-memory-size": 256,
-  "function-timeout": 30,
-  "function-handler": "XMLConverter::XMLConverter.Function::ConvertFiles"
+  "function-timeout": 300,
+  "function-handler": "AWSLambdaFileConvert::AWSLambdaConvert.Function::ConvertFiles"
 }

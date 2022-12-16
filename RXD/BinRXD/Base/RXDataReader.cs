@@ -386,6 +386,18 @@ namespace RXD.Base
             }
         }
 
+        internal UInt32 GetFilePreBufferInitialTimestamp
+        {
+            get
+            {
+                if (collection.PreBuffers.Count > 0)
+                    if (collection.PreBuffers[0].data.PreStartSector == DataSectorStart)
+                        return collection.PreBuffers[0].data.InitialTimestamp;
+
+                return 0;
+            }
+        }
+
         void CheckForPreBuffers()
         {
             if (collection.PreBuffers is null)

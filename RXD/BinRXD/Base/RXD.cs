@@ -155,6 +155,18 @@ namespace RXD.Base
             }
         }
 
+        /// <summary>
+        /// Example usage:
+        /// string uri = "https://bucket.s3.eu-central-1.amazonaws.com/datalogs/RexGen Air config 500kb_0001902_20221006_103901.rxd";
+        /// FileStream fs = new FileStream(fn, FileMode.Open, FileAccess.Read);
+        /// BinRXD r = BinRXD.Load(uri, fs);
+        /// FileStream fw = new FileStream(outfn, FileMode.Create);
+        /// DataHelper.Convert(r, null, fw, "csv");
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <param name="dataStream"></param>
+        /// <param name="xsdStream"></param>
+        /// <returns></returns>
         public static BinRXD Load(string uri, Stream dataStream, Stream xsdStream = null)
         {
             try
@@ -442,7 +454,7 @@ namespace RXD.Base
                         {
                             using (RXDataReader dr = new(this))
                             {
-                                UInt32 InitialTimestamp = PreBuffers.GetFileTimestamp;
+                                UInt32 InitialTimestamp = dr.GetFilePreBufferInitialTimestamp;
                                 bool FirstTimestampRead = false;
                                 UInt32 FileTimestamp = 0;
 
@@ -580,7 +592,7 @@ namespace RXD.Base
                 settings.ProgressCallback?.Invoke("Extracting channel data...");
                 using (RXDataReader dr = new RXDataReader(this))
                 {
-                    UInt32 InitialTimestamp = PreBuffers.GetFileTimestamp;
+                    UInt32 InitialTimestamp = dr.GetFilePreBufferInitialTimestamp;
                     FileTimestamp = InitialTimestamp == 0 ? LowestTimestamp : InitialTimestamp;
                     //ddata.FirstTimestamp = InitialTimestamp == 0 ? double.NaN : (InitialTimestamp * TimestampCoeff);
                     if (settings.ProcessingRules is not null)
@@ -662,7 +674,8 @@ namespace RXD.Base
                 for (int i = 0; i < tc.Count; i++)
                 {
                     if (Double.IsNaN(FileTimestamp))
-                        FileTimestamp = (InitialTimestamp == 0 ? LowestTimestamp : Math.Min(LowestTimestamp, InitialTimestamp)) * TimestampCoeff;
+                        FileTimestamp = (InitialTimestamp == 0 ? LowestTimestamp : InitialTimestamp) * TimestampCoeff;
+                        //FileTimestamp = (InitialTimestamp == 0 ? LowestTimestamp : Math.Min(LowestTimestamp, InitialTimestamp)) * TimestampCoeff;
                     if (tc[i]._Timestamp < LastTimestamp)
                         TimeOffset += (double)0x100000000 * TimePrecison * 0.000001;
                     LastTimestamp = tc[i]._Timestamp;
@@ -677,7 +690,7 @@ namespace RXD.Base
             ProgressCallback?.Invoke("Processing trace data...");
             using (RXDataReader dr = new RXDataReader(this))
             {
-                InitialTimestamp = PreBuffers.GetFileTimestamp;
+                InitialTimestamp = dr.GetFilePreBufferInitialTimestamp;
                 while (dr.ReadNext())
                 {
                     foreach (RecBase rec in dr.Messages)
@@ -691,7 +704,7 @@ namespace RXD.Base
                                 TraceAdd(rec.ToTraceRow(TimePrecison));
                                 break;
                             case RecordType.PreBuffer:
-                                ProgressCallback?.Invoke(rec.ToTraceRow(TimePrecison));
+                                ProcessCallback?.Invoke(rec.ToTraceRow(TimePrecison));
                                 break;
                             case RecordType.MessageData:
                                 break;

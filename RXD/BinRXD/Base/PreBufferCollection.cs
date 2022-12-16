@@ -14,7 +14,7 @@ namespace RXD.Base
 
         }
 
-        public UInt32 GetFileTimestamp => Count == 0 ? 0 : this[0].data.InitialTimestamp;
+        //public UInt32 GetFileTimestamp => Count == 0 ? 0 : this[0].data.InitialTimestamp;
 
         public List<(UInt32, UInt32)> GetSectorMap()
         {

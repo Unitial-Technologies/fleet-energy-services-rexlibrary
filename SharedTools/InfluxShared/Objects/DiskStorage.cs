@@ -19,7 +19,7 @@ namespace InfluxShared.Objects
 
         private bool disposedValue;
 
-        public DiskStorage(string filePath) : base(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite)
+        public DiskStorage(string filePath) : base(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite, 4096, FileOptions.DeleteOnClose)
         {
             elementSize = Marshal.SizeOf(typeof(T));
             FilePath = filePath;
@@ -33,11 +33,11 @@ namespace InfluxShared.Objects
             {
                 if (disposing)
                 {
-                    Flush();
-                    Close();
-                    if (File.Exists(FilePath))
-                        File.Delete(FilePath);
-                    base.Dispose();
+                    //Flush(true);
+                    //Close();
+                    //if (File.Exists(FilePath))
+                        //File.Delete(FilePath);
+                    //base.Dispose();
                 }
 
                 // TODO: free unmanaged resources (unmanaged objects) and override finalizer

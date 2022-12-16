@@ -37,6 +37,7 @@
             this.btnOpenXML = new System.Windows.Forms.Button();
             this.dlgOpenXml = new System.Windows.Forms.OpenFileDialog();
             this.dlgSaveRXC = new System.Windows.Forms.SaveFileDialog();
+            this.btnConvert = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // richTextBox1
@@ -111,17 +112,28 @@
             // 
             this.dlgSaveRXC.Filter = "*.rxc|*.rxc";
             // 
-            // Form1
+            // btnConvert
+            // 
+            this.btnConvert.Location = new System.Drawing.Point(713, 12);
+            this.btnConvert.Name = "btnConvert";
+            this.btnConvert.Size = new System.Drawing.Size(75, 23);
+            this.btnConvert.TabIndex = 5;
+            this.btnConvert.Text = "Convert";
+            this.btnConvert.UseVisualStyleBackColor = true;
+            this.btnConvert.Click += new System.EventHandler(this.btnConvert_Click);
+            // 
+            // rxdDemoMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.btnConvert);
             this.Controls.Add(this.btnOpenXML);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.btnOpen);
             this.Controls.Add(this.listBox1);
             this.Controls.Add(this.richTextBox1);
-            this.Name = "Form1";
+            this.Name = "rxdDemoMain";
             this.Text = "RXD demo app";
             this.ResumeLayout(false);
 
@@ -138,6 +150,7 @@
         private System.Windows.Forms.Button btnOpenXML;
         private System.Windows.Forms.OpenFileDialog dlgOpenXml;
         private System.Windows.Forms.SaveFileDialog dlgSaveRXC;
+        private System.Windows.Forms.Button btnConvert;
     }
 }
 

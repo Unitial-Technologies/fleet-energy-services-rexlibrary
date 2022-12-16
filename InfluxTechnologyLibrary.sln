@@ -15,16 +15,27 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "MatlabFile", "Matlab\Matlab
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "DbcParser", "DbcParser\DbcParser.shproj", "{CBD41CAC-6CD2-42DA-951E-6ADE1D8657D0}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinFormsApp1", "WinFormsApp1\WinFormsApp1.csproj", "{BC750A54-515A-4182-BB11-D19C5FB2F397}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Cloud", "Cloud\Cloud.shproj", "{804C5FD4-7F69-4E20-A3D5-26B72A0EA751}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		RXD\BinRXD\BinRXD.projitems*{30d6e0c6-5e82-4ffc-b4ca-c4d671e26c53}*SharedItemsImports = 13
 		MDF4xx\MDF4xx\MDF4xx.projitems*{432f235e-6775-4749-a2ef-827359bab8e5}*SharedItemsImports = 13
 		SharedTools\InfluxShared\InfluxShared.projitems*{5d304db9-4a8e-453f-89e1-34a74f91e0ef}*SharedItemsImports = 13
+		Cloud\Cloud.projitems*{804c5fd4-7f69-4e20-a3d5-26b72a0ea751}*SharedItemsImports = 13
+		Cloud\Cloud.projitems*{a7c032d2-27cc-4525-a094-fd7d6418ba31}*SharedItemsImports = 5
 		DbcParser\DbcParser.projitems*{a7c032d2-27cc-4525-a094-fd7d6418ba31}*SharedItemsImports = 5
 		Matlab\MatlabFile\MatlabFile.projitems*{a7c032d2-27cc-4525-a094-fd7d6418ba31}*SharedItemsImports = 5
 		MDF4xx\MDF4xx\MDF4xx.projitems*{a7c032d2-27cc-4525-a094-fd7d6418ba31}*SharedItemsImports = 5
 		RXD\BinRXD\BinRXD.projitems*{a7c032d2-27cc-4525-a094-fd7d6418ba31}*SharedItemsImports = 5
 		SharedTools\InfluxShared\InfluxShared.projitems*{a7c032d2-27cc-4525-a094-fd7d6418ba31}*SharedItemsImports = 5
+		DbcParser\DbcParser.projitems*{bc750a54-515a-4182-bb11-d19c5fb2f397}*SharedItemsImports = 5
+		Matlab\MatlabFile\MatlabFile.projitems*{bc750a54-515a-4182-bb11-d19c5fb2f397}*SharedItemsImports = 5
+		MDF4xx\MDF4xx\MDF4xx.projitems*{bc750a54-515a-4182-bb11-d19c5fb2f397}*SharedItemsImports = 5
+		RXD\BinRXD\BinRXD.projitems*{bc750a54-515a-4182-bb11-d19c5fb2f397}*SharedItemsImports = 5
+		SharedTools\InfluxShared\InfluxShared.projitems*{bc750a54-515a-4182-bb11-d19c5fb2f397}*SharedItemsImports = 5
 		Matlab\MatlabFile\MatlabFile.projitems*{bc796a4e-2f4e-441f-be3b-3bf8c11c5b6f}*SharedItemsImports = 13
 		DbcParser\DbcParser.projitems*{cbd41cac-6cd2-42da-951e-6ade1d8657d0}*SharedItemsImports = 13
 	EndGlobalSection
@@ -37,6 +48,10 @@ Global
 		{A7C032D2-27CC-4525-A094-FD7D6418BA31}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A7C032D2-27CC-4525-A094-FD7D6418BA31}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A7C032D2-27CC-4525-A094-FD7D6418BA31}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC750A54-515A-4182-BB11-D19C5FB2F397}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC750A54-515A-4182-BB11-D19C5FB2F397}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC750A54-515A-4182-BB11-D19C5FB2F397}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC750A54-515A-4182-BB11-D19C5FB2F397}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

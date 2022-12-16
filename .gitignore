@@ -366,3 +366,9 @@ dir_to_ignore/Gateway
 dir_to_ignore/Licensing
 dir_to_ignore/Oscilloscope
 dir_to_ignore/TCComm
+/TCComm/TCComm
+/Gateway
+/Licensing
+/Oscilloscope/Oscilloscope
+/WpfApp1
+/WinFormsApp1

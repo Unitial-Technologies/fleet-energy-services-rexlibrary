@@ -17,8 +17,6 @@
 
   <Import Project="..\..\..\SharedTools\InfluxShared\InfluxShared.projitems" Label="Shared" />
 
-  <Import Project="..\..\..\DbcParser\DbcParser.projitems" Label="Shared" />
-
   <ItemGroup>
     <Compile Remove="Objects\**" />
     <EmbeddedResource Remove="Objects\**" />

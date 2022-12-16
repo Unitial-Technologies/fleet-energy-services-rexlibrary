@@ -37,7 +37,8 @@ namespace RXD.Base
         public XmlHandler(string xmlPath)
         {
             xmlFileName = xmlPath;
-            xmlFile = XDocument.Load(xmlFileName);
+            if (File.Exists(xmlFileName))
+                xmlFile = XDocument.Load(xmlFileName);
 
             // Create validation handler
             xmlValidationHandler = new ValidationEventHandler((object sender, ValidationEventArgs args) => throw new Exception(args.Message));

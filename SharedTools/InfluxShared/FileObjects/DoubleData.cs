@@ -60,10 +60,14 @@ namespace InfluxShared.FileObjects
                 if (disposing)
                 {
                     if (TimeStream != null)
-                        TimeStream.Dispose();
+                    {
+                        (TimeStream as FileStream).Close();
+
+                    }
 
                     if (DataStream != null)
-                        DataStream.Dispose();
+
+                        (DataStream as FileStream).Close();
                 }
 
                 // TODO: free unmanaged resources (unmanaged objects) and override finalizer

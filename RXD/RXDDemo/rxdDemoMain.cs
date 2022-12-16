@@ -1,4 +1,6 @@
-﻿using RXD.Base;
+﻿using InfluxShared.FileObjects;
+using MDF4xx.IO;
+using RXD.Base;
 using RXD.Blocks;
 using System;
 using System.Collections.Generic;
@@ -92,6 +94,20 @@ namespace RXDDemo
 
             if (dlgSaveRXC.ShowDialog() == DialogResult.OK)
                 rxd.ToRXD(dlgSaveRXC.FileName);
+        }
+
+        private void btnConvert_Click(object sender, EventArgs e)
+        {
+            /* using (OpenFileDialog dlg = new OpenFileDialog()
+             {
+                 Filter = string.Join("|", new string[] { DoubleDataCollection.Filter, Matlab.Filter, ASC.Filter, BLF.Filter, TRC.Filter, MDF.Filter, BinRXD.Filter, XmlHandler.Filter }),
+                 FilterIndex = 1,
+                 Title = "Export datalog",
+                 FileName = Path.GetFileNameWithoutExtension(r.rxdUri)
+             })
+             {
+
+             }*/
         }
     }
 }

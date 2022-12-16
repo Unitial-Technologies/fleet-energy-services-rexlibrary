@@ -4,6 +4,7 @@ using RXD.DataRecords;
 using SharedObjects;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace RXD.Base
 {

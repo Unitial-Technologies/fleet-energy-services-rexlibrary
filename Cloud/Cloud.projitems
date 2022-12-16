@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>804c5fd4-7f69-4e20-a3d5-26b72a0ea751</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Cloud</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Grafana\Annotations.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grafana\Color.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grafana\Column.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grafana\Custom.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grafana\Dashboard.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grafana\Dashboard.Datasource.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grafana\Defaults.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grafana\FieldConfig.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grafana\GrafanaApi.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grafana\GridPos.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grafana\HideFrom.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grafana\Legend.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grafana\List.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grafana\Options.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grafana\Panel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grafana\ScaleDistribution.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grafana\Schema.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grafana\Stacking.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grafana\Step.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grafana\Target.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grafana\Templating.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grafana\Thresholds.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grafana\ThresholdsStyle.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grafana\Time.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grafana\Timepicker.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grafana\Tooltip.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Grafana\UrlOptions.cs" />
+  </ItemGroup>
+</Project>

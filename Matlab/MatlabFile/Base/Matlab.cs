@@ -80,7 +80,7 @@ namespace MatlabFile.Base
             {
                 el.Write(bw);
                 if (data != null)
-                    data.Copy(fs, el.DataOffsets);
+                    data.Copy(bw.BaseStream, el.DataOffsets);
 
                 return true;
             }

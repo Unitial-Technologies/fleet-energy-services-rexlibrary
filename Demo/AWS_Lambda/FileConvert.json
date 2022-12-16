@@ -1,0 +1,17 @@
+{
+  "InfluxDB": {
+    "enabled": false,
+    "url": "",
+    "token": "InfluxDB Token API",
+    "org": "<Company>",
+    "bucket": "bucket-name"
+  },
+  "CSV": {
+    "enabled": true
+  },
+  "AmazonTimestream": {
+    "enabled": false,
+    "db_name": "dbname",
+    "table_name": "test"
+  }
+}
