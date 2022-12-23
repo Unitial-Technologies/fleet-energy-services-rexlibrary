@@ -9,7 +9,7 @@
   "region": "eu-central-1",
   "configuration": "Release",
   "function-runtime": "dotnet6",
-  "function-memory-size": 256,
+  "function-memory-size": 2048,
   "function-timeout": 300,
   "function-handler": "AWSLambdaFileConvert::AWSLambdaConvert.Function::ConvertFiles"
 }

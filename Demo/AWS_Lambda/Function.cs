@@ -73,7 +73,6 @@ public class Function
         Context?.Logger.LogInformation("GetObjectMetadataAsync: " + s3Event.Bucket.Name +","+ s3Event.Object.Key);
 
         var response = await this.S3Client.GetObjectMetadataAsync(s3Event.Bucket.Name, FileName);
-        Context?.Logger.LogInformation("4");
 
         Context?.Logger.LogInformation("Processing file : " + FileName);
 
@@ -234,14 +233,8 @@ public class Function
                     //CSV Export
                     if (UseCSV)
                     {
-                        //CsvMultipartHelper.Context = Context;
-                        MemoryStream outStream = new MemoryStream();
-                        if (ddc.ToCSV(outStream))
-                            if (outStream != null)
-                                await S3.UploadFileAsync(s3Event.Bucket.Name, 
-                                        Path.ChangeExtension(FileName, ".csv"), 
-                                        outStream.ToArray());
-                        Context?.Logger.LogInformation("Path is:" + Path.ChangeExtension(FileName, ".csv"));
+                        CsvMultipartHelper.Context = Context;
+                        await CsvMultipartHelper.ToCSVMultipart(ddc, S3Client, s3Event.Bucket.Name, Path.ChangeExtension(FileName, ".csv"));
                     }                   
                 }
             }

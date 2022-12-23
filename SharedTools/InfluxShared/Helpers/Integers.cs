@@ -42,5 +42,18 @@ namespace InfluxShared.Helpers
 
         public static int Clamp(this int value, int minval, int maxval) => value < minval ? minval : value > maxval ? maxval : value;
 
+        public static int StrToIntDef(this string value, int defaultValue = 0)
+        {
+            int result;
+            try
+            {
+                result = Convert.ToInt32(value, value.Contains("0x")? 16 : 10);
+                return result;
+            }
+            catch (Exception)
+            {
+                return defaultValue;
+            } 
+        }
     }
 }

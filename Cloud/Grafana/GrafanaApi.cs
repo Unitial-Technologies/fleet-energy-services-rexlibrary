@@ -21,8 +21,8 @@ namespace Cloud.Grafana
 
         public bool Export(DoubleDataCollection ddc)
         {
-            Uri uri = new Uri("https://ppetkov.grafana.net/"); //new Uri("http://localhost:3000/");
-            string apiKey = "eyJrIjoieG8yOHVvWkk5TVFTVGE5c0pZOWIzRXlpZXZodHUxZjUiLCJuIjoiSW5mbHV4QWRtaW4iLCJpZCI6MX0=";//"eyJrIjoiYnNhNldscjhQY0dKRTEwdVBCRXFxNWw1WmVnYUdTekwiLCJuIjoiVGVzdEFQSSIsImlkIjoxfQ==";
+            Uri uri = new Uri(""); //Grafana account url
+            string apiKey = "";//Generated Grafana API
 
 
             
@@ -35,7 +35,7 @@ namespace Cloud.Grafana
             folderId = null;
             folderUid = null;
             overwrite = true;
-            dashboard.panels[0].targets[0].url = "https://l76iclla6sfe2ed2xm624gn4uy0fpdze.lambda-url.eu-central-1.on.aws/?file=firstjson.json";
+            dashboard.panels[0].targets[0].url = "";
             dashboard.panels[0].targets[0].columns[0].selector = "time";
             for (int i = 0; i < ddc.Count; i++)
             {                
