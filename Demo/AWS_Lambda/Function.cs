@@ -1,29 +1,33 @@
+using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
-using Amazon.Lambda.S3Events;
 using Amazon.S3;
 using Amazon.S3.Model;
-using Amazon.S3.Transfer;
-using Amazon.S3.Util;
-using RXD.Base;
-using Influx.Shared.Helpers;
-using InfluxShared.FileObjects;
-using DbcParserLib;
-using DbcParserLib.Influx;
-using Amazon.TimestreamWrite;
-using Amazon.TimestreamWrite.Model;
-using Amazon;
 using AWSLambdaFileConvert;
 using AWSLambdaFileConvert.ExportFormats;
+using DbcParserLib;
+using DbcParserLib.Influx;
+using InfluxShared.FileObjects;
 using Newtonsoft.Json;
-using System.Text;
-using Cloud.Grafana;
-using System.IO;
+using Newtonsoft.Json.Linq;
+using RXD.Base;
+using System.Net;
 
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
 namespace AWSLambdaConvert;
+
+[Flags]
+public enum ConversionType
+{
+    None = 0,
+    Csv = 1,
+    TimeStream = 2,
+    InfluxDB = 4,
+    Snapshot = 8,
+    Rxc = 16
+}
 
 public class Function
 {
@@ -32,6 +36,8 @@ public class Function
     S3Storage S3; 
     string FilePath { get; set; } = "";
     string FileName { get; set; } = "";
+    string LoggerDir { get; set; } = "";
+    dynamic ConfigJson;
     /// <summary>
     /// Default constructor. This constructor is used by Lambda to construct the instance. When invoked in a Lambda environment
     /// the AWS credentials will come from the IAM role associated with the function and the AWS region will be set to the
@@ -59,8 +65,9 @@ public class Function
     /// <param name="context"></param>
     /// <returns></returns>
     /// 
-    public async Task<string?> ConvertFiles(S3Event evnt, ILambdaContext context)
-    {
+
+    /*public async Task<APIGatewayProxyResponse> ConvertFiles(S3Event evnt, ILambdaContext context)
+    {        
         var s3Event = evnt.Records?[0].S3;
         if (s3Event == null)
             return null;
@@ -72,39 +79,183 @@ public class Function
         S3 = new S3Storage(S3Client, context);
         Context?.Logger.LogInformation("GetObjectMetadataAsync: " + s3Event.Bucket.Name +","+ s3Event.Object.Key);
 
-        var response = await this.S3Client.GetObjectMetadataAsync(s3Event.Bucket.Name, FileName);
+        await this.S3Client.GetObjectMetadataAsync(s3Event.Bucket.Name, FileName);
 
         Context?.Logger.LogInformation("Processing file : " + FileName);
 
         if (FileName.Contains("Configuration.xml"))
-            await ConvertXMLToRxc(s3Event);
+            await ConvertXMLToRxc(s3Event.Bucket.Name, s3Event.Object.Key);
         else if (FileName.Contains(".rxd"))
-            await ConvertRXD(s3Event);
+            await ConvertRXD(s3Event.Bucket.Name, s3Event.Object.Key);
+        else if (FileName.Contains(".json"))
+            await WriteSnapshot(s3Event.Bucket.Name);
 
-        return response.Headers.ContentType;
+        var rsp = new
+        {            
+            message = "Hello API",
+        };
+
+        var response = new APIGatewayProxyResponse
+        {
+            StatusCode = (int)HttpStatusCode.OK,
+            Body = JsonConvert.SerializeObject(rsp),
+            Headers = new Dictionary<string, string> { { "Content-Type", "text/plain" } }
+        };
+        return response;
+    }*/
+
+    ConversionType StringToConversionType(string conversion)
+    {
+        if (conversion.ToLower() == "snapshot")
+            return ConversionType.Snapshot;
+        else if (conversion.ToLower() == "csv")
+            return ConversionType.Csv;
+        else if (conversion.ToLower() == "amazontimestream")
+            return ConversionType.TimeStream;
+        else if (conversion.ToLower() == "influxdb")
+            return ConversionType.InfluxDB;
+        else if (conversion.ToLower() == "rxc")
+            return ConversionType.Rxc;
+        else
+            return ConversionType.None;
     }
 
-    public async Task<Stream> GetXSD(S3Event.S3Entity s3Event)
+    async Task<bool> GetConversionJson(string bucket)
+    {
+        var jsonStream = await S3.GetStream(bucket, "FileConvert.json");
+        using (StreamReader reader = new(jsonStream))
+            ConfigJson = JsonConvert.DeserializeObject(reader.ReadToEnd());
+        return true;
+    }
+
+    //By using Stream as a parameter the function can be triggered by both S3 Event and Http request
+    public async Task<APIGatewayProxyResponse> ConvertFiles(Stream inputStream, ILambdaContext context)
+    {
+        try
+        {
+            this.Context = context;
+            string bucket = "";
+            string filename = "";
+            ConversionType convert = ConversionType.None;
+
+            S3 = new S3Storage(S3Client, Context);
+
+            TextReader textReader = new StreamReader(inputStream);
+            var request = await textReader.ReadToEndAsync();
+            Context?.Logger.Log("Request is:" + textReader.ReadToEnd());
+            JObject obj = JsonConvert.DeserializeObject<JObject>(request);
+            if (obj.ContainsKey("queryStringParameters"))  // When triggered by Http request
+            {
+                Context?.Logger.Log("Triggered by http request");
+
+                APIGatewayProxyRequest apiRequest = JsonConvert.DeserializeObject<APIGatewayProxyRequest>(request);
+
+
+                var query = apiRequest.QueryStringParameters;
+                if (query == null)
+                    return new APIGatewayProxyResponse
+                    {
+                        StatusCode = (int)HttpStatusCode.BadRequest,
+                        Body = JsonConvert.SerializeObject(new { query, message = "File missing or not found" }),
+                        Headers = new Dictionary<string, string> { { "Content-Type", "text/plain" } }
+                    };
+                if (!query.ContainsKey("filename") || !query.ContainsKey("bucket") || !query.ContainsKey("conversion"))
+                    return new APIGatewayProxyResponse
+                    {
+                        StatusCode = (int)HttpStatusCode.NotFound,
+                        Body = JsonConvert.SerializeObject(new { query, message = "Missing Parameters" }),
+                        Headers = new Dictionary<string, string> { { "Content-Type", "text/plain" } }
+                    };
+                bucket = query["bucket"];
+                filename = query["filename"];
+                convert |= StringToConversionType(query["conversion"]);
+                await GetConversionJson(bucket);
+            }
+            else if (obj.ContainsKey("Records"))  //When triggered by S3 upload event
+            {
+                Context?.Logger.Log("Triggered by S3 Event");
+                dynamic s3Event = JsonConvert.DeserializeObject(request);
+                bucket = s3Event.Records[0].s3.bucket.name;
+                filename = s3Event.Records[0].s3.@object.key;
+                await GetConversionJson(bucket);
+
+                if (ConfigJson.ContainsKey("InfluxDB") && ConfigJson.InfluxDB.ContainsKey("enabled") && (ConfigJson.InfluxDB.enabled == true))
+                    convert |= ConversionType.InfluxDB;
+                if (ConfigJson.ContainsKey("CSV") && ConfigJson.CSV.ContainsKey("enabled") && (ConfigJson.CSV.enabled == true))
+                    convert |= ConversionType.Csv;
+                if (ConfigJson.ContainsKey("AmazonTimestream") && ConfigJson.AmazonTimestream.ContainsKey("enabled") && (ConfigJson.AmazonTimestream.enabled == true))
+                    convert |= ConversionType.TimeStream;
+                if (ConfigJson.ContainsKey("Snapshot") && ConfigJson.Snapshot.ContainsKey("enabled") && (ConfigJson.Snapshot.enabled == true))
+                    convert |= ConversionType.Snapshot;
+                else
+                    Context.Logger.Log("No conversion settings enabled in Config.json");
+            }
+            else
+            {
+                Context?.Logger.Log("RECORDS NOT found");
+            }
+            FilePath = Path.GetDirectoryName(filename);
+            FileName = filename.Replace("+", " ");
+            if (FilePath is null)
+                FilePath = "";
+            LoggerDir = filename.Substring(0, filename.IndexOf('/'));
+            Context?.Logger.LogInformation("Processing file : " + FileName);
+            await this.S3Client.GetObjectMetadataAsync(bucket, FileName);
+
+            bool res = false;
+            Context?.Logger.LogInformation($"Bucket :{bucket}   Path: {filename}");
+            if (FileName.Contains("Configuration.xml"))
+                res = (bool)await ConvertXMLToRxc(bucket, FileName);
+            else if (FileName.Contains(".json") && convert.HasFlag(ConversionType.Snapshot))
+                res = (bool)await WriteSnapshot(bucket);
+            else if (FileName.Contains(".rxd"))
+                res = (bool)await ConvertRXD(bucket, FileName, convert);
+
+
+            if (res)
+                return CreateResponse(HttpStatusCode.OK, "Successfully converted input");
+            else
+                return CreateResponse(HttpStatusCode.InternalServerError, "Error converting input. Check log for details.");
+        }
+        catch (Exception exc)
+        {
+            Context?.Logger.LogInformation($"Json Exception :{exc.Message}");
+            throw;
+        }
+    }
+
+    private APIGatewayProxyResponse CreateResponse(HttpStatusCode statusCode, string msg)
+    {
+        APIGatewayProxyResponse response = new APIGatewayProxyResponse
+        {
+            StatusCode = (int)statusCode,
+            Body = JsonConvert.SerializeObject(new { message = msg }),
+            Headers = new Dictionary<string, string> { { "Content-Type", "text/plain" } }
+        };
+        return response;
+    }
+
+    public async Task<Stream> GetXSD(string bucket)
     {
         //The xsd schema must be in the same folder as the xml file
-        return await S3.GetStream(s3Event.Bucket.Name, Path.Combine(FilePath, "ReXConfig.xsd"));
+        return await S3.GetStream(bucket, Path.Combine(LoggerDir, "ReXConfig.xsd"));
     }
 
-    public async Task<Stream> LoadDBC(S3Event.S3Entity s3Event)
+    public async Task<Stream> LoadDBC(string bucket)
     {
         //The dbc must be in the same folder as the rxd file
-        return await S3.GetStream(s3Event.Bucket.Name, Path.Combine(FilePath, "ExportDBC.dbc"));
+        return await S3.GetStream(bucket, Path.Combine(LoggerDir, "ExportDBC.dbc"));
     }
 
-    public async Task<bool?> ConvertXMLToRxc(S3EventNotification.S3Entity s3Event)
+    public async Task<bool?> ConvertXMLToRxc(string bucket, string filename)
     {
         try
         {
             //Get the XML file name and bucket
             BinRXD rxd = BinRXD.Create();
             GetObjectResponse objResponse = new GetObjectResponse();
-            string BucketName = s3Event.Bucket.Name;
-            string Key = s3Event.Object.Key;
+            string BucketName = bucket;
+            string Key = filename;
             var request = new GetObjectRequest
             {
                 BucketName = BucketName,
@@ -115,7 +266,7 @@ public class Function
             {
                 //Load the XSD schema needed for the XML verification
                 //XSD schema has to be in the same folder as the XML file
-                Stream xsd = await GetXSD(s3Event);
+                Stream xsd = await GetXSD(bucket);
                 if (xsd is null)
                 {
                     Context?.Logger.LogInformation("XSD Schema Not Found!");
@@ -154,27 +305,18 @@ public class Function
             return false;
         }
     }
-    
 
-    
-    
-
-    public async Task<bool> ConvertRXD(S3Event.S3Entity s3Event)
-    {
-        var jsonStream = await S3.GetStream(s3Event.Bucket.Name, "FileConvert.json");
-        dynamic json;
-        using (StreamReader reader = new(jsonStream))
-            json = JsonConvert.DeserializeObject(reader.ReadToEnd());
-
-        bool UseInfluxDB = json.ContainsKey("InfluxDB") && json.InfluxDB.ContainsKey("enabled") && (json.InfluxDB.enabled == true);
-        bool UseCSV = json.ContainsKey("CSV") && json.CSV.ContainsKey("enabled") && (json.CSV.enabled == true);
-        bool UseAmazonTimestream = json.ContainsKey("AmazonTimestream") && json.AmazonTimestream.ContainsKey("enabled") && (json.AmazonTimestream.enabled == true);
-
-        if (!UseInfluxDB && !UseCSV && !UseAmazonTimestream)
+    public async Task<bool> ConvertRXD(string bucket, string filename, ConversionType conversion)
+    {  
+        if (!conversion.HasFlag(ConversionType.Csv) && !conversion.HasFlag(ConversionType.InfluxDB) &&
+                    !conversion.HasFlag(ConversionType.TimeStream))
+        {
+            Context?.Logger.LogInformation("No valid Conversion requested!");
             return false;
+        }
 
         Context?.Logger.LogInformation("Loading DBC");
-        Stream dbcStream = await LoadDBC(s3Event);
+        Stream dbcStream = await LoadDBC(bucket);
         if (dbcStream is null)
         {
             Context?.Logger.LogInformation("DBC File Not Found!");
@@ -189,7 +331,7 @@ public class Function
             return false;
         }
         DBC influxDBC = (DbcToInfluxObj.FromDBC(dbc) as DBC);
-        Stream rxdStream = await S3.GetStream(s3Event.Bucket.Name, FileName);
+        Stream rxdStream = await S3.GetStream(bucket, FileName);
 
         ExportDbcCollection signalsCollection = DbcToInfluxObj.LoadExportSignalsFromDBC(influxDBC);
         Context?.Logger.LogInformation("DBC Message Count: " + influxDBC.Messages.Count.ToString());        
@@ -213,28 +355,48 @@ public class Function
                     });
 
                     //Write to InfluxDB
-                    if (UseInfluxDB)
+                    if (conversion.HasFlag(ConversionType.InfluxDB))
                     {
                         Context?.Logger.LogInformation("InfluxDB");
                         InfluxDBHelper.Context = Context;
-                        InfluxDBHelper.idbSettings iddSettings = json.InfluxDB.ToObject<InfluxDBHelper.idbSettings>();
+                        InfluxDBHelper.idbSettings iddSettings = ConfigJson.InfluxDB.ToObject<InfluxDBHelper.idbSettings>();
+                        string vars = "";
+                        var vardict = Environment.GetEnvironmentVariables();
+                        foreach (var item in vardict.Keys)
+                        {
+                            vars += $"Key:{item} ";
+                        }
+                        Context?.Logger.LogInformation(vars);
+                        iddSettings.token = Environment.GetEnvironmentVariable("influxdb_token");
+                        if (iddSettings.token is null)
+                        {
+                            Context?.Logger.LogInformation("InfluxDB access token missing. Add the Influx DB token as a Environment variable named influxdb_token");
+                            iddSettings.token = "";
+                        }
+                        if (iddSettings.bucket == "default")
+                            iddSettings.bucket = bucket;
                         await ddc.ToInfluxDB(iddSettings);
                     }
 
                     //Write to timestream table
-                    if (UseAmazonTimestream)
+                    if (conversion.HasFlag(ConversionType.TimeStream))
                     {
                         Context?.Logger.LogInformation("Amazon");
                         TimeStreamHelper.Context = Context;
-                        TimeStreamHelper.atsSettings atsSettings = json.AmazonTimestream.ToObject<TimeStreamHelper.atsSettings>();
-                        await ddc.ToAwsTimeStream(atsSettings);
+                        TimeStreamHelper.atsSettings atsSettings = ConfigJson.AmazonTimestream.ToObject<TimeStreamHelper.atsSettings>();
+                        if (atsSettings.db_name == "default")
+                            atsSettings.db_name = bucket;
+                        if (atsSettings.table_name == "default")
+                            atsSettings.table_name = "rxddata";
+                        int idx = filename.LastIndexOf('/');
+                        await ddc.ToAwsTimeStream(atsSettings, filename.Substring(idx + 1, filename.Length - idx - 5));
                     }
 
                     //CSV Export
-                    if (UseCSV)
+                    if (conversion.HasFlag(ConversionType.Csv))
                     {
                         CsvMultipartHelper.Context = Context;
-                        await CsvMultipartHelper.ToCSVMultipart(ddc, S3Client, s3Event.Bucket.Name, Path.ChangeExtension(FileName, ".csv"));
+                        await CsvMultipartHelper.ToCSVMultipart(ddc, S3Client, bucket, Path.ChangeExtension(FileName, ".csv"));
                     }                   
                 }
             }
@@ -247,5 +409,29 @@ public class Function
         return true;
     }
 
-    
+    private async Task<bool> WriteSnapshot(string bucket)
+    {        
+        TimeStreamHelper.Context = Context;
+        int startIndex = FilePath.IndexOf("_SN") + 3;
+        string sn = FilePath.Substring(startIndex, 7);
+        Context?.Logger.LogInformation($"Snapshot Timestream for SN{sn}");
+        if (!FileName.ToLower().Contains("snapshot"))
+        {
+            Context?.Logger.LogInformation($"File {FileName} ignored. Not a snapshot.");
+            return false;
+        }
+        var jsonStream = await S3.GetStream(bucket, FileName);
+        string json;
+        using (StreamReader reader = new(jsonStream))
+            json = reader.ReadToEnd();
+        TimeStreamHelper.atsSettings atsSettings = ConfigJson.AmazonTimestream.ToObject<TimeStreamHelper.atsSettings>();
+        if (atsSettings.db_name == "default")
+            atsSettings.db_name = bucket;
+        if (atsSettings.table_name == "default")
+            atsSettings.table_name = "snapshot";
+        await TimeStreamHelper.WriteSnapshot(sn, atsSettings, json);
+        return true;
+    }
+
+
 }

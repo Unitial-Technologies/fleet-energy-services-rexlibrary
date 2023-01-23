@@ -77,7 +77,7 @@ namespace AWSLambdaFileConvert.ExportFormats
                     while (Values != null)
                     {
                         stream.WriteLine(
-                            DateTime.FromOADate(ddc.RealTime.ToOADate() + Values[0] / 86400).ToString("dd/MM/yyyy HH:mm:ss.fff") +
+                            DateTime.FromOADate(ddc.RealTime.ToOADate() + Values[0] / 86400).ToString("dd/MM/yyyy HH:mm:ss.fff") +","+
                             string.Join(",", Values.Select(x => x.ToString(ci)).ToArray(), 1, Values.Length - 1).Replace("NaN", ""));
 
                         if (csvStream.Length >= 5 * 1024 * 1024)

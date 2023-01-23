@@ -50,7 +50,7 @@ namespace AWSLambdaFileConvert.ExportFormats
                     var idbFields = new List<string>();
 
                     ddc.InitReading();
-                    ddc.RealTime = DateTime.Now.AddHours(-3);
+                    //ddc.RealTime = DateTime.Now.AddHours(-3); //Used to overwrite time, so that older files can be written to DB
 
                     double[] Values = ddc.GetValues();
                     while (Values != null)

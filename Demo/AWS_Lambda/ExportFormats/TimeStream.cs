@@ -2,6 +2,7 @@
 using Amazon.TimestreamWrite;
 using Amazon.TimestreamWrite.Model;
 using InfluxShared.FileObjects;
+using Newtonsoft.Json;
 
 namespace AWSLambdaFileConvert.ExportFormats
 {
@@ -16,7 +17,7 @@ namespace AWSLambdaFileConvert.ExportFormats
 
         public static ILambdaContext? Context { get; set; } //Used to write information to log filesS
 
-        public static async Task<bool> ToAwsTimeStream(this DoubleDataCollection ddc, atsSettings settings)
+        public static async Task<bool> ToAwsTimeStream(this DoubleDataCollection ddc, atsSettings settings, string filename)
         {
             var writeClient = new AmazonTimestreamWriteClient();
             var writeRecordsRequest = new WriteRecordsRequest
@@ -31,7 +32,8 @@ namespace AWSLambdaFileConvert.ExportFormats
 
                 List<Dimension> dimensions = new List<Dimension>
                 {
-                    new Dimension { Name = "device_id", Value = ddc.DisplayName }
+                    new Dimension { Name = "device_id", Value = ddc.DisplayName },
+                    new Dimension { Name = "filename", Value = filename},
                 };
 
                 Context?.Logger.LogInformation("Created Dimension");
@@ -51,8 +53,9 @@ namespace AWSLambdaFileConvert.ExportFormats
                                 MeasureValueType = MeasureValueType.DOUBLE,
                                 Time = Math.Truncate(((ddc.RealTime.ToOADate() - 25569) * 86400 + Values[0]) * 1000).ToString()
                             });
-                            //Context?.Logger.LogInformation(records[records.Count-1].Time.ToString());
-                            if (writeRecordsRequest.Records.Count >= 50)
+                            if (ddc[i - 1].ChannelName == "Engine_temperature")
+                                Context?.Logger.LogInformation($"Engine Temperature is: {Values[i]}");
+                            if (writeRecordsRequest.Records.Count >= 90)
                             {
                                 Context?.Logger.LogInformation($"Writing {writeRecordsRequest.Records.Count} records");
                                 await writeClient.LocalWriteRecordsAsync(writeRecordsRequest);
@@ -102,6 +105,62 @@ namespace AWSLambdaFileConvert.ExportFormats
             }
 
             return true;
+        }
+
+        public static async Task<bool>WriteSnapshot(string device_id, atsSettings settings, string json)
+        {
+            var writeClient = new AmazonTimestreamWriteClient();
+            var writeRecordsRequest = new WriteRecordsRequest
+            {
+                DatabaseName = settings.db_name,
+                TableName = settings.table_name,
+                Records = new()
+            };
+
+            try
+            {
+                var snapshot = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(json);
+                if (snapshot is null)
+                {
+                    Context?.Logger.LogInformation("Couldn't parse Snapshot json");
+                    return false;
+                }                
+                List<Dimension> dimensions = new List<Dimension>
+                {
+                    new Dimension { Name = "device_id", Value = device_id }
+                };
+                long timeStamp = snapshot["RTC_UNIX"] * 1000;
+                Context?.Logger.LogInformation("Created Dimension");
+                foreach (var signal in snapshot)
+                {
+                    if (signal.Key != "RTC_UNIX")
+                    {
+                        writeRecordsRequest.Records.Add(new Record
+                        {
+                            Dimensions = dimensions,
+                            MeasureName = signal.Key,
+                            MeasureValue = signal.Value.ToString(),
+                            MeasureValueType = MeasureValueType.DOUBLE,
+                            Time = timeStamp.ToString()
+                        }); ;
+                    }
+                }
+                
+                if (writeRecordsRequest.Records.Count > 0)
+                {
+                    Context?.Logger.LogInformation($"Writing {writeRecordsRequest.Records.Count} records");
+                    await writeClient.LocalWriteRecordsAsync(writeRecordsRequest);
+                    Context?.Logger.LogInformation($"Records {writeRecordsRequest.Records.Count} written");
+                    writeRecordsRequest.Records.Clear();
+                }
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                Context?.Logger.LogInformation(e.Message);
+                return false;
+            }
         }
     }
 

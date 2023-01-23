@@ -52,9 +52,12 @@ namespace DbcParserLib.Influx
             ExportDbcCollection signalsCollection = new ExportDbcCollection();
             foreach (var msg in dbc.Messages)
             {
-                var expmsg = signalsCollection.AddMessage(0, msg);
-                foreach (var sig in msg.Items)
-                    expmsg.AddSignal(sig);
+                for (byte i = 0; i < 4; i++)
+                {
+                    var expmsg = signalsCollection.AddMessage(i, msg);
+                    foreach (var sig in msg.Items)
+                        expmsg.AddSignal(sig);
+                }                
             }
             return signalsCollection;
         }
