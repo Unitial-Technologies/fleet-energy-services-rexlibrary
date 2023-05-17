@@ -32,6 +32,7 @@ namespace RXD.Blocks
 
         internal virtual string GetName => data.TryGetValue("name", out PropertyData name) ? name.Value : (ToString() + header.uniqueid);
         internal virtual string GetUnits => data.TryGetValue("units", out PropertyData units) ? units.Value : "";
+        internal virtual Guid GetGUID => data.TryGetValue("guid", out PropertyData guid) ? guid.Value : null;
         internal virtual ChannelDescriptor GetDataDescriptor => null;
         internal UInt32 LowestTimestamp = 0;
         internal bool DataFound = false; // Used for validate detected lowest timestamp

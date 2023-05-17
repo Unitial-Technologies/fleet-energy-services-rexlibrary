@@ -118,7 +118,7 @@ namespace InfluxShared.Objects
             if (mode != CryptoStreamMode.Write)
                 return;
 
-            byte[] data = Encoding.UTF8.GetBytes(message);
+            byte[] data = new UTF8Encoding(false).GetBytes(message);
             if (cstream.CanWrite)
                 cstream.Write(data, 0, data.Length);
         }

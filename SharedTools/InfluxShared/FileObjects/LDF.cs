@@ -4,6 +4,8 @@ using System.IO;
 
 namespace InfluxShared.FileObjects
 {
+    public enum LDFMessageType : byte { Lin }
+
     public class LdfItem : BasicItemInfo
     {
         public ushort StartBit { get; set; }
@@ -71,7 +73,7 @@ namespace InfluxShared.FileObjects
         public uint ID { get; set; }
         public string HexIdent => "0x" + ID.ToString("X2");
         public byte DLC { get; set; }
-        public DBCMessageType MsgType => DBCMessageType.Lin;
+        public LDFMessageType MsgType => LDFMessageType.Lin;
         public string Publisher { get; set; }
         public string Comment { get; set; }
         public List<LdfItem> Items { get; set; }
@@ -174,11 +176,6 @@ namespace InfluxShared.FileObjects
             Add(channel);
             return channel;
         }
-
-
-
     }
-
-
 
 }

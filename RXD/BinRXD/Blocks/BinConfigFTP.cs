@@ -43,6 +43,7 @@ namespace RXD.Blocks
             FirmwareCheckTime,
             AutomaticFirmwareUpdate, 
             EncryptPass,
+            UploadResume,
         }
 
         #region Do not touch these
@@ -80,6 +81,11 @@ namespace RXD.Blocks
             {
                 Versions[1].DynamicInvoke();
                 data.AddProperty(BinProp.EncryptPass, typeof(bool));
+            });
+            Versions[3] = new Action(() =>
+            {
+                Versions[2].DynamicInvoke();
+                data.AddProperty(BinProp.UploadResume, typeof(bool), true);
             });
         }
     }

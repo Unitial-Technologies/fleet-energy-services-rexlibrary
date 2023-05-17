@@ -102,7 +102,7 @@ namespace InfluxShared.FileObjects
         {
             try
             {
-                traceWriter = new StreamWriter(outStream, Encoding.UTF8, 1024, true);
+                traceWriter = new StreamWriter(outStream, new UTF8Encoding(false), 1024, true);
                 WriteHeader(LogTime);
                 return true;
             }

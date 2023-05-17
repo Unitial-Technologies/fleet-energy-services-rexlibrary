@@ -46,6 +46,7 @@ namespace RXD.Blocks
         DAQFILE = 35,
         DAQ = 36,
         DAQITEM = 37,
+        TC = 38,
     };
 
     public abstract partial class BinBase
@@ -97,6 +98,7 @@ namespace RXD.Blocks
             { BlockType.DAQFILE, typeof(BinDaqFile) },
             { BlockType.DAQ, typeof(BinDAQ) },
             { BlockType.DAQITEM, typeof(BinDAQItem) },
+            { BlockType.TC, typeof(BinTC) },
         };
 
         /// <summary>
@@ -146,6 +148,7 @@ namespace RXD.Blocks
             { BlockType.DAQFILE, RecordType.Unknown },
             { BlockType.DAQ, RecordType.Unknown },
             { BlockType.DAQITEM, RecordType.Unknown },
+            { BlockType.TC, RecordType.Unknown },
 
         };
 

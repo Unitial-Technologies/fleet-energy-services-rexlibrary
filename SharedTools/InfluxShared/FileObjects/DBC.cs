@@ -6,11 +6,10 @@ using System.IO;
 namespace InfluxShared.FileObjects
 {
     public enum DBCByteOrder : byte { Intel, Motorola }
-    public enum DBCMessageType : byte { Standard, Extended, CanFDStandard, CanFDExtended, J1939PG, Lin }
+    public enum DBCMessageType : byte { Standard, Extended, CanFDStandard, CanFDExtended, J1939PG}
     public enum DBCValueType : byte { Unsigned, Signed, IEEEFloat, IEEEDouble }
     public enum DBCSignalType : byte { Standard, Mode, ModeDependent }
     public enum DBCFileType : byte { None, Generic, CAN, CANFD, LIN, J1939, Ethernet, FlexRay };
-
 
     public class DbcSelection
     {
@@ -27,10 +26,7 @@ namespace InfluxShared.FileObjects
         public DBCByteOrder ByteOrder { get; set; }
         public DBCValueType ValueType { get; set; }
         public bool Log { get; set; }
-        public override string ToString()
-        {
-            return Name;
-        }
+        public override string ToString() => Name;
         public double Factor => Conversion.Formula.CoeffB;
         public double Offset => Conversion.Formula.CoeffC;
 
@@ -185,7 +181,6 @@ namespace InfluxShared.FileObjects
                 case DBCMessageType.CanFDStandard: return "CAN FD Standard";
                 case DBCMessageType.CanFDExtended: return "CAN FD Extended";
                 case DBCMessageType.J1939PG: return "J1939 PG (ext. ID)";
-                case DBCMessageType.Lin: return "Lin";
                 default: return "Unknown";
             }
         }

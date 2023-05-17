@@ -13,10 +13,13 @@ namespace InfluxShared.FileObjects
     public class DoubleDataCollection : List<DoubleData>, IDisposable
     {
         public const string Extension = ".csv";
-        public const string Filter = "Comma delimited (*.csv)|*.csv";
+        public const string Filter = "Comma separated values (*.csv)|*.csv";
+        public const string svExtension = ".csv";
+        public const string svFilter = "Separated values (*.csv)|*.csv";
 
         readonly string TempLocation;
         readonly StorageCacheType StorageCache;
+        internal TimeFormatType DefaultCsvDateFormat = TimeFormatType.Seconds;
         private bool disposedValue = false;
         internal bool ObjectOwner = true;
 
@@ -210,7 +213,67 @@ namespace InfluxShared.FileObjects
             return TempTime;
         }
 
-        public bool ToCSV(string csvFileName, Action<object> ProgressCallback = null) => ToCSV(csvFileName, TimeFormatType.Seconds, ProgressCallback);
+        public bool ToSV(string csvFileName, Action<object> ProgressCallback = null) => ToSV(csvFileName, DefaultCsvDateFormat, ProgressCallback);
+
+        public bool ToSV(string csvFileName, TimeFormatType TimeFormat, Action<object> ProgressCallback = null)
+        {
+            using (FileStream fs = new FileStream(csvFileName, FileMode.Create))
+                return ToSV(fs, TimeFormat, ProgressCallback);
+        }
+
+        public bool ToSV(Stream csvStream, Action<object> ProgressCallback = null) => ToSV(csvStream, DefaultCsvDateFormat, ProgressCallback);
+
+        public bool ToSV(Stream svStream, TimeFormatType TimeFormat, Action<object> ProgressCallback = null)
+        {
+            var ci = CultureInfo.CurrentCulture;
+            string sep = ci.TextInfo.ListSeparator;
+
+            Func<double, string> TimestampToString = TimeFormat switch
+            {
+                TimeFormatType.Seconds => delegate (double ts) { return ts.ToString("0.00000", ci); }
+                ,
+                TimeFormatType.DateTime => delegate (double ts) { return DateTime.FromOADate(RealTime.ToOADate() + ts / 86400).ToString("yyyy-MM-dd HH:mm:ss.fff"); }
+                ,
+                _ => delegate (double ts) { return ""; }
+                ,
+            };
+
+            try
+            {
+                ProgressCallback?.Invoke(0);
+                ProgressCallback?.Invoke("Writing SV file...");
+                InitReading();
+                using (StreamWriter stream = new StreamWriter(svStream, new UTF8Encoding(false), 1024, true))
+                {
+                    stream.Write(
+                        "Creation Time : " + RealTime.ToString("yyyy-MM-dd HH:mm:ss.fff", ci) + Environment.NewLine +
+                        "Time" + sep + string.Join(sep, this.Select(n => n.ChannelName)) + Environment.NewLine +
+                        "sec" + sep + string.Join(sep, this.Select(n => n.ChannelUnits)) + Environment.NewLine
+                    );
+
+                    double[] Values = GetValues();
+                    while (Values != null)
+                    {
+                        stream.WriteLine(
+                            TimestampToString(Values[0]) + sep +
+                            string.Join(sep, Values.Select(x => x.ToString(ci)).ToArray(), 1, Values.Length - 1).Replace("NaN", ""));
+
+                        Values = GetValues();
+                        ProgressCallback?.Invoke((int)(ReadingProgress * 100));
+                    }
+                }
+
+                ProgressCallback?.Invoke(100);
+                return true;
+            }
+            catch (Exception e)
+            {
+                //MessageBox.Show(e.Message);
+                return false;
+            }
+        }
+
+        public bool ToCSV(string csvFileName, Action<object> ProgressCallback = null) => ToCSV(csvFileName, DefaultCsvDateFormat, ProgressCallback);
 
         public bool ToCSV(string csvFileName, TimeFormatType TimeFormat, Action<object> ProgressCallback = null)
         {
@@ -218,7 +281,7 @@ namespace InfluxShared.FileObjects
                 return ToCSV(fs, TimeFormat, ProgressCallback);
         }
 
-        public bool ToCSV(Stream csvStream, Action<object> ProgressCallback = null) => ToCSV(csvStream, TimeFormatType.Seconds, ProgressCallback);
+        public bool ToCSV(Stream csvStream, Action<object> ProgressCallback = null) => ToCSV(csvStream, DefaultCsvDateFormat, ProgressCallback);
 
         public bool ToCSV(Stream csvStream, TimeFormatType TimeFormat, Action<object> ProgressCallback = null)
         {
@@ -239,7 +302,7 @@ namespace InfluxShared.FileObjects
                 ProgressCallback?.Invoke(0);
                 ProgressCallback?.Invoke("Writing CSV file...");
                 InitReading();
-                using (StreamWriter stream = new StreamWriter(csvStream, Encoding.UTF8, 1024, true))
+                using (StreamWriter stream = new StreamWriter(csvStream, new UTF8Encoding(false), 1024, true))
                 {
                     stream.Write(
                         "Creation Time : " + RealTime.ToString("dd/MM/yy HH:mm") + Environment.NewLine +
@@ -286,7 +349,7 @@ namespace InfluxShared.FileObjects
                 ProgressCallback?.Invoke(0);
                 ProgressCallback?.Invoke("Writing CSV file...");
                 InitReading();
-                using (StreamWriter stream = new StreamWriter(csvStream, Encoding.UTF8, 1024, true))
+                using (StreamWriter stream = new StreamWriter(csvStream, new UTF8Encoding(false), 1024, true))
                 {
                     stream.Write(
                         "#datatype measurement,tag,double,dateTime:RFC3339" + Environment.NewLine +

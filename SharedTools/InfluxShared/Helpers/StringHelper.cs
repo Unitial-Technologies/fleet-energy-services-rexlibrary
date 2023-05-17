@@ -6,6 +6,11 @@ using System.Text;
 
 namespace InfluxShared.Helpers
 {
+    public interface FDialog {
+        public string Filter { get; set; }
+        public int FilterIndex { get;set; }
+    }
+
     public static class StringHelper
     {
         private static byte CaseLookupSize = 0xFF;

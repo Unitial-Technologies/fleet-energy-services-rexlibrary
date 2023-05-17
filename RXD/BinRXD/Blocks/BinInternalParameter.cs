@@ -44,6 +44,7 @@ namespace RXD.Blocks
             Parameter_Type,
             Value_Type,
             SamplingRate,
+            InputUID
         }
 
         #region Do not touch these
@@ -64,6 +65,11 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.Parameter_Type, typeof(Parameter_Type));
                 data.AddProperty(BinProp.Value_Type, typeof(Value_Type));
                 data.AddProperty(BinProp.SamplingRate, typeof(UInt16));
+            });
+            Versions[2] = new Action(() =>
+            {
+                Versions[1].DynamicInvoke();
+                data.AddProperty(BinProp.InputUID, typeof(UInt16));
             });
         }
     }

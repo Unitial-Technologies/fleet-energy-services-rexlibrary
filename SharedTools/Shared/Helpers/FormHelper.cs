@@ -71,5 +71,10 @@ namespace Influx.Shared.Helpers
                 action(p1, p2);
         }
 
+        public static string SelectedFilter(this FileDialog dlg)
+        {
+            string[] ftypes = dlg.Filter.Split('|');
+            return String.Join("|", ftypes.Skip((dlg.FilterIndex - 1) * 2).Take(2));
+        }
     }
 }

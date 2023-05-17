@@ -43,6 +43,7 @@ namespace RXD.Base
         public static readonly string EncryptedFilter = "ReX encrypted data (*.rxe)|*.rxe";
         public static readonly string BinFilter = "ReX configuration (*.rxc)|*.rxc";
 
+        public static bool UseMf4Compression = true;
         public static string EncryptionContainerName = "ReXgen";
         public static byte[] EncryptionKeysBlob = null;
 
@@ -386,7 +387,7 @@ namespace RXD.Base
 
         }*/
 
-        public bool ToMF4(string outputfn, ExportCollections frameSignals = null, Action<object> ProgressCallback = null)
+        public bool ToMF4(string outputfn,  ExportCollections frameSignals = null, Action<object> ProgressCallback = null)
         {
             bool FindMessageFrameID(RecBase rec, out UInt16 GroupID, out byte DLC)
             {
@@ -417,7 +418,6 @@ namespace RXD.Base
                 return false;
             }
 
-            bool UseCompression = true;
             UInt64 LastTimestamp = 0;
             UInt64 TimeOffset = 0;
 
@@ -431,7 +431,7 @@ namespace RXD.Base
                      ToDictionary(dg => dg.ID, dg => dg.Data);
 
                 MDF mdf = new MDF(outputfn);
-                mdf.BuildLoggerStruct(DatalogStartTime, 8/*Config[BinConfig.BinProp.TimeStampSize]*/, Config[BinConfig.BinProp.TimeStampPrecision], UseCompression, Signals, frameSignals);
+                mdf.BuildLoggerStruct(DatalogStartTime, 8/*Config[BinConfig.BinProp.TimeStampSize]*/, Config[BinConfig.BinProp.TimeStampPrecision], UseMf4Compression, Signals, frameSignals);
                 mdf.WriteHeader();
 
                 Dictionary<FrameType, CGBlock> mdfGroups =
@@ -442,7 +442,7 @@ namespace RXD.Base
                 using (FileStream fw = new FileStream(outputfn, FileMode.Open, FileAccess.Write, FileShare.None))
                 {
                     fw.Seek(0, SeekOrigin.End);
-                    var DataBlock = UseCompression ?
+                    var DataBlock = UseMf4Compression ?
                         mdf.FirstOrDefault(x => x.Value is DZBlock).Value :
                         mdf.FirstOrDefault(x => x.Value is DTBlock).Value;
 
@@ -477,7 +477,7 @@ namespace RXD.Base
                                     LastTimestamp = frame.data.Timestamp;
                                     frame.data.Timestamp += TimeOffset - FileTimestamp;
 
-                                    if (UseCompression)
+                                    if (UseMf4Compression)
                                     {
                                         byte[] data = frame.ToBytes();
                                         zlStream.Write(data, 0, data.Length);
@@ -504,11 +504,11 @@ namespace RXD.Base
                             }
                         }
 
-                        if (UseCompression)
+                        if (UseMf4Compression)
                             zipData = memZippedStream.ToArray();
                     }
 
-                    if (UseCompression)
+                    if (UseMf4Compression)
                     {
                         fw.Write(zipData, 0, zipData.Length);
                         fw.Flush();

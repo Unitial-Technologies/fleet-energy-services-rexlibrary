@@ -39,7 +39,7 @@ namespace AWSLambdaFileConvert.ExportFormats
                 ddc.InitReading();
                 int partId = 1;
                 MemoryStream csvStream = new MemoryStream();
-                using (StreamWriter stream = new StreamWriter(csvStream, Encoding.UTF8, 1024, true))
+                using (StreamWriter stream = new StreamWriter(csvStream, new UTF8Encoding(false), 1024, true))
                 {
                     async Task S3Upload()
                     {
@@ -52,7 +52,8 @@ namespace AWSLambdaFileConvert.ExportFormats
                             UploadId = initResponse.UploadId,
                             PartNumber = partId,
                             InputStream = csvStream,
-                            IsLastPart = csvStream.Length < 5*1024*1024
+                            IsLastPart = csvStream.Length < 5 * 1024 * 1024,
+                            PartSize = csvStream.Length >= 5 * 1024 * 1024 ? csvStream.Length : 5 * 1024 * 1024
                         };
 
                         // Upload a part and add the response to our list.

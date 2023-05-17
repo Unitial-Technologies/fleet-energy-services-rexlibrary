@@ -7,6 +7,7 @@ using RXD.Objects;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Influx.Shared.Helpers
@@ -17,9 +18,11 @@ namespace Influx.Shared.Helpers
         {
             public string Filter;
             public string Extension;
+            public string Name;
             public override string ToString() => Filter.Split('|')[0];
             public bool supportMerge =>
                 Filter == DoubleDataCollection.Filter ||
+                Filter == DoubleDataCollection.svFilter ||
                 Filter == Matlab.Filter ||
                 Filter == ASC.Filter ||
                 Filter == BLF.Filter ||
@@ -34,7 +37,14 @@ namespace Influx.Shared.Helpers
                 Add(new FileType()
                 {
                     Filter = DoubleDataCollection.Filter,
-                    Extension = DoubleDataCollection.Extension
+                    Extension = DoubleDataCollection.Extension,
+                    Name = "DiaLOG"
+                });
+                Add(new FileType()
+                {
+                    Filter = DoubleDataCollection.svFilter,
+                    Extension = DoubleDataCollection.svExtension,
+                    Name = "Regional"
                 });
                 Add(new FileType()
                 {
@@ -74,6 +84,7 @@ namespace Influx.Shared.Helpers
             }
 
             public bool ValidExtension(string extension) => Exists(e => extension.Equals(e.Extension, StringComparison.OrdinalIgnoreCase));
+            public string TypeName(string filter) => this.Where(f => f.Filter == filter).Select(f => f.Name ?? "").FirstOrDefault();
         }
 
         public static FileTypeList FileTypeCollection = new();
@@ -336,7 +347,7 @@ namespace Influx.Shared.Helpers
                         TraceConvert = trace is null ? rxd.ToBLF : trace.ToBLF;
                     else if (ext.Equals(TRC.Extension, StringComparison.OrdinalIgnoreCase))
                         TraceConvert = trace is null ? rxd.ToTRC : trace.ToTRC;
-                    
+
                     if (TraceConvert != null)
                         return TraceConvert(outputPath, ProgressCallback);
                 }
@@ -345,22 +356,32 @@ namespace Influx.Shared.Helpers
                 {
                     Func<string, Action<object>, bool> GetChannelConverter()
                     {
-                        DoubleDataCollection BuildChannels()
+                        DoubleDataCollection BuildChannels(TimeFormatType csvTimeFormat = TimeFormatType.Seconds)
                         {
-                            channels ??= rxd.ToDoubleData(settings);
+                            channels = rxd.ToDoubleData(settings);
                             if (channels is null || channels.Count == 0)
                                 throw new Exception("There is no data channels to export!");
                             else
+                            {
+                                channels.DefaultCsvDateFormat = csvTimeFormat;
                                 return channels;
+                            }
                         }
 
                         if (ext.Equals(Matlab.Extension, StringComparison.OrdinalIgnoreCase))
                             return BuildChannels().ToMatlab;
                         else if (ext.Equals(DoubleDataCollection.Extension, StringComparison.OrdinalIgnoreCase))
+                        {
+                            bool FullDateTime = outputFormat.Contains("_FullDateTime");
+                            outputFormat = outputFormat.Replace("_FullDateTime", "");
+
                             if (outputFormat.Equals("InfluxDB", StringComparison.OrdinalIgnoreCase))
-                                return BuildChannels().ToInfluxDBCSV;
+                                return BuildChannels(FullDateTime ? TimeFormatType.DateTime : TimeFormatType.Seconds).ToInfluxDBCSV;
+                            else if (outputFormat.Equals("Regional", StringComparison.OrdinalIgnoreCase))
+                                return BuildChannels(FullDateTime ? TimeFormatType.DateTime : TimeFormatType.Seconds).ToSV;
                             else
-                                return BuildChannels().ToCSV;
+                                return BuildChannels(FullDateTime ? TimeFormatType.DateTime : TimeFormatType.Seconds).ToCSV;
+                        }
                         return null;
                     }
 
@@ -413,7 +434,7 @@ namespace Influx.Shared.Helpers
                         return rxd.ToRXData(outputStream);
                     else if (ext.Equals(XmlHandler.Extension, StringComparison.OrdinalIgnoreCase))
                         throw new Exception("Not implemented!");
-                        //return rxd.ToXML(outputPath);
+                    //return rxd.ToXML(outputPath);
                     else if (ext.Equals(MDF.Extension, StringComparison.OrdinalIgnoreCase))
                         throw new Exception("Not implemented!");
                     //return rxd.ToMF4(outputPath, settings.SignalsDatabase, ProgressCallback);
@@ -435,9 +456,9 @@ namespace Influx.Shared.Helpers
 
                 if (channels != null || rxd != null)
                 {
-                    Func<Stream, Action<object>, bool> GetChannelConverter()
+                     Func<Stream, Action<object>, bool> GetChannelConverter()
                     {
-                        DoubleDataCollection BuildChannels()
+                        DoubleDataCollection BuildChannels(TimeFormatType csvTimeFormat = TimeFormatType.Seconds)
                         {
                             channels ??= rxd.ToDoubleData(settings);
                             if (channels is null || channels.Count == 0)
@@ -449,10 +470,17 @@ namespace Influx.Shared.Helpers
                         if (ext.Equals(Matlab.Extension, StringComparison.OrdinalIgnoreCase))
                             return BuildChannels().ToMatlab;
                         else if (ext.Equals(DoubleDataCollection.Extension, StringComparison.OrdinalIgnoreCase))
+                        {
+                            bool FullDateTime = outputFormat.Contains("_FullDateTime");
+                            outputFormat = outputFormat.Replace("_FullDateTime", "");
+
                             if (outputFormat.Equals("InfluxDB", StringComparison.OrdinalIgnoreCase))
-                                return BuildChannels().ToInfluxDBCSV;
+                                return BuildChannels(FullDateTime ? TimeFormatType.DateTime : TimeFormatType.Seconds).ToInfluxDBCSV;
+                            else if (outputFormat.Equals("Regional", StringComparison.OrdinalIgnoreCase))
+                                return BuildChannels(FullDateTime ? TimeFormatType.DateTime : TimeFormatType.Seconds).ToSV;
                             else
                                 return BuildChannels().ToCSV;
+                        }
                         return null;
                     }
 

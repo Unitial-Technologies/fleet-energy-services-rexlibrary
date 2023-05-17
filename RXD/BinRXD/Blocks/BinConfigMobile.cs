@@ -20,6 +20,8 @@ namespace RXD.Blocks
             PIN,
             GetRealTimeFromMobile,
             NoCommunicationRestartTimeOut,
+          //  NameSize,
+          //  Name,
         }
 
         #region Do not touch these
@@ -47,6 +49,8 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.PIN, typeof(string), BinProp.PinSize);
                 data.AddProperty(BinProp.GetRealTimeFromMobile, typeof(bool));
                 data.AddProperty(BinProp.NoCommunicationRestartTimeOut, typeof(UInt32));
+               // data.AddProperty(BinProp.NameSize, typeof(byte));
+               // data.AddProperty(BinProp.Name, typeof(string), BinProp.NameSize);
             });
         }
     }

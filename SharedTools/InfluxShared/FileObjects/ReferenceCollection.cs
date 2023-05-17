@@ -39,15 +39,31 @@ namespace InfluxShared.FileObjects
         public static bool operator !=(ReferenceLdfChannel item1, ReferenceLdfChannel item2) => !(item1 == item2);
     }
 
+    public class ReferenceA2LChannel : ReferenceChannel
+    {
+        public UInt32 Address { get; set; }
+
+        public string SignalName { get; set; }
+
+        public static bool operator ==(ReferenceA2LChannel item1, ReferenceA2LChannel item2) =>
+            item1.BusChannelIndex == item2.BusChannelIndex &&
+            item1.FileName == item2.FileName &&
+            item1.Address == item2.Address &&
+            item1.SignalName == item2.SignalName;
+        public static bool operator !=(ReferenceA2LChannel item1, ReferenceA2LChannel item2) => !(item1 == item2);
+    }
+
     public class ExportCollections
     {
         public ExportDbcCollection dbcCollection;
         public ExportLdfCollection ldfCollection;
+        public ExportA2LCollection a2lCollection;
 
         public ExportCollections()
         {
             dbcCollection = new ExportDbcCollection();
             ldfCollection = new ExportLdfCollection();
+            a2lCollection = new ExportA2LCollection();
         }
     }
 
@@ -98,8 +114,19 @@ namespace InfluxShared.FileObjects
                     var sig = msg.Items.FirstOrDefault(s => s.Name == (channel as ReferenceLdfChannel).SignalName);
                     if (sig is null)
                         break;
-                    
+
                     config.ldfCollection.AddMessage(channel.BusChannelIndex, msg).AddSignal(sig);
+                }
+                else if (channel is ReferenceA2LChannel)
+                {
+                    var a2l = ObjLibrary.A2LFiles.FirstOrDefault(d => d.FileNameSerialized == channel.FileName);
+                    if (a2l is null)
+                        continue;
+                    var msg = a2l.Items.FirstOrDefault(m => m.Address == (channel as ReferenceA2LChannel).Address);
+                    if (msg is null)
+                        break;
+
+                    config.a2lCollection.AddItem(channel.BusChannelIndex, msg);
                 }
 
             return config;
@@ -133,6 +160,20 @@ namespace InfluxShared.FileObjects
             return ldflist;
         }
 
+        public List<A2L> GetAssignedA2L()
+        {
+            var a2llist = new List<A2L>();
+            foreach (var channel in this.OfType<ReferenceA2LChannel>())
+            {
+                var a2l = ObjLibrary.A2LFiles.FirstOrDefault(d => d.FileNameSerialized == channel.FileName);
+                if (a2l is null)
+                    continue;
+                if (!a2llist.Contains(a2l))
+                    a2llist.Add(a2l);
+            }
+            return a2llist;
+        }
+
         public bool IsInUse(object obj)
         {
             if (obj is DBC)
@@ -145,6 +186,12 @@ namespace InfluxShared.FileObjects
             {
                 foreach (var item in this)
                     if (item.FileName == (obj as LDF).FileNameSerialized)
+                        return true;
+            }
+            else if (obj is A2L)
+            {
+                foreach (var item in this)
+                    if (item.FileName == (obj as A2L).FileNameSerialized)
                         return true;
             }
 
