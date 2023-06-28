@@ -317,7 +317,7 @@ namespace InfluxShared.FileObjects
                     {
                         stream.WriteLine(
                             TimestampToString(Values[0]) + ", " +
-                            string.Join(",", Values.Select(x => x.ToString(ci)).ToArray(), 1, Values.Length - 1).Replace("NaN", ""));
+                            string.Join(",", Values.Select(x => x.ToString("0.################", ci)).ToArray(), 1, Values.Length - 1).Replace("NaN", ""));
 
                         Values = GetValues();
                         ProgressCallback?.Invoke((int)(ReadingProgress * 100));

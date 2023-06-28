@@ -44,6 +44,8 @@ namespace RXD.Blocks
             AutomaticFirmwareUpdate, 
             EncryptPass,
             UploadResume,
+            NameSize,
+            Name
         }
 
         #region Do not touch these
@@ -86,6 +88,12 @@ namespace RXD.Blocks
             {
                 Versions[2].DynamicInvoke();
                 data.AddProperty(BinProp.UploadResume, typeof(bool), true);
+            });
+            Versions[4] = new Action(() =>
+            {
+                Versions[3].DynamicInvoke();
+                data.AddProperty(BinProp.NameSize, typeof(byte));
+                data.AddProperty(BinProp.Name, typeof(string), BinProp.NameSize);
             });
         }
     }

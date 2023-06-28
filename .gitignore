@@ -374,3 +374,8 @@ dir_to_ignore/TCComm
 /WinFormsApp1
 /RXD/BinRXD/IMG_20200305_114632.jpg
 /RXD/BinRXD/schema.jpg
+/SharedTools/InfluxShared/FileObjects/A2L.cs
+/SharedTools/InfluxShared/FileObjects/A2L.cs
+/SharedTools/InfluxShared/FileObjects/A2LItem.cs
+/SharedTools/InfluxShared/FileObjects/A2LOdt.cs
+/SharedTools/InfluxShared/FileObjects/A2LSettings.cs

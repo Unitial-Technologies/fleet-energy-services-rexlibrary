@@ -41,7 +41,7 @@ namespace RXD.Blocks
 
         internal override string GetName => "Digital " + this[BinDigitalIn.BinProp.PhysicalNumber].ToString();
         internal override ChannelDescriptor GetDataDescriptor => new ChannelDescriptor()
-        { StartBit = 0, BitCount = 8, isIntel = true, HexType = typeof(UInt64), Factor = 1, Offset = 0, Name = GetName, Units = GetUnits };
+        { StartBit = 0, BitCount = 8, isIntel = true, HexType = typeof(UInt64), conversionType = ConversionType.None, Name = GetName, Units = GetUnits };
 
         internal override void SetupVersions()
         {

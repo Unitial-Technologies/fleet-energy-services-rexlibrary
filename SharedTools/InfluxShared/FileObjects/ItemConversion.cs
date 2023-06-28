@@ -1,10 +1,19 @@
-﻿using System;
+﻿using InfluxShared.Helpers;
+using System;
 using System.Collections.Generic;
 
 namespace InfluxShared.FileObjects
 {
-    public enum ConversionType { Formula, TableNumeric, TableVerbal, FormulaAndTableNumeric, FormulaAndTableVerbal }
-
+    [Flags]
+    public enum ConversionType : byte
+    {
+        None = 0,
+        Formula = 1 << 0,
+        TableNumeric = 1 << 1,
+        TableVerbal = 1 << 2,
+        FormulaAndTableNumeric = Formula | TableNumeric,
+        FormulaAndTableVerbal = Formula | TableVerbal,
+    }
 
     public class ItemConversion
     {
@@ -14,7 +23,8 @@ namespace InfluxShared.FileObjects
         }
 
         private ConversionType type { get; set; }
-        public ConversionType Type {
+        public ConversionType Type
+        {
             get => type;
             set
             {
@@ -34,7 +44,8 @@ namespace InfluxShared.FileObjects
                     if (TableVerbal is null)
                         TableVerbal = new TableVerbalConversion();
                 }
-            } }
+            }
+        }
         public FormulaConversion Formula { get; set; }
         public TableNumericConversion TableNumeric { get; set; }
         public TableVerbalConversion TableVerbal { get; set; }
@@ -86,14 +97,25 @@ namespace InfluxShared.FileObjects
         }
     }
 
-    public class TableNumericConversion 
+    public class TableNumericConversion : SortedList<double, double>
     {
-        public int Count;
-        public Dictionary<double, double> Pairs;
-
-        public TableNumericConversion()
+        public double Interpolate(double x)
         {
-            Pairs = new Dictionary<double, double>();
+            if (Count == 0) 
+                return double.NaN;
+
+            int idx = IndexOfKey(x);
+            if (idx > 0)
+                return Values[idx];
+
+            if (x < Keys[0])
+                idx = 1;
+            else if (x > Keys[Count - 1])
+                idx = Count - 1;
+            else
+                idx = Keys.FindFirstIndexGreaterThanOrEqualTo(x);
+
+            return Values[idx - 1] + (x - Keys[idx - 1]) * (Values[idx] - Values[idx - 1]) / (Keys[idx] - Keys[idx - 1]);
         }
     }
 

@@ -88,6 +88,7 @@ namespace AWSLambdaFileConvert.ExportFormats
 
             try
             {
+                Context?.Logger.LogInformation($"Request is:{request}");
                 WriteRecordsResponse response = await writeClient.WriteRecordsAsync(request);
                 Context?.Logger.LogInformation($"Write records status code: {response.HttpStatusCode.ToString()}");
             }
@@ -130,19 +131,21 @@ namespace AWSLambdaFileConvert.ExportFormats
                     new Dimension { Name = "device_id", Value = device_id }
                 };
                 long timeStamp = snapshot["RTC_UNIX"] * 1000;
-                Context?.Logger.LogInformation("Created Dimension");
+                Context?.Logger.LogInformation($"Created Dimension, writing to {settings.table_name}");
                 foreach (var signal in snapshot)
                 {
                     if (signal.Key != "RTC_UNIX")
                     {
-                        writeRecordsRequest.Records.Add(new Record
+                        Record record = new Record
                         {
                             Dimensions = dimensions,
                             MeasureName = signal.Key,
                             MeasureValue = signal.Value.ToString(),
                             MeasureValueType = MeasureValueType.DOUBLE,
                             Time = timeStamp.ToString()
-                        }); ;
+                        };
+                        writeRecordsRequest.Records.Add(record); ;
+                        //Context?.Logger.LogInformation($"Record: {JsonConvert.SerializeObject(record)}"); 
                     }
                 }
                 

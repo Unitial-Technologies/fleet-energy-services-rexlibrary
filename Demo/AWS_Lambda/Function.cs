@@ -424,7 +424,7 @@ public class Function
         string json;
         using (StreamReader reader = new(jsonStream))
             json = reader.ReadToEnd();
-        TimeStreamHelper.atsSettings atsSettings = ConfigJson.AmazonTimestream.ToObject<TimeStreamHelper.atsSettings>();
+        TimeStreamHelper.atsSettings atsSettings = ConfigJson.Snapshot.ToObject<TimeStreamHelper.atsSettings>();
         if (atsSettings.db_name == "default")
             atsSettings.db_name = bucket;
         if (atsSettings.table_name == "default")

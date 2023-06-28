@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+
 
 namespace InfluxShared.FileObjects
 {
@@ -27,8 +29,9 @@ namespace InfluxShared.FileObjects
         public DBCValueType ValueType { get; set; }
         public bool Log { get; set; }
         public override string ToString() => Name;
-        public double Factor => Conversion.Formula.CoeffB;
-        public double Offset => Conversion.Formula.CoeffC;
+        public double Factor => Conversion.Type.HasFlag(ConversionType.Formula) ? Conversion.Formula.CoeffB : 1;
+        public double Offset => Conversion.Type.HasFlag(ConversionType.Formula) ? Conversion.Formula.CoeffC : 0;
+        public TableNumericConversion Table => Conversion.Type.HasFlag(ConversionType.TableNumeric) ? Conversion.TableNumeric : null;
 
         public static bool operator ==(DbcItem item1, DbcItem item2) =>
             item1.StartBit == item2.StartBit &&
@@ -52,8 +55,10 @@ namespace InfluxShared.FileObjects
             BitCount = BitCount,
             isIntel = ByteOrder == DBCByteOrder.Intel,
             HexType = BinaryData.BinaryTypes[(int)ValueType],
+            conversionType = Conversion.Type,
             Factor = Factor,
             Offset = Offset,
+            Table = Table,
             Name = Name,
             Units = Units
         };
@@ -134,6 +139,9 @@ namespace InfluxShared.FileObjects
         public byte BusChannel { get; set; }
         public DbcMessage Message { get; set; }
         public List<DbcItem> Signals { get; set; }
+        public DbcItem multiplexor = null;
+        // Multiplexor map is dictionary with pair - mode value and list of signal indexes
+        public Dictionary<UInt16, List<UInt16>> multiplexorMap = null;
 
         public static bool operator ==(ExportDbcMessage item1, ExportDbcMessage item2) => item1.BusChannel == item2.BusChannel && item1.Message == item2.Message;
         public static bool operator !=(ExportDbcMessage item1, ExportDbcMessage item2) => !(item1 == item2);
@@ -144,10 +152,47 @@ namespace InfluxShared.FileObjects
             else
                 return false;
         }
+
         public void AddSignal(DbcItem Signal)
         {
             Signals.Add(Signal);
+            multiplexor = GetMode();
         }
+
+        public DbcItem GetMode()
+        {
+            if (Signals[0].Type == DBCSignalType.Mode)
+                return Signals[0];
+            else
+            {
+                DbcItem mode = Signals.FirstOrDefault(s => s.Type == DBCSignalType.Mode);
+                if (mode is not null)
+                {
+                    Signals.Remove(mode);
+                    Signals.Insert(0, mode);
+
+                    multiplexorMap =
+                        Signals.Where(sg => sg.Type == DBCSignalType.ModeDependent).
+                        GroupBy(md => (UInt16)md.Mode,
+                        (k, c) => new { ModeValue = (UInt16)k, Indexes = c.Select(cs => (UInt16)Signals.IndexOf(cs)).ToList() }).
+                        ToDictionary(d => d.ModeValue, d => d.Indexes);
+                }
+                return mode;
+            }
+        }
+
+        public UInt16 FindMultiplexorIndex(DbcItem signal)
+        {
+            var keys = multiplexorMap.Where(pair => pair.Value.Contains((ushort)Signals.IndexOf(signal))).
+                Select(pair => pair.Key);
+
+            if (keys.Count() > 0)
+                return (UInt16)multiplexorMap.Keys.ToList().IndexOf(keys.First());
+            else
+                return UInt16.MaxValue;
+        }
+
+        public UInt32 CalcInvalidationBitCount => (uint)(multiplexorMap is null ? 0 : (multiplexorMap.Count() + 7) >> 3);
     }
 
     public class ExportDbcCollection : List<ExportDbcMessage>

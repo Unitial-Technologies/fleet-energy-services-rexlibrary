@@ -40,6 +40,7 @@ namespace InfluxShared.FileObjects
             BitCount = BitCount,
             isIntel = true,
             HexType =  typeof(UInt64),
+            conversionType = ConversionType.Formula,
             Factor = Factor,
             Offset = Offset,
             Name = Name,

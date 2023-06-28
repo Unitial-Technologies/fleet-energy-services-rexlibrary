@@ -58,6 +58,7 @@ namespace RXD.Blocks
         { 
             StartBit = this[BinProp.StartBit], BitCount = this[BinProp.BitCount], 
             isIntel = this[BinProp.Endian] == SignalByteOrder.INTEL, HexType = BinaryData.BinaryTypes[(int)this[BinProp.SignalType]], 
+            conversionType = ConversionType.Formula,
             Factor = this[BinProp.ParA], Offset = this[BinProp.ParB], 
             Name = GetName, Units = GetUnits 
         };

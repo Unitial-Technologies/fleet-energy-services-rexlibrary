@@ -84,8 +84,7 @@ namespace RXD.Blocks
             BitCount = (ushort)(8 *Marshal.SizeOf(GnssType[this[BinGNSSMessage.BinProp.Type]] as Type)),
             isIntel = true,
             HexType = GnssType[this[BinGNSSMessage.BinProp.Type]],
-            Factor = 1,
-            Offset = 0,
+            conversionType = ConversionType.None,
             Name = GetName,
             Units = GetUnits
         };

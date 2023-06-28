@@ -114,13 +114,14 @@ namespace InfluxShared.FileObjects
             //DataStream.Flush();
         }
 
-        public void WriteBinaryData(double Timestamp, byte[] BinaryArray)
+        public double WriteBinaryData(double Timestamp, byte[] BinaryArray)
         {
             if (!BinaryHelper.ExtractHex(BinaryArray, out BinaryData.HexStruct hex))
-                return;
+                return double.NaN;
 
             double DoubleValue = BinaryHelper.CalcValue(ref hex);
             WriteData(Timestamp, DoubleValue);
+            return DoubleValue;
         }
 
         public void Copy(Stream output, Int64[] outOffsets)

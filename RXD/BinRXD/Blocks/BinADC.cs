@@ -29,7 +29,7 @@ namespace RXD.Blocks
         internal override string GetName => "ADC " + this[BinADC.BinProp.PhysicalNumber].ToString();
         internal override string GetUnits => "Volt";
         internal override ChannelDescriptor GetDataDescriptor => new ChannelDescriptor()
-        { StartBit = 0, BitCount = 32, isIntel = true, HexType = typeof(Single), Factor = 1, Offset = 0, Name = GetName, Units = GetUnits };
+        { StartBit = 0, BitCount = 32, isIntel = true, HexType = typeof(Single), conversionType = ConversionType.None, Name = GetName, Units = GetUnits };
 
         internal override void SetupVersions()
         {

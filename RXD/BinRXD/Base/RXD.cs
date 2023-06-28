@@ -382,11 +382,6 @@ namespace RXD.Base
             }
         }
 
-        /*public bool ToMF4(string outputfn, ExportCollections frameSignals = null, Action<object> ProgressCallback = null)
-        {
-
-        }*/
-
         public bool ToMF4(string outputfn,  ExportCollections frameSignals = null, Action<object> ProgressCallback = null)
         {
             bool FindMessageFrameID(RecBase rec, out UInt16 GroupID, out byte DLC)
@@ -576,14 +571,14 @@ namespace RXD.Base
             UInt64 LastTimestamp = 0;
             UInt64 TimeOffset = 0;
 
-            void WriteData(DoubleData dd, UInt64 Timestamp, byte[] BinaryArray)
+            double WriteData(DoubleData dd, UInt64 Timestamp, byte[] BinaryArray)
             {
                 if (Timestamp < LastTimestamp)
                     TimeOffset += 0x100000000;
                 LastTimestamp = Timestamp;
                 Timestamp += TimeOffset;
 
-                dd.WriteBinaryData((Timestamp - FileTimestamp) * TimestampCoeff, BinaryArray);
+                return dd.WriteBinaryData((Timestamp - FileTimestamp) * TimestampCoeff, BinaryArray);
             }
 
             try
@@ -611,12 +606,21 @@ namespace RXD.Base
                                         if (FindMessageFrameID(canrec, out int id))
                                         {
                                             ExportDbcMessage busMsg = settings.SignalsDatabase.dbcCollection[id];
-                                            byte SA = 0xFF;
-                                            if (busMsg.Message.MsgType == DBCMessageType.J1939PG)
-                                                SA = (byte)canrec.data.CanID.Source;
+                                            byte SA = (byte)((busMsg.Message.MsgType == DBCMessageType.J1939PG) ? canrec.data.CanID.Source : 0xFF);
+
+                                            var mode = busMsg.GetMode();
+                                            double modeval = double.NaN;
+                                            double lastval = double.NaN;
                                             for (int i = 0; i < busMsg.Signals.Count; i++)
-                                                WriteData(ddata.Object(busMsg.Signals[i], (1u << 30) | ((uint)i << 16) | (uint)id, SA),
-                                                    canrec.data.Timestamp, rec.VariableData);
+                                            {
+                                                var sig = busMsg.Signals[i];
+                                                var obj = ddata.Object(sig, (1u << 30) | ((uint)i << 16) | (uint)id, SA);
+
+                                                if (i == 1 && mode is not null)
+                                                    modeval = lastval;
+                                                if ((sig.Type == DBCSignalType.ModeDependent && sig.Mode == modeval) || sig.Type != DBCSignalType.ModeDependent)
+                                                    lastval = WriteData(obj, canrec.data.Timestamp, rec.VariableData);
+                                            }
                                         }
                                     break;
                                 case RecordType.CanError:

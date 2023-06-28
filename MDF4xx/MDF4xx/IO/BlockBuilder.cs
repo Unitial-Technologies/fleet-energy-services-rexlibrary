@@ -1,4 +1,5 @@
 ﻿using InfluxShared.FileObjects;
+using InfluxShared.Helpers;
 using MDF4xx.Blocks;
 using MDF4xx.Frames;
 using System;
@@ -372,6 +373,20 @@ namespace MDF4xx.IO
             return cc;
         }
 
+        internal CCBlock BuildCCTabular(CNBlock cn, double[] parameters)
+        {
+            CCBlock cc = new CCBlock();
+            cc.data.cc_type = Blocks.ConversionType.tblValueToValueInt;
+            cc.cc_val_length = (ushort)parameters.Length;
+            for (int i = 0; i < parameters.Length; i++)
+                cc.cc_val[i].AsDouble = parameters[i];
+            cc.SetWriteFileLink(ref lastlink);
+            collection.Add(cc);
+            cn.links.SetObject(CNLinks.cn_cc_conversion, cc);
+
+            return cc;
+        }
+
         internal CNDataType ConvertType(DbcItem signal)
         {
             switch (signal.ValueType)
@@ -410,9 +425,17 @@ namespace MDF4xx.IO
                                 conversion.Formula.CoeffF
                         }
                     );
-                case InfluxShared.FileObjects.ConversionType.TableNumeric: return null;
+                case InfluxShared.FileObjects.ConversionType.TableNumeric:
+                    return BuildCCTabular(
+                        cn,
+                        conversion.TableNumeric.ToArray()
+                    );
                 case InfluxShared.FileObjects.ConversionType.TableVerbal: return null;
-                case InfluxShared.FileObjects.ConversionType.FormulaAndTableNumeric: return null;
+                case InfluxShared.FileObjects.ConversionType.FormulaAndTableNumeric:
+                    return BuildCCTabular(
+                        cn,
+                        conversion.TableNumeric.ApplyFxToArray(conversion.Formula.CoeffB, conversion.Formula.CoeffC)
+                    );
                 case InfluxShared.FileObjects.ConversionType.FormulaAndTableVerbal: return null;
                 default: return null;
             }
@@ -421,57 +444,59 @@ namespace MDF4xx.IO
         internal void BuildFrameSignalGroups(DGBlock dg, ExportCollections exSignals)
         {
             UInt32 groupid = 0;
-            foreach (var msg in exSignals.dbcCollection)
-            {
-                while (collection.Any(g => g.Value is CGBlock && (g.Value as CGBlock).data.cg_record_id == groupid))
-                    groupid++;
-                msg.uniqueid = groupid;
-
-                CGBlock cg = BuildCG(dg, "CAN" + msg.BusChannel.ToString() + "." + msg.Message.Name, groupid);
-                //cg.FlagBusEvent = true;
-                CNBlock cnTime = BuildTimeChannel(cg);
-                CNBlock cn;
-                foreach (var sig in msg.Signals)
+            if (exSignals.dbcCollection is not null)
+                foreach (var msg in exSignals.dbcCollection)
                 {
-                    cg.AppendCN(cn = BuildCN(
-                        sig.Name,
-                        ConvertType(sig),
-                        cnTime.LastByteOffset + (UInt32)(sig.StartBit / 8),
-                        (byte)((sig.ByteOrder == DBCByteOrder.Intel) ? sig.StartBit % 8 : (65 - sig.BitCount + sig.StartBit) % 8),
-                        sig.BitCount,
-                        0
-                    ));
-                    if (sig.Conversion != null)
-                        BuildConvertion(cn, sig.Conversion);
+                    while (collection.Any(g => g.Value is CGBlock && (g.Value as CGBlock).data.cg_record_id == groupid))
+                        groupid++;
+                    msg.uniqueid = groupid;
+
+                    CGBlock cg = BuildCG(dg, "CAN" + msg.BusChannel.ToString() + "." + msg.Message.Name, groupid);
+                    //cg.FlagBusEvent = true;
+                    CNBlock cnTime = BuildTimeChannel(cg);
+                    CNBlock cn;
+                    foreach (var sig in msg.Signals)
+                    {
+                        cg.AppendCN(cn = BuildCN(
+                            sig.Name,
+                            ConvertType(sig),
+                            cnTime.LastByteOffset + (UInt32)(sig.StartBit / 8),
+                            (byte)((sig.ByteOrder == DBCByteOrder.Intel) ? sig.StartBit % 8 : (65 - sig.BitCount + sig.StartBit) % 8),
+                            sig.BitCount,
+                            0
+                        ));
+                        if (sig.Conversion != null)
+                            BuildConvertion(cn, sig.Conversion);
+                    }
+                    cg.data.cg_size.cg_data_bytes += msg.Message.DLC;
                 }
-                cg.data.cg_size.cg_data_bytes += msg.Message.DLC;
-            }
 
-            foreach (var msg in exSignals.ldfCollection)
-            {
-                while (collection.Any(g => g.Value is CGBlock && (g.Value as CGBlock).data.cg_record_id == groupid))
-                    groupid++;
-                msg.uniqueid = groupid;
-
-                CGBlock cg = BuildCG(dg, "LIN" + msg.BusChannel.ToString() + "." + msg.Message.Name, groupid);
-                //cg.FlagBusEvent = true;
-                CNBlock cnTime = BuildTimeChannel(cg);
-                CNBlock cn;
-                foreach (var sig in msg.Signals)
+            if (exSignals.ldfCollection is not null)
+                foreach (var msg in exSignals.ldfCollection)
                 {
-                    cg.AppendCN(cn = BuildCN(
-                        sig.Name,
-                        CNDataType.IntelUnsigned,
-                        cnTime.LastByteOffset + (UInt32)(sig.StartBit / 8),
-                        (byte)((sig.ByteOrder == DBCByteOrder.Intel) ? sig.StartBit % 8 : (65 - sig.BitCount + sig.StartBit) % 8),
-                        sig.BitCount,
-                        0
-                    ));
-                    if (sig.Conversion != null)
-                        BuildConvertion(cn, sig.Conversion);
+                    while (collection.Any(g => g.Value is CGBlock && (g.Value as CGBlock).data.cg_record_id == groupid))
+                        groupid++;
+                    msg.uniqueid = groupid;
+
+                    CGBlock cg = BuildCG(dg, "LIN" + msg.BusChannel.ToString() + "." + msg.Message.Name, groupid);
+                    //cg.FlagBusEvent = true;
+                    CNBlock cnTime = BuildTimeChannel(cg);
+                    CNBlock cn;
+                    foreach (var sig in msg.Signals)
+                    {
+                        cg.AppendCN(cn = BuildCN(
+                            sig.Name,
+                            CNDataType.IntelUnsigned,
+                            cnTime.LastByteOffset + (UInt32)(sig.StartBit / 8),
+                            (byte)((sig.ByteOrder == DBCByteOrder.Intel) ? sig.StartBit % 8 : (65 - sig.BitCount + sig.StartBit) % 8),
+                            sig.BitCount,
+                            0
+                        ));
+                        if (sig.Conversion != null)
+                            BuildConvertion(cn, sig.Conversion);
+                    }
+                    cg.data.cg_size.cg_data_bytes += msg.Message.DLC;
                 }
-                cg.data.cg_size.cg_data_bytes += msg.Message.DLC;
-            }
         }
 
         CNDataType ConvertType(ChannelDescriptor sig)
@@ -503,7 +528,18 @@ namespace MDF4xx.IO
                         0
                     ));
 
-                    BuildCCLinear(cn, new double[] { sig.Value.Offset, sig.Value.Factor });
+                    switch (sig.Value.conversionType)
+                    {
+                        case InfluxShared.FileObjects.ConversionType.Formula:
+                            BuildCCLinear(cn, new double[] { sig.Value.Offset, sig.Value.Factor });
+                            break;
+                        case InfluxShared.FileObjects.ConversionType.TableNumeric:
+                            BuildCCTabular(cn, sig.Value.Table.ToArray());
+                            break;
+                        case InfluxShared.FileObjects.ConversionType.FormulaAndTableNumeric:
+                            BuildCCTabular(cn, sig.Value.Table.ApplyFxToArray(sig.Value.Offset, sig.Value.Factor));
+                            break;
+                    }
 
                     cg.data.cg_size.cg_data_bytes += cn.LastByteOffset - cn.data.cn_byte_offset;
                 }

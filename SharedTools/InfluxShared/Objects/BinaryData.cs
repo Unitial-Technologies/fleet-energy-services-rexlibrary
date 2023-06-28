@@ -1,4 +1,5 @@
-﻿using System;
+﻿using InfluxShared.FileObjects;
+using System;
 using System.Runtime.InteropServices;
 
 namespace InfluxShared.Objects
@@ -29,6 +30,7 @@ namespace InfluxShared.Objects
         public readonly Type HexType;
         public readonly double Factor;
         public readonly double Offset;
+        public readonly TableNumericConversion Table;
 
         // Precalculated variables
         readonly UInt16 byteOffset;
@@ -42,14 +44,12 @@ namespace InfluxShared.Objects
         public delegate double CalcValueMethod(ref HexStruct hex);
         public readonly CalcValueMethod CalcValue;
 
-        public BinaryData(UInt16 StartBit, UInt16 BitCount, bool isIntel, int DataTypeIndex, double Factor, double Offset)
+        public BinaryData(UInt16 StartBit, UInt16 BitCount, bool isIntel, int DataTypeIndex)
         {
             this.StartBit = StartBit;
             this.BitCount = BitCount;
             this.isIntel = isIntel;
             this.HexType = BinaryTypes[DataTypeIndex];
-            this.Factor = Factor;
-            this.Offset = Offset;
 
             // Calculate channel binary helpers
             byteOffset = (UInt16)(StartBit >> 3);
@@ -65,10 +65,52 @@ namespace InfluxShared.Objects
 
             switch (DataTypeIndex)
             {
-                case 0: CalcValue = CalcUnsignedValue; break;
-                case 1: CalcValue = CalcSignedValue; break;
-                case 2: CalcValue = CalcSingleValue; break;
-                case 3: CalcValue = CalcDoubleValue; break;
+                case 0: CalcValue = CalcEmptyUnsignedValue; break;
+                case 1: CalcValue = CalcEmptySignedValue; break;
+                case 2: CalcValue = CalcEmptySingleValue; break;
+                case 3: CalcValue = CalcEmptyDoubleValue; break;
+            }
+        }
+
+        public BinaryData(UInt16 StartBit, UInt16 BitCount, bool isIntel, int DataTypeIndex, double Factor, double Offset) : this(StartBit, BitCount, isIntel, DataTypeIndex)
+        {
+            this.Factor = Factor;
+            this.Offset = Offset;
+
+            switch (DataTypeIndex)
+            {
+                case 0: CalcValue = CalcFxUnsignedValue; break;
+                case 1: CalcValue = CalcFxSignedValue; break;
+                case 2: CalcValue = CalcFxSingleValue; break;
+                case 3: CalcValue = CalcFxDoubleValue; break;
+            }
+        }
+
+        public BinaryData(UInt16 StartBit, UInt16 BitCount, bool isIntel, int DataTypeIndex, TableNumericConversion Table) : this(StartBit, BitCount, isIntel, DataTypeIndex)
+        {
+            this.Table = Table;
+
+            switch (DataTypeIndex)
+            {
+                case 0: CalcValue = CalcTableUnsignedValue; break;
+                case 1: CalcValue = CalcTableSignedValue; break;
+                case 2: CalcValue = CalcTableSingleValue; break;
+                case 3: CalcValue = CalcTableDoubleValue; break;
+            }
+        }
+
+        public BinaryData(UInt16 StartBit, UInt16 BitCount, bool isIntel, int DataTypeIndex, double Factor, double Offset, TableNumericConversion Table) : this(StartBit, BitCount, isIntel, DataTypeIndex)
+        {
+            this.Factor = Factor;
+            this.Offset = Offset;
+            this.Table = Table;
+
+            switch (DataTypeIndex)
+            {
+                case 0: CalcValue = CalcTableFxUnsignedValue; break;
+                case 1: CalcValue = CalcTableFxSignedValue; break;
+                case 2: CalcValue = CalcTableFxSingleValue; break;
+                case 3: CalcValue = CalcTableFxDoubleValue; break;
             }
         }
 
@@ -111,10 +153,22 @@ namespace InfluxShared.Objects
             return true;
         }
 
-        double CalcUnsignedValue(ref HexStruct hex) => hex.Unsigned * Factor + Offset;
-        double CalcSignedValue(ref HexStruct hex) => hex.Signed * Factor + Offset;
-        double CalcSingleValue(ref HexStruct hex) => hex.Single * Factor + Offset;
-        double CalcDoubleValue(ref HexStruct hex) => hex.Double * Factor + Offset;
+        double CalcEmptyUnsignedValue(ref HexStruct hex) => hex.Unsigned;
+        double CalcEmptySignedValue(ref HexStruct hex) => hex.Signed;
+        double CalcEmptySingleValue(ref HexStruct hex) => hex.Single;
+        double CalcEmptyDoubleValue(ref HexStruct hex) => hex.Double;
+        double CalcFxUnsignedValue(ref HexStruct hex) => hex.Unsigned * Factor + Offset;
+        double CalcFxSignedValue(ref HexStruct hex) => hex.Signed * Factor + Offset;
+        double CalcFxSingleValue(ref HexStruct hex) => hex.Single * Factor + Offset;
+        double CalcFxDoubleValue(ref HexStruct hex) => hex.Double * Factor + Offset;
+        double CalcTableUnsignedValue(ref HexStruct hex) => Table.Interpolate(hex.Unsigned);
+        double CalcTableSignedValue(ref HexStruct hex) => Table.Interpolate(hex.Signed);
+        double CalcTableSingleValue(ref HexStruct hex) => Table.Interpolate(hex.Single);
+        double CalcTableDoubleValue(ref HexStruct hex) => Table.Interpolate(hex.Double);
+        double CalcTableFxUnsignedValue(ref HexStruct hex) => Table.Interpolate(CalcFxUnsignedValue(ref hex));
+        double CalcTableFxSignedValue(ref HexStruct hex) => Table.Interpolate(CalcFxSignedValue(ref hex));
+        double CalcTableFxSingleValue(ref HexStruct hex) => Table.Interpolate(CalcFxSingleValue(ref hex));
+        double CalcTableFxDoubleValue(ref HexStruct hex) => Table.Interpolate(CalcFxDoubleValue(ref hex));
 
     }
 }

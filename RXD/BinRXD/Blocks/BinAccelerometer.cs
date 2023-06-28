@@ -30,7 +30,7 @@ namespace RXD.Blocks
         internal override string GetName => $"Accelerometer {this[BinProp.Axis]}";
         internal override string GetUnits => "g";
         internal override ChannelDescriptor GetDataDescriptor => new ChannelDescriptor()
-        { StartBit = 0, BitCount = 32, isIntel = true, HexType = typeof(Single), Factor = 1, Offset = 0, Name = GetName, Units = GetUnits };
+        { StartBit = 0, BitCount = 32, isIntel = true, HexType = typeof(Single), conversionType = ConversionType.None, Name = GetName, Units = GetUnits };
 
         internal override void SetupVersions()
         {

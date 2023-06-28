@@ -104,5 +104,17 @@ namespace InfluxShared.Helpers
             return FileName;
         }
 
+        public static uint ConvertFromHex(this string hex)
+        {
+            try
+            {
+                return Convert.ToUInt32(hex, 16);
+            }
+            catch (Exception)
+            {
+                return 0;
+            }
+        }
+
     }
 }

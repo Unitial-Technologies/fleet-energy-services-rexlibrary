@@ -11,8 +11,8 @@ namespace InfluxShared.FileObjects
         public UInt16 BitCount { get; set; }
         public bool isIntel { get; set; }
         public Type HexType { get; set; }
-        public int TypeIndex 
-        { 
+        public int TypeIndex
+        {
             get
             {
                 if (HexType == typeof(uint) || HexType == typeof(UInt16) || HexType == typeof(UInt32) || HexType == typeof(UInt64))
@@ -23,9 +23,18 @@ namespace InfluxShared.FileObjects
                     return Array.IndexOf(BinaryData.BinaryTypes, HexType);
             }
         }
+        public ConversionType conversionType { get; set; }
         public double Factor { get; set; }
         public double Offset { get; set; }
+        public TableNumericConversion Table { get; set; }
 
-        public BinaryData CreateBinaryData() => new BinaryData(StartBit, BitCount, isIntel, TypeIndex, Factor, Offset);
+        public BinaryData CreateBinaryData() => conversionType switch
+        {
+            ConversionType.Formula => new BinaryData(StartBit, BitCount, isIntel, TypeIndex, Factor, Offset),
+            ConversionType.TableNumeric => new BinaryData(StartBit, BitCount, isIntel, TypeIndex, Table),
+            ConversionType.FormulaAndTableNumeric => new BinaryData(StartBit, BitCount, isIntel, TypeIndex, Factor, Offset, Table),
+            _ => new BinaryData(StartBit, BitCount, isIntel, TypeIndex),
+        };
+
     }
 }

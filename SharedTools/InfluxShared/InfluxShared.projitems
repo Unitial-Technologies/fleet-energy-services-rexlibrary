@@ -10,6 +10,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)FileObjects\A2L.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FileObjects\A2LItem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FileObjects\A2lOdt.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FileObjects\A2LSettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FileObjects\BasicItemInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FileObjects\ChannelDescriptor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FileObjects\BLF.cs" />
@@ -33,6 +36,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\FileStreamHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\Integers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\LinqHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\ListHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\MathHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\PathHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\ReflectionsHelper.cs" />
