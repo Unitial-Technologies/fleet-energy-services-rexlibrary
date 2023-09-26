@@ -379,3 +379,4 @@ dir_to_ignore/TCComm
 /SharedTools/InfluxShared/FileObjects/A2LItem.cs
 /SharedTools/InfluxShared/FileObjects/A2LOdt.cs
 /SharedTools/InfluxShared/FileObjects/A2LSettings.cs
+/WinFormsApp2
