@@ -1,6 +1,7 @@
 ﻿
 using DbcParserLib;
 using InfluxShared.FileObjects;
+using System.Collections.Generic;
 
 namespace DbcParserLib.Influx
 {
@@ -15,8 +16,8 @@ namespace DbcParserLib.Influx
                 msgI.CANID = msg.ID;
                 msgI.DLC = msg.DLC;
                 msgI.Comment = msg.Comment;
-                msgI.Name = msg.Name;
-                msgI.MsgType = DBCMessageType.Standard;
+                msgI.Name = msg.Name;                
+                msgI.MsgType = (DBCMessageType)(int)msg.Type;
                 msgI.Transmitter = msg.Transmitter;
                 
                 influxDBC.Messages.Add(msgI);
@@ -36,7 +37,7 @@ namespace DbcParserLib.Influx
                     sigI.Conversion.Formula.CoeffC = sig.Offset;
                     sigI.Conversion.Formula.CoeffF = 1;
                     sigI.Type = DBCSignalType.Standard;
-                    sigI.ValueType = sig.IsSigned == 0 ? DBCValueType.Signed : DBCValueType.Unsigned;
+                    sigI.ValueType = sig.IsSigned == 1 ? DBCValueType.Signed : DBCValueType.Unsigned;
                     sigI.ItemType = 0;                    
                     //sigI.Mode = sig.Multiplexing
 
@@ -47,17 +48,23 @@ namespace DbcParserLib.Influx
             return influxDBC;
         }
 
-        public static ExportDbcCollection LoadExportSignalsFromDBC(DBC dbc)
+        // Each dbc index in the list is for the corresponding CAN channel
+        // So list[0] is for channel 0, list[1] is for channel 1 etc.
+        public static ExportDbcCollection LoadExportSignalsFromDBC(List<DBC?> dbcList)
         {
             ExportDbcCollection signalsCollection = new ExportDbcCollection();
-            foreach (var msg in dbc.Messages)
+            for (byte i = 0; i < dbcList.Count; i++)
             {
-                for (byte i = 0; i < 4; i++)
+                DBC? dbc = dbcList[i];
+                if (dbc != null)
                 {
-                    var expmsg = signalsCollection.AddMessage(i, msg);
-                    foreach (var sig in msg.Items)
-                        expmsg.AddSignal(sig);
-                }                
+                    foreach (var msg in dbc.Messages)
+                    {
+                        var expmsg = signalsCollection.AddMessage(i, msg);
+                        foreach (var sig in msg.Items)
+                            expmsg.AddSignal(sig);
+                    }
+                }
             }
             return signalsCollection;
         }

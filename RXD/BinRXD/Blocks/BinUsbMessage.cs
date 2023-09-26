@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace RXD.Blocks
 {
@@ -44,6 +45,8 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.DefaultHex, typeof(byte[]), BinProp.DLC);
                 data.AddProperty(BinProp.InputUID, typeof(UInt16));
             });
+            AddInput(BinProp.InputUID.ToString());
+            AddOutput(BinProp.InterfaceUID.ToString());
         }
 
     }

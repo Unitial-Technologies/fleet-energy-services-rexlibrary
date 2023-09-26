@@ -8,16 +8,6 @@ using System.Runtime.InteropServices;
 
 namespace RXD.DataRecords
 {
-    public enum RecordType : byte
-    {
-        Unknown,
-        PreBuffer,
-        CanTrace,
-        CanError,
-        LinTrace,
-        MessageData,
-    }
-
     internal class RecBase
     {
         /// <summary>

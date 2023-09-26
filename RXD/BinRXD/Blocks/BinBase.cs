@@ -9,7 +9,7 @@ namespace RXD.Blocks
 {
     public abstract partial class BinBase
     {
-        public enum BlockSubType {None, MessageTrigger, MessageFilter, MessageLogAll, MessageJ1939Filter, MessageJ1939DM, MessageDBC};
+        public enum BlockSubType { None, MessageTrigger, MessageFilter, MessageLogAll, MessageJ1939Filter, MessageJ1939DM, MessageDBC };
 
         internal Dictionary<UInt16, Delegate> Versions = new Dictionary<ushort, Delegate>();
 
@@ -36,6 +36,16 @@ namespace RXD.Blocks
         internal virtual ChannelDescriptor GetDataDescriptor => null;
         internal UInt32 LowestTimestamp = 0;
         internal bool DataFound = false; // Used for validate detected lowest timestamp
+        internal virtual List<string> Inputs { get; set; } = new List<string>();
+        internal virtual List<string> Outputs { get; set; } = new List<string>();
+        public void AddInput(string prop)
+        {
+            Inputs.Add(prop);
+        }
+        public void AddOutput(string prop)
+        {
+            Outputs.Add(prop);
+        }        
 
         public BinBase(BinHeader hs = null)
         {

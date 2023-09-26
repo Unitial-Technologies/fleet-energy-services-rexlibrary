@@ -45,6 +45,10 @@ namespace RXD.Blocks
                 Versions[1].DynamicInvoke();
                 data.AddProperty(BinProp.ArithmeticAction, typeof(ArithmeticType));
             });
+
+            AddInput(BinProp.Input1UID.ToString());
+            AddInput(BinProp.Input2UID.ToString());
+            AddOutput("UID");
         }
 
     }

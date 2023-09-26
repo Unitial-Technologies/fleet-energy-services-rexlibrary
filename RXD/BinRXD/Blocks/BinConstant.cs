@@ -28,6 +28,7 @@ namespace RXD.Blocks
             {
                 data.AddProperty(BinProp.Value, typeof(Single));
             });
+            AddOutput("UID");
         }
     }
 }

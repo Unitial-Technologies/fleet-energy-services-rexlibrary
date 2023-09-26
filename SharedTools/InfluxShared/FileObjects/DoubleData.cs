@@ -19,6 +19,7 @@ namespace InfluxShared.FileObjects
         public UInt64 identifier = 0;
         public string ChannelName { get; set; }
         public string ChannelUnits { get; set; }
+        public string BusChannel { get; set; } = "";
 
         public UInt32 RecordCount = 0;
 

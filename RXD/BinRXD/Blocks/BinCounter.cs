@@ -34,6 +34,8 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.MaxValue, typeof(UInt32));
                 data.AddProperty(BinProp.InitialValue, typeof(UInt32));
             });
+
+            AddOutput("UID");
         }
     }
 }

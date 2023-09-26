@@ -14,6 +14,7 @@ namespace RXD.Blocks
             InputUID,
         }
 
+
         #region Do not touch these
         public BinDAQItem(BinHeader hs = null) : base(hs) { }
 
@@ -33,6 +34,9 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.Name, typeof(string), BinProp.NameSize);
                 data.AddProperty(BinProp.InputUID, typeof(UInt16));
             });
+
+            AddInput(BinProp.InputUID.ToString());
+            AddOutput("UID");
         }
 
     }

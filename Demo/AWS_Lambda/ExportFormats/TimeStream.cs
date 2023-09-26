@@ -17,7 +17,7 @@ namespace AWSLambdaFileConvert.ExportFormats
 
         public static ILambdaContext? Context { get; set; } //Used to write information to log filesS
 
-        public static async Task<bool> ToAwsTimeStream(this DoubleDataCollection ddc, atsSettings settings, string filename)
+        public static async Task<bool> ToAwsTimeStream(this DoubleDataCollection ddc, atsSettings settings, string filename, long correction)
         {
             var writeClient = new AmazonTimestreamWriteClient();
             var writeRecordsRequest = new WriteRecordsRequest
@@ -29,15 +29,8 @@ namespace AWSLambdaFileConvert.ExportFormats
 
             try
             {
-
-                List<Dimension> dimensions = new List<Dimension>
-                {
-                    new Dimension { Name = "device_id", Value = ddc.DisplayName },
-                    new Dimension { Name = "filename", Value = filename},
-                };
-
-                Context?.Logger.LogInformation("Created Dimension");
                 ddc.InitReading();
+
 
                 double[] Values = ddc.GetValues();
                 while (Values != null)
@@ -45,21 +38,29 @@ namespace AWSLambdaFileConvert.ExportFormats
                     for (int i = 1; i < Values.Length; i++)
                         if (!double.IsNaN(Values[i]))
                         {
+                            //long timeStamp = (long)Math.Truncate(((DateTime.Now.AddHours(-6).ToOADate() - 25569) * 86400 + Values[0]) * 1000); 
+                            long timeStamp = (long)Math.Truncate((((ddc.RealTime.ToOADate() - 25569) * 86400 + Values[0]) - correction) * 1000);
+                            //Context?.Logger.LogInformation($"Logger Timestamp is {(ddc.RealTime.ToOADate() - 25569) * 86400 + Values[0]}");
+                            //Context?.Logger.LogInformation($"Corrected timestamp is: {timeStamp}");
                             writeRecordsRequest.Records.Add(new Record
                             {
-                                Dimensions = dimensions,
+                                Dimensions = new List<Dimension>
+                                {
+                                    new Dimension { Name = "device_id", Value = ddc.DisplayName },
+                                    new Dimension { Name = "filename", Value = filename},
+                                    new Dimension { Name = "bus", Value = ddc[i - 1].BusChannel},
+                                },
                                 MeasureName = ddc[i - 1].ChannelName,
                                 MeasureValue = Values[i].ToString(),
                                 MeasureValueType = MeasureValueType.DOUBLE,
-                                Time = Math.Truncate(((ddc.RealTime.ToOADate() - 25569) * 86400 + Values[0]) * 1000).ToString()
+                                Time = timeStamp.ToString()
                             });
                             if (ddc[i - 1].ChannelName == "Engine_temperature")
                                 Context?.Logger.LogInformation($"Engine Temperature is: {Values[i]}");
                             if (writeRecordsRequest.Records.Count >= 90)
                             {
-                                Context?.Logger.LogInformation($"Writing {writeRecordsRequest.Records.Count} records");
-                                await writeClient.LocalWriteRecordsAsync(writeRecordsRequest);
-                                Context?.Logger.LogInformation($"Records {writeRecordsRequest.Records.Count} written");
+                                // Context?.Logger.LogInformation($"Writing {writeRecordsRequest.Records.Count} records");
+                                await writeClient.LocalWriteRecordsAsync(writeRecordsRequest);                               
                                 writeRecordsRequest.Records.Clear();
                             }
                         }
@@ -67,9 +68,9 @@ namespace AWSLambdaFileConvert.ExportFormats
                 }
                 if (writeRecordsRequest.Records.Count > 0)
                 {
-                    Context?.Logger.LogInformation($"Writing {writeRecordsRequest.Records.Count} records");
+                   // Context?.Logger.LogInformation($"Writing {writeRecordsRequest.Records.Count} records");
                     await writeClient.LocalWriteRecordsAsync(writeRecordsRequest);
-                    Context?.Logger.LogInformation($"Records {writeRecordsRequest.Records.Count} written");
+                  //  Context?.Logger.LogInformation($"Records {writeRecordsRequest.Records.Count} written");
                     writeRecordsRequest.Records.Clear();
                 }
 
@@ -84,7 +85,7 @@ namespace AWSLambdaFileConvert.ExportFormats
 
         private static async Task<bool> LocalWriteRecordsAsync(this AmazonTimestreamWriteClient writeClient, WriteRecordsRequest request)
         {
-            Context?.Logger.LogInformation("Writing records");
+           // Context?.Logger.LogInformation("Writing records");
 
             try
             {
@@ -131,6 +132,7 @@ namespace AWSLambdaFileConvert.ExportFormats
                     new Dimension { Name = "device_id", Value = device_id }
                 };
                 long timeStamp = snapshot["RTC_UNIX"] * 1000;
+                Context?.Logger.LogInformation($"Snapshot timestamp is: {(ulong)snapshot["RTC_UNIX"]}");
                 Context?.Logger.LogInformation($"Created Dimension, writing to {settings.table_name}");
                 foreach (var signal in snapshot)
                 {

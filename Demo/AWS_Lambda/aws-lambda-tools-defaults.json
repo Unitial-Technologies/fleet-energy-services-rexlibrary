@@ -6,7 +6,7 @@
         "dotnet lambda help",
         "All the command line options for the Lambda command can be specified in this file."
     ],
-    "profile"     : "petko",
+    "profile"     : "",
     "region"      : "eu-central-1",
     "configuration" : "Release",
     "function-runtime" : "dotnet6",
@@ -16,12 +16,13 @@
     "framework"            : "net6.0",
     "function-name"        : "FileConvert",
     "function-description" : "",
-    "package-type"         : "Zip",    
+    "package-type"         : "Zip",
     "function-architecture" : "x86_64",
     "function-subnets"      : "",
     "function-security-groups" : "",
     "tracing-mode"             : "PassThrough",
-    "environment-variables"    : "\"influxdb_token\"=\"dtG_NUtmMnavQ6qMYHCnqHJWfesN1-VgWV3b0e6mq7P2f4F80t20hHNeS-nbLANJvh6_pK5LIFWKhGJC_HxL7Q==\"",
-    "image-tag": "",
-    "function-url-enable" : true
+    "environment-variables"    : "\"influxdb_token\"=\"\"",
+    "image-tag"                : "",
+    "function-url-enable"      : true,
+    "function-role"            : "arn:aws:iam::101084225131:role/influx_lambda_role"
 }

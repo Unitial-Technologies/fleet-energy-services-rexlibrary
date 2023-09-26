@@ -52,6 +52,8 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.DigitalType, typeof(DigitalType));
                 data.AddProperty(BinProp.ActiveState, typeof(DigitalActiveState));
             });
+            
+            AddOutput("UID");
         }
     }
 }

@@ -49,7 +49,10 @@ namespace DbcParserLib.Parsers
             string[] records = sigCommentStr.SplitBySpace();
             if (records.Length > 3)
             {
-                builder.AddNodeComment(records[2].Trim(), string.Join(Helpers.Space, records.Skip(3)).Trim(' ', '"', ';'));
+                //builder.AddNodeComment(records[2].Trim(), string.Join(Helpers.Space, records.Skip(3)).Trim(' ', '"', ';'));
+                var node = builder.GetNode(records[2].Trim());
+                if (node != null) 
+                    node.Comment = string.Join(Helpers.Space, records.Skip(3)).Trim(' ', '"', ';');
             }
         }
 

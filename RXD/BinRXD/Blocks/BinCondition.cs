@@ -50,6 +50,11 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.InputConditionUID2, typeof(UInt16));
                 data.AddProperty(BinProp.OperatorCondition, typeof(ConditionType));
             });
+            AddInput(BinProp.Input1UID.ToString());
+            AddInput(BinProp.Input2UID.ToString());
+            AddInput(BinProp.InputConditionUID1.ToString());
+            AddInput(BinProp.InputConditionUID2.ToString());
+            AddOutput("UID");
         }
     }
 }

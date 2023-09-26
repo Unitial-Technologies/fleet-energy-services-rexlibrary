@@ -59,6 +59,9 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.WhenDeactive, typeof(LED_DisplayOption));
                 data.AddProperty(BinProp.WhenNotActive, typeof(LED_DisplayOption));
             });
+            AddInput(BinProp.InputUIDActive.ToString());
+            AddInput(BinProp.InputUIDDeactive.ToString());
+            AddOutput("UID");
         }
     }
 }

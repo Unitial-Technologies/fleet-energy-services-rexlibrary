@@ -37,6 +37,7 @@ namespace AWSLambdaFileConvert.ExportFormats
                 var ci = new CultureInfo("en-US", false);
 
                 ddc.InitReading();
+                Context?.Logger.LogInformation($"ddc count {ddc.Count}");
                 int partId = 1;
                 MemoryStream csvStream = new MemoryStream();
                 using (StreamWriter stream = new StreamWriter(csvStream, new UTF8Encoding(false), 1024, true))
@@ -86,7 +87,7 @@ namespace AWSLambdaFileConvert.ExportFormats
 
                         Values = ddc.GetValues();
                     }
-                    Context?.Logger.LogInformation($"Final upload initiation");
+                    Context?.Logger.LogInformation($"Final upload initiation. Length is:{csvStream.Length}");
                     if (csvStream.Length > 0)
                         await S3Upload();
 

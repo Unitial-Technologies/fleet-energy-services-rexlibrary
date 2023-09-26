@@ -107,6 +107,21 @@ namespace RXD.Base
             return (xsdType.Particle as XmlSchemaGroupBase).Items.OfType<XmlSchemaElement>().Where(x => x.Name == PropName).FirstOrDefault();
         }
 
+        public XmlSchemaAttribute xsdObjectAttribute(XmlSchemaComplexType xsdType, string PropName)
+        {
+            if (xsdType is null)
+                return null;
+
+            if (!xsdType.Particle.GetType().IsSubclassOf(typeof(XmlSchemaGroupBase)))
+                return null;
+
+            var attr = (xsdType.Particle as XmlSchemaGroupBase).Items.OfType<XmlSchemaAttribute>().Where(x => x.Name == PropName).FirstOrDefault();
+            if (attr is not null)
+                return attr;
+
+            return null;
+        }
+
         public void Save()
         {
             if (xmlFile != null)

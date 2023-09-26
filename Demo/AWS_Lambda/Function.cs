@@ -1,16 +1,20 @@
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
+using Amazon.Lambda.S3Events;
 using Amazon.S3;
 using Amazon.S3.Model;
 using AWSLambdaFileConvert;
 using AWSLambdaFileConvert.ExportFormats;
 using DbcParserLib;
 using DbcParserLib.Influx;
+using InfluxDB.Client.Api.Domain;
 using InfluxShared.FileObjects;
+using InfluxShared.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RXD.Base;
 using System.Net;
+using System.Net.Sockets;
 
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -188,7 +192,7 @@ public class Function
                 if (ConfigJson.ContainsKey("Snapshot") && ConfigJson.Snapshot.ContainsKey("enabled") && (ConfigJson.Snapshot.enabled == true))
                     convert |= ConversionType.Snapshot;
                 else
-                    Context.Logger.Log("No conversion settings enabled in Config.json");
+                    Context?.Logger.Log("No conversion settings enabled in Config.json");
             }
             else
             {
@@ -196,8 +200,7 @@ public class Function
             }
             FilePath = Path.GetDirectoryName(filename);
             FileName = filename.Replace("+", " ");
-            if (FilePath is null)
-                FilePath = "";
+            FilePath ??= "";
             LoggerDir = filename.Substring(0, filename.IndexOf('/'));
             Context?.Logger.LogInformation("Processing file : " + FileName);
             await this.S3Client.GetObjectMetadataAsync(bucket, FileName);
@@ -241,10 +244,10 @@ public class Function
         return await S3.GetStream(bucket, Path.Combine(LoggerDir, "ReXConfig.xsd"));
     }
 
-    public async Task<Stream> LoadDBC(string bucket)
+    public async Task<Stream> LoadDBC(string bucket, string dbcFilename)
     {
         //The dbc must be in the same folder as the rxd file
-        return await S3.GetStream(bucket, Path.Combine(LoggerDir, "ExportDBC.dbc"));
+        return await S3.GetStream(bucket, Path.Combine(LoggerDir, dbcFilename));
     }
 
     public async Task<bool?> ConvertXMLToRxc(string bucket, string filename)
@@ -315,26 +318,11 @@ public class Function
             return false;
         }
 
-        Context?.Logger.LogInformation("Loading DBC");
-        Stream dbcStream = await LoadDBC(bucket);
-        if (dbcStream is null)
-        {
-            Context?.Logger.LogInformation("DBC File Not Found!");
-            return false;
-        }
-        Dbc dbc = Parser.ParseFromStream(dbcStream);
-        Context?.Logger.LogInformation("DBC Messages count:" + dbc.Messages.ToList().Count.ToString());
-
-        if (dbc is null)
-        {
-            Context?.Logger.LogInformation("Error parsing DBC file");
-            return false;
-        }
-        DBC influxDBC = (DbcToInfluxObj.FromDBC(dbc) as DBC);
+        List<DBC?> dbcList = await LoadDBCList(bucket);
         Stream rxdStream = await S3.GetStream(bucket, FileName);
 
-        ExportDbcCollection signalsCollection = DbcToInfluxObj.LoadExportSignalsFromDBC(influxDBC);
-        Context?.Logger.LogInformation("DBC Message Count: " + influxDBC.Messages.Count.ToString());        
+        ExportDbcCollection signalsCollection = DbcToInfluxObj.LoadExportSignalsFromDBC(dbcList);
+        
         //Stream xsdStream = await GetXSD(s3Event);
         try
         {
@@ -347,12 +335,21 @@ public class Function
                 }
                 else
                 {
-                    DoubleDataCollection ddc = rxd.ToDoubleData(new BinRXD.ExportSettings()
+                    var export = new BinRXD.ExportSettings()
                     {
                         StorageCache = StorageCacheType.Memory,
                         SignalsDatabase = new() { dbcCollection = signalsCollection },
 
-                    });
+                    };
+                    foreach (var collection in export.SignalsDatabase.dbcCollection)
+                    {
+                        Context?.Logger.LogInformation($"ExportSettingsBUS:{collection.BusChannel} signals:{collection.Signals.Count}");
+                        foreach (var item in collection.Signals)
+                        {
+                            Context?.Logger.LogInformation($"ExportSettingsBUS:{collection.BusChannel} signal:{item.Name}");
+                        }
+                    }
+                    DoubleDataCollection ddc = rxd.ToDoubleData(export);
 
                     //Write to InfluxDB
                     if (conversion.HasFlag(ConversionType.InfluxDB))
@@ -389,7 +386,10 @@ public class Function
                         if (atsSettings.table_name == "default")
                             atsSettings.table_name = "rxddata";
                         int idx = filename.LastIndexOf('/');
-                        await ddc.ToAwsTimeStream(atsSettings, filename.Substring(idx + 1, filename.Length - idx - 5));
+                        long timeCorrection = await GetUTCCorrection(bucket);
+                        Context?.Logger.LogInformation($"Table is is: {atsSettings.table_name}");
+                        //Context?.Logger.LogInformation($"Correction in seconds is: {timeCorrection}");
+                        await ddc.ToAwsTimeStream(atsSettings, filename.Substring(idx + 1, filename.Length - idx - 5), timeCorrection);
                     }
 
                     //CSV Export
@@ -407,6 +407,35 @@ public class Function
             return false;
         }
         return true;
+    }
+
+    private async Task<List<DBC?>> LoadDBCList(string bucket)
+    {
+        Context?.Logger.LogInformation("Loading DBC");
+        List<DBC?> listDbc = new();
+        for (int i = 0; i< 4; i++)
+        {
+            Stream dbcStream = await LoadDBC(bucket, $"dbc_can{i}.dbc");
+            if (dbcStream is null)
+            {
+                Context?.Logger.LogInformation("DBC File Not Found!");
+                listDbc.Add(null);
+                continue;
+            }
+            Parser dbcParser = new();
+            Dbc dbc = dbcParser.ParseFromStream(dbcStream);
+            Context?.Logger.LogInformation("DBC Messages count:" + dbc.Messages.ToList().Count.ToString());
+
+            if (dbc is null)
+            {
+                Context?.Logger.LogInformation("Error parsing DBC file");
+                listDbc.Add(null);
+                continue;
+            }
+            DBC influxDBC = (DbcToInfluxObj.FromDBC(dbc) as DBC);
+            listDbc.Add(influxDBC);
+        }
+        return listDbc;
     }
 
     private async Task<bool> WriteSnapshot(string bucket)
@@ -433,5 +462,49 @@ public class Function
         return true;
     }
 
+    private async Task<long> GetUTCCorrection(string bucket)
+    {
+        var jsonstream = await S3.GetStream(bucket, Path.Combine(FilePath, "Status.json"));
+        if (jsonstream is null)
+            return 0;
+        DateTime fileDateTime = await GetFileCreationDateTime(bucket, Path.Combine(FilePath, "Status.json"));
+        if (fileDateTime > DateTime.MinValue)
+        {
+            using (StreamReader reader = new(jsonstream))
+            {
+                string json = reader.ReadToEnd();
+                dynamic status = JsonConvert.DeserializeObject(json);
+                Context?.Logger.LogInformation($"UTC Time is: {((DateTimeOffset)fileDateTime).ToUnixTimeSeconds()} ::: {fileDateTime.ToString()}");
+                Context?.Logger.LogInformation($"Logger Time is: {status.RTC_UNIX} ::: {DateUtility.FromUnixTimestamp((ulong)status.RTC_UNIX)}");
+                if (status != null)
+                {
+                    //if ((ulong)((DateTimeOffset)DateTime.UtcNow).ToUnixTimeSeconds() < (ulong)status.RTC_UNIX)
+                        return (long)status.RTC_UNIX - (long)((DateTimeOffset)DateTime.UtcNow).ToUnixTimeSeconds();
+                }
+            }
+        }
+        
+        return 0;
+    }
+
+    async Task<DateTime> GetFileCreationDateTime(string bucket, string filename)
+    {
+        try
+        {
+            GetObjectMetadataRequest metadataRequest = new GetObjectMetadataRequest
+            {
+                BucketName = bucket,
+                Key = filename
+            };
+            GetObjectMetadataResponse metadataResponse = await S3Client.GetObjectMetadataAsync(metadataRequest);
+
+            DateTime creationDate = metadataResponse.LastModified;
+            return creationDate;
+        }
+        catch (Exception ex)
+        {
+            return DateTime.MinValue;
+        }
+    }
 
 }

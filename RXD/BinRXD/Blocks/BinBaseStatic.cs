@@ -1,5 +1,4 @@
-﻿using RXD.DataRecords;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -47,14 +46,25 @@ namespace RXD.Blocks
         DAQ = 36,
         DAQITEM = 37,
         TC = 38,
+        LINSignal = 39,
     };
+
+    public enum RecordType : byte
+    {
+        Unknown,
+        PreBuffer,
+        CanTrace,
+        CanError,
+        LinTrace,
+        MessageData,
+    }
 
     public abstract partial class BinBase
     {
         /// <summary>
         /// BlockType to Class reference dictionary
         /// </summary>
-        internal static readonly Dictionary<BlockType, Type> BlockInfo = new Dictionary<BlockType, Type>()
+        public static readonly Dictionary<BlockType, Type> BlockInfo = new Dictionary<BlockType, Type>()
         {
             { BlockType.Unknown, typeof(BinBase) },
 
@@ -99,6 +109,7 @@ namespace RXD.Blocks
             { BlockType.DAQ, typeof(BinDAQ) },
             { BlockType.DAQITEM, typeof(BinDAQItem) },
             { BlockType.TC, typeof(BinTC) },
+            { BlockType.LINSignal, typeof(BinLinSignal) },
         };
 
         /// <summary>
@@ -149,6 +160,7 @@ namespace RXD.Blocks
             { BlockType.DAQ, RecordType.Unknown },
             { BlockType.DAQITEM, RecordType.Unknown },
             { BlockType.TC, RecordType.Unknown },
+            { BlockType.LINSignal, RecordType.MessageData },
 
         };
 

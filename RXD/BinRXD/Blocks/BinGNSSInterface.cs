@@ -28,6 +28,7 @@ namespace RXD.Blocks
             {
                 data.AddProperty(BinProp.PhysicalNumber, typeof(byte));
                 data.AddProperty(BinProp.SamplingRate, typeof(UInt16));
+                AddOutput("");
             });
         }
     }

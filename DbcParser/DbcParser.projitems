@@ -20,9 +20,12 @@
     <Compile Include="$(MSBuildThisFileDirectory)Model\Node.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Packer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Parser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)parsers\AttributeLineParser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Parsers\CommentLineParser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Parsers\EnvVariableLineParser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Parsers\IgnoreLineParser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Parsers\ILineParser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Parsers\AttributeDefaultParser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Parsers\MessageLineParser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Parsers\NodeLineParser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Parsers\SignalLineParser.cs" />

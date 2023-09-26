@@ -40,6 +40,9 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.ParE, typeof(Single));
                 data.AddProperty(BinProp.ParF, typeof(Single));
             });
+
+            AddInput(BinProp.InputUID.ToString());
+            AddOutput("UID");
         }
 
     }

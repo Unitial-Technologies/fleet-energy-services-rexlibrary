@@ -112,6 +112,8 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.FilterType, typeof(FilterType[]), BinProp.FilterCount);
                 //data.AddProperty(BinProp.FilterExtended, typeof(bool)); // bool
             });
+            AddInput("");
+            AddOutput("");
         }
     }
 }

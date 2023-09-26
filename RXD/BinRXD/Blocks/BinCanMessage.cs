@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace RXD.Blocks
 {
@@ -57,6 +59,8 @@ namespace RXD.Blocks
         }
         #endregion
 
+
+
         internal override void SetupVersions()
         {
             Versions[4] = new Action(() =>
@@ -100,6 +104,10 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.Delay, typeof(UInt32));
                 data.AddProperty(BinProp.NextOutputMessageID, typeof(UInt16));
             });
+            AddInput(BinProp.InterfaceUID.ToString());
+            AddInput(BinProp.InputMessageUID.ToString());
+            AddOutput("UID");
+            AddOutput(BinProp.NextOutputMessageID.ToString());
         }
     }
 }

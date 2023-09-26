@@ -41,6 +41,8 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.SamplingRate, typeof(UInt16));
                 data.AddProperty(BinProp.RangeHi, typeof(Single));
                 data.AddProperty(BinProp.RangeLow, typeof(Single));
+
+                AddOutput("UID");
             });
         }
 

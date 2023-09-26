@@ -18,6 +18,7 @@ namespace RXD.Blocks
             Source,
         }
 
+      
         #region Do not touch these
         public BinJ1939DM(BinHeader hs = null) : base(hs) { }
 
@@ -36,6 +37,8 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.Source, typeof(byte));
                 data.AddProperty(BinProp.InputUID, typeof(UInt16));
             });
+            AddInput(BinProp.InputUID.ToString());
+            AddOutput("UID");
         }
     }
 }

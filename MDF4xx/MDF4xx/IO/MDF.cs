@@ -112,7 +112,7 @@ namespace MDF4xx.IO
                                     if (cg.FlagVLSD)
                                     {
                                         sr.FastRead(vlsdSize, 4);
-                                        sr.Seek(vlsdSize, SeekOrigin.Current);
+                                        sr.Seek((uint)vlsdSize, SeekOrigin.Current);
                                         if (id.FlagVlsdSize)
                                             cg.data.cg_size.vlsd_size += vlsdSize;
                                     }

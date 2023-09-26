@@ -8,7 +8,6 @@ namespace RXD.Blocks
         {
             InterfaceID,
         }
-
         #region Do not touch these
         public BinCanError(BinHeader hs = null) : base(hs) { }
 
@@ -25,6 +24,7 @@ namespace RXD.Blocks
             {
                 data.AddProperty(BinProp.InterfaceID, typeof(UInt16));
             });
+            AddInput(BinProp.InterfaceID.ToString());
         }
     }
 }

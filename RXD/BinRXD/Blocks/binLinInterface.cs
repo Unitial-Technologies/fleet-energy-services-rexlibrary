@@ -43,7 +43,8 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.ProtocolVersion, typeof(LINProtocolVersion));
                 data.AddProperty(BinProp.Time_Base, typeof(UInt16));
                 data.AddProperty(BinProp.Time_Jitter, typeof(UInt16)); 
-            });            
+            });
+            AddOutput("UID");
         }
     }
 }

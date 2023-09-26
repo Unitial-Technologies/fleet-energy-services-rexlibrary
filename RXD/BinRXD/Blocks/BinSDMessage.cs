@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace RXD.Blocks
 {
@@ -51,6 +52,9 @@ namespace RXD.Blocks
                 Versions[1].DynamicInvoke();
                 data.AddProperty(BinProp.Downsampling, typeof(UInt32));
             });*/
+
+            AddInput(BinProp.InputMessageUID.ToString());
+            AddOutput(BinProp.InterfaceUID.ToString());
         }
     }
 }

@@ -7,6 +7,13 @@ namespace RXD.Blocks
         #region Enumerations for Property type definitions
         #endregion
 
+        public enum RealTimeSourceType : byte
+        {
+            No,
+            Mobile,
+            NTP
+        }
+
         internal enum BinProp
         {
             UseAPN,
@@ -18,7 +25,7 @@ namespace RXD.Blocks
             Pass,
             PinSize,
             PIN,
-            GetRealTimeFromMobile,
+            RealTimeSource,
             NoCommunicationRestartTimeOut,
           //  NameSize,
           //  Name,
@@ -47,7 +54,7 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.Pass, typeof(string), BinProp.PassSize);
                 data.AddProperty(BinProp.PinSize, typeof(byte));
                 data.AddProperty(BinProp.PIN, typeof(string), BinProp.PinSize);
-                data.AddProperty(BinProp.GetRealTimeFromMobile, typeof(bool));
+                data.AddProperty(BinProp.RealTimeSource, typeof(RealTimeSourceType));
                 data.AddProperty(BinProp.NoCommunicationRestartTimeOut, typeof(UInt32));
                // data.AddProperty(BinProp.NameSize, typeof(byte));
                // data.AddProperty(BinProp.Name, typeof(string), BinProp.NameSize);

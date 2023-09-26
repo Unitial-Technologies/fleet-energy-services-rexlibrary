@@ -38,6 +38,9 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.InputUID1, typeof(UInt16)); 
                 data.AddProperty(BinProp.InputUID2, typeof(UInt16)); 
                 data.AddProperty(BinProp.OperatorCondition, typeof(ConditionType));
+                AddInput(BinProp.InputUID1.ToString());
+                AddInput(BinProp.InputUID2.ToString());
+                AddOutput("UID");
             });
             Versions[2] = new Action(() =>
             {

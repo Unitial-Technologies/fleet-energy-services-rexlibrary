@@ -36,6 +36,8 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.NewValTimeout, typeof(UInt16));
                 data.AddProperty(BinProp.NewValAggregation, typeof(byte));
             });
+            AddInput(BinProp.InputUID.ToString());
+            AddOutput("UID");
         }
 
     }

@@ -43,6 +43,9 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.InputTypeID, typeof(UInt16));
                 data.AddProperty(BinProp.FileType, typeof(FileType));
             });
+
+            AddInput(BinProp.InputUID.ToString());            
+            AddOutput("UID");
         }
     }
 }

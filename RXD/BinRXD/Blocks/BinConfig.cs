@@ -50,6 +50,8 @@ namespace RXD.Blocks
             EncryptKey,
             LockDevice,
             EncryptDataLog,
+            NTPServerSize,
+            NTPServer
         }
 
         #region Do not touch these
@@ -110,6 +112,12 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.EncryptKey, typeof(string), BinProp.EncryptKeySize);
                 data.AddProperty(BinProp.LockDevice, typeof(bool));
                 data.AddProperty(BinProp.EncryptDataLog, typeof(bool));
+            });
+            Versions[8] = new Action(() =>
+            {
+                Versions[7].DynamicInvoke();
+                data.AddProperty(BinProp.NTPServerSize, typeof(byte));
+                data.AddProperty(BinProp.NTPServer, typeof(string), BinProp.NTPServerSize);
             });
         }
     }

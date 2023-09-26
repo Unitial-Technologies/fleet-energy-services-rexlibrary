@@ -413,8 +413,10 @@ namespace RXD.Base
                 return false;
             }
 
-            UInt64 LastTimestamp = 0;
-            UInt64 TimeOffset = 0;
+            UInt64 LastTimestampCan = 0;
+            UInt64 TimeOffsetCan = 0;
+            UInt64 LastTimestampLin = 0;
+            UInt64 TimeOffsetLin = 0;
 
             ProgressCallback?.Invoke(0);
             ProgressCallback?.Invoke("Writing MF4 file...");
@@ -453,7 +455,7 @@ namespace RXD.Base
                                 bool FirstTimestampRead = false;
                                 UInt32 FileTimestamp = 0;
 
-                                void WriteMdfFrame(BaseDataFrame frame)
+                                void WriteMdfFrame(BaseDataFrame frame, RecordType frameType)
                                 {
                                     if (frame == null)
                                         return;
@@ -467,10 +469,21 @@ namespace RXD.Base
                                         FileTimestamp = (uint)(InitialTimestamp == 0 ? LowestTimestamp : Math.Min(InitialTimestamp, frame.data.Timestamp));
                                     }
 
-                                    if (frame.data.Timestamp < LastTimestamp)
-                                        TimeOffset += 0x100000000;
-                                    LastTimestamp = frame.data.Timestamp;
-                                    frame.data.Timestamp += TimeOffset - FileTimestamp;
+                                    if (frameType == RecordType.LinTrace)
+                                            {
+                                        if (frame.data.Timestamp < LastTimestampLin)
+                                            TimeOffsetLin += 0x100000000;
+                                        LastTimestampLin = frame.data.Timestamp;
+                                        frame.data.Timestamp += TimeOffsetLin - FileTimestamp;
+                                    }
+                                    else
+                                    {
+                                        if (frame.data.Timestamp < LastTimestampCan)
+                                            TimeOffsetCan += 0x100000000;
+                                        LastTimestampCan = frame.data.Timestamp;
+                                        frame.data.Timestamp += TimeOffsetCan - FileTimestamp;
+                                    }
+                                    
 
                                     if (UseMf4Compression)
                                     {
@@ -488,11 +501,11 @@ namespace RXD.Base
                                     foreach (RecBase rec in dr.Messages)
                                     {
                                         foreach (var mdfframe in rec.ToMdfFrame())
-                                            WriteMdfFrame(mdfframe);
+                                            WriteMdfFrame(mdfframe, rec.LinkedBin.RecType);
 
                                         if (frameSignals != null)
                                             if (FindMessageFrameID(rec, out UInt16 groupid, out byte DLC))
-                                                WriteMdfFrame(rec.ConvertToMdfMessageFrame(groupid, DLC));
+                                                WriteMdfFrame(rec.ConvertToMdfMessageFrame(groupid, DLC), rec.LinkedBin.RecType);
                                     }
                                     ProgressCallback?.Invoke((int)dr.GetProgress);
                                 }
@@ -568,10 +581,12 @@ namespace RXD.Base
             ddata.ProcessingRules = settings.ProcessingRules;
 
             UInt32 FileTimestamp = 0;
-            UInt64 LastTimestamp = 0;
-            UInt64 TimeOffset = 0;
+            UInt64 LastTimestampCan = 0;
+            UInt64 LastTimestampLin = 0;
+            UInt64 TimeOffsetCan = 0;
+            UInt64 TimeOffsetLin = 0;
 
-            double WriteData(DoubleData dd, UInt64 Timestamp, byte[] BinaryArray)
+            double WriteData(DoubleData dd, UInt64 Timestamp, byte[] BinaryArray, ref UInt64 LastTimestamp, ref UInt64 TimeOffset)
             {
                 if (Timestamp < LastTimestamp)
                     TimeOffset += 0x100000000;
@@ -615,11 +630,12 @@ namespace RXD.Base
                                             {
                                                 var sig = busMsg.Signals[i];
                                                 var obj = ddata.Object(sig, (1u << 30) | ((uint)i << 16) | (uint)id, SA);
+                                                obj.BusChannel = $"CAN{canrec.BusChannel}";
 
                                                 if (i == 1 && mode is not null)
                                                     modeval = lastval;
                                                 if ((sig.Type == DBCSignalType.ModeDependent && sig.Mode == modeval) || sig.Type != DBCSignalType.ModeDependent)
-                                                    lastval = WriteData(obj, canrec.data.Timestamp, rec.VariableData);
+                                                    lastval = WriteData(obj, canrec.data.Timestamp, rec.VariableData, ref LastTimestampCan, ref TimeOffsetCan);
                                             }
                                         }
                                     break;
@@ -632,13 +648,16 @@ namespace RXD.Base
                                         {
                                             ExportLdfMessage busMsg = settings.SignalsDatabase.ldfCollection[id];
                                             for (int i = 0; i < busMsg.Signals.Count; i++)
-                                                WriteData(ddata.Object(busMsg.Signals[i], (2u << 30) | ((uint)i << 16) | (uint)id),
-                                                    linrec.data.Timestamp, rec.VariableData);
+                                            {
+                                                var obj = ddata.Object(busMsg.Signals[i], (2u << 30) | ((uint)i << 16) | (uint)id);
+                                                obj.BusChannel = "LIN";
+                                                WriteData(obj, linrec.data.Timestamp, rec.VariableData, ref LastTimestampLin, ref TimeOffsetLin);
+                                            }
                                         }
                                     break;
                                 case RecordType.MessageData:
                                     if (Exportable(rec.LinkedBin))
-                                        WriteData(ddata.Object(rec.LinkedBin), (rec as RecMessage).data.Timestamp, rec.VariableData);
+                                        WriteData(ddata.Object(rec.LinkedBin), (rec as RecMessage).data.Timestamp, rec.VariableData, ref LastTimestampCan, ref TimeOffsetCan);
                                     break;
                                 default:
                                     break;
@@ -646,7 +665,7 @@ namespace RXD.Base
                         settings.ProgressCallback?.Invoke((int)dr.GetProgress);
                     }
                     if (settings.ProcessingRules is not null)
-                        ddata.FinishWrite((LastTimestamp - FileTimestamp) * TimestampCoeff);
+                        ddata.FinishWrite((Math.Max(LastTimestampCan, LastTimestampLin) - FileTimestamp) * TimestampCoeff);
                 }
 
                 ddata.SortByIdentifier();
@@ -669,22 +688,37 @@ namespace RXD.Base
             UInt32 TimePrecison = Config[BinConfig.BinProp.TimeStampPrecision];
 
             double FileTimestamp = double.NaN;
-            double LastTimestamp = 0;
-            double TimeOffset = 0;
+            double LastTimestampCan = 0;
+            double TimeOffsetCan = 0;
+            double LastTimestampLin = 0;
+            double TimeOffsetLin = 0;
             UInt32 InitialTimestamp = 0;
 
             void TraceAdd(TraceCollection tc)
             {
+                void TimeCheck(int idx, ref double LastTimestamp, ref double TimeOffset)
+                {
+                    if (tc[idx]._Timestamp < LastTimestamp)
+                        TimeOffset += (double)0x100000000 * TimePrecison * 0.000001;
+                    LastTimestamp = tc[idx]._Timestamp;
+                    tc[idx]._Timestamp -= FileTimestamp;
+                    tc[idx]._Timestamp += TimeOffset;
+                }
+
                 for (int i = 0; i < tc.Count; i++)
                 {
                     if (Double.IsNaN(FileTimestamp))
                         FileTimestamp = (InitialTimestamp == 0 ? LowestTimestamp : InitialTimestamp) * TimestampCoeff;
                         //FileTimestamp = (InitialTimestamp == 0 ? LowestTimestamp : Math.Min(LowestTimestamp, InitialTimestamp)) * TimestampCoeff;
-                    if (tc[i]._Timestamp < LastTimestamp)
-                        TimeOffset += (double)0x100000000 * TimePrecison * 0.000001;
-                    LastTimestamp = tc[i]._Timestamp;
-                    tc[i]._Timestamp -= FileTimestamp;
-                    tc[i]._Timestamp += TimeOffset;
+                    switch (tc[i].TraceType)
+                    {
+                        case RecordType.LinTrace:
+                            TimeCheck(i, ref LastTimestampLin, ref TimeOffsetLin);
+                            break;
+                        default:
+                            TimeCheck(i, ref LastTimestampCan, ref TimeOffsetCan);
+                            break;
+                    }
                 }
 
                 ProcessCallback(tc);
@@ -736,8 +770,19 @@ namespace RXD.Base
             {
                 if (bin is null)
                     return null;
-
-                XElement xblock = xml.NewElement(bin.header.type.ToString().ToUpper(), new XAttribute("UID", bin.header.uniqueid));
+                object[] xmlAttr = new object[1] { 
+                     new XAttribute("UID", bin.header.uniqueid) 
+                       
+                };
+                if (bin.external.ContainsKey("X"))
+                {
+                    xmlAttr = new object[3] {
+                     new XAttribute("UID", bin.header.uniqueid),
+                     new XAttribute("X", bin.external["X"]),
+                     new XAttribute("Y", bin.external["Y"])
+                    };
+                }
+                XElement xblock = xml.NewElement(bin.header.type.ToString().ToUpper(), xmlAttr);
                 XmlSchemaComplexType xsdBinType = xml.xsdNodeType(xblock);
 
                 foreach (KeyValuePair<string, PropertyData> prop in bin.data.Union(bin.external).Where(p => p.Value.XmlSequenceGroup == string.Empty))
@@ -850,11 +895,17 @@ namespace RXD.Base
                     return null;
 
                 if (!UInt16.TryParse(node.Attribute("UID").Value, out hs.uniqueid))
-                    return null;
+                    return null;                
 
                 BinBase bin = (BinBase)Activator.CreateInstance(BinBase.BlockInfo[hs.type], hs);
                 XmlSchemaComplexType xsdBinType = xml.xsdNodeType(node);
 
+                if (node.Attribute("X") is not null)
+                    if (uint.TryParse(node.Attribute("X").Value, out uint X))
+                        bin.external.AddProperty("X", typeof(uint), X);
+                if (node.Attribute("Y") is not null)
+                    if (uint.TryParse(node.Attribute("Y").Value, out uint Y))
+                        bin.external.AddProperty("Y", typeof(uint), Y);
                 foreach (var prop in bin.data.Where(p => p.Value.XmlSequenceGroup == string.Empty))
                 {
                     if (prop.Value.PropType.IsArray)

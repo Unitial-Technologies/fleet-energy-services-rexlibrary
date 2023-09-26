@@ -36,6 +36,11 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.InputUID, typeof(UInt16[]), BinProp.InputCount);
                 data.AddProperty(BinProp.CaseValue, typeof(Int32[]), BinProp.InputCount);
             });
+
+            AddInput(BinProp.InputSwitchUID.ToString());
+            AddInput(BinProp.InputDefaultUID.ToString());
+            AddInput(BinProp.InputUID.ToString());
+            AddOutput("UID");
         }
 
     }

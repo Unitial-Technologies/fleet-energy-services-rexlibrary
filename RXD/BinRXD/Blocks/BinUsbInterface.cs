@@ -26,6 +26,7 @@ namespace RXD.Blocks
             Versions[1] = new Action(() =>
             {
             });
+            AddInput("");
         }
 
     }

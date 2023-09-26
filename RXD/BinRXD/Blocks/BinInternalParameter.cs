@@ -47,6 +47,7 @@ namespace RXD.Blocks
             InputUID
         }
 
+
         #region Do not touch these
         public BinInternalParameter(BinHeader hs = null) : base(hs) { }
 
@@ -70,6 +71,8 @@ namespace RXD.Blocks
             {
                 Versions[1].DynamicInvoke();
                 data.AddProperty(BinProp.InputUID, typeof(UInt16));
+                AddInput(BinProp.InputUID.ToString());
+                AddOutput("UID");
             });
         }
     }

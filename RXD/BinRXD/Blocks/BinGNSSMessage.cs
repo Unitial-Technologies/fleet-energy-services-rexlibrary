@@ -32,7 +32,7 @@ namespace RXD.Blocks
             Type,
         }
 
-        #region Do not touch these
+            #region Do not touch these
         public BinGNSSMessage(BinHeader hs = null) : base(hs) { }
 
         internal dynamic this[BinProp index]
@@ -95,6 +95,8 @@ namespace RXD.Blocks
             {
                 data.AddProperty(BinProp.InterfaceUID, typeof(UInt16));
                 data.AddProperty(BinProp.Type, typeof(TypeGNSS));
+
+                AddInput(BinProp.InterfaceUID.ToString());
             });
         }
     }

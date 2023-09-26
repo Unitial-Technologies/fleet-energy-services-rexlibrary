@@ -21,6 +21,7 @@ namespace RXD.Blocks
             Name
         }
 
+
         #region Do not touch these
         public BinLinMessage(BinHeader hs = null) : base(hs) { }
 
@@ -47,6 +48,9 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.NameSize, typeof(byte));
                 data.AddProperty(BinProp.Name, typeof(string), BinProp.NameSize);
             });
+            AddInput(BinProp.InputUID.ToString());
+            AddInput(BinProp.InterfaceID.ToString());
+            AddOutput("UID");
         }
     }
 }

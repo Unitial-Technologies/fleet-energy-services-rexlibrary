@@ -11,6 +11,8 @@ using uint32_T = System.UInt32;
 using int64_T = System.Int64;
 using uint64_T = System.UInt64;
 using System.Globalization;
+using System.ComponentModel.DataAnnotations;
+using System.Collections.Specialized;
 
 /* 
  * ------------------------------------
@@ -25,35 +27,80 @@ namespace DbcParserLib
 {
     public class Message
     {
-        public uint ID;
-        public bool IsExtID;
-        public string Name;
-        public byte DLC;
-        public string Transmitter;
-        public string Comment;
-        public int CycleTime;
-        public List<Signal> Signals = new List<Signal>();
+        public uint ID { get; set; }
+        public enum MsgType { Standard, Extended, CanFDStandard, CanFDExtended, J1939PG, Lin , reserved}
+        public MsgType Type { get; set; }
+        public bool BRS { get; set; } //1 == true
+        public string Name { get; set; } 
+        public byte DLC { get; set; }
+        public string Transmitter { get; set; } 
+        public string Comment { get; set; } 
+        public int CycleTime { get; set; }
+        public List<Signal> Signals = new List<Signal>() ;
+        public NameValueCollection AttrValues = new NameValueCollection();
     }
 
     public class Signal
     {
-        public uint ID;
+        public uint ID { get; set; }
+        public string Name { get; set; }
+        public ushort StartBit { get; set; }
+        public byte Length { get; set; }
+        public byte ByteOrder { get; set; } = 1;
+        public byte IsSigned { get; set; }
+        public double InitialValue { get; set; }
+        public double Factor { get; set; } = 1;
+        public double Offset { get; set; }
+        public double Minimum { get; set; }
+        public double Maximum { get; set; }
+        public string Unit { get; set; }
+        public string[] Receiver { get; set; }
+        public string ValueTable { get; set; }
+        public string Comment { get; set; }
+        public string Multiplexing { get; set; }
+        public NameValueCollection AttrValues = new NameValueCollection();
+    }
+ 
+/* ------------------------------------
+ * Author:  Georgi Georgiev
+ * Year:    2023
+ * 
+ * Company: Influx Technology LTD
+ * ------------------------------------
+ */
+    public enum DataType {Int, Hex, Float, Enum, String}
+
+    public enum ApplyTo {Project, Node, Message, Signal, EnvVar}
+
+    public enum EnvVarType {Int, Float, String, Data}
+
+    public class DBCAttribute
+    {
         public string Name;
-        public byte StartBit;
-        public byte Length;
-        public byte ByteOrder = 1;
-        public byte IsSigned;
+        public DataType DataType;
+        public string Min;
+        public string Max;
+        public string Default;
+        public ApplyTo ApplyTo;
+        public List<String> Enums = new List<String>();
+    }
+
+    public class EnvVariable
+    {
+        public string Name;
+        public EnvVarType EnvVarType;
         public double InitialValue;
-        public double Factor = 1;
-        public double Offset;
         public double Minimum;
         public double Maximum;
-        public string Unit;
-        public string[] Receiver;
-        public string ValueTable;
-        public string Comment;
-        public string Multiplexing;
+        public uint MaxLength;
+        public string Units;
+        public bool AllowRead;
+        public bool AllowWrite;
+        public string Comment;    
+        public NameValueCollection AttrValues = new NameValueCollection();
+        public List<string> Nodes = new List<string>();
     }
+/* ------------------------------------*/
 
     [Obsolete("This class is obsolete and will be removed in the future. Use Parser class instead.", false)]
     public class DbcParser
@@ -146,16 +193,16 @@ namespace DbcParserLib
             Nodes = nodesStr.Split(new string[] { " " }, StringSplitOptions.None).Skip(1).ToList();
         }
 
-        private bool CheckExtID(ref uint id)
+        private Message.MsgType CheckExtID(ref uint id)
         {
             // For extended ID bit 31 is always 1
             if (id >= 0x80000000)
             {
                 id -= 0x80000000;
-                return true;
+                return Message.MsgType.CanFDExtended;
             }
             else
-                return false;
+                return Message.MsgType.CanFDStandard;
         }
 
         private void AddMessage(string msgStr)
@@ -164,7 +211,9 @@ namespace DbcParserLib
             string[] record = msgStr.Split(new string[] { " " }, StringSplitOptions.None);
 
             msg.ID = uint.Parse(record[1], CultureInfo.InvariantCulture);
-            msg.IsExtID = CheckExtID(ref msg.ID);
+            uint id = msg.ID;
+            msg.Type = CheckExtID(ref id);
+            msg.ID = id;
             msg.Name = record[2].Substring(0, record[2].Length - 1);
             msg.DLC = byte.Parse(record[3], CultureInfo.InvariantCulture);
             msg.Transmitter = record[4];

@@ -13,6 +13,8 @@ namespace RXD.Helpers
             {
                 data = ddata.Add(bin.header.uniqueid, ChannelName: bin.GetName, ChannelUnits: bin.GetUnits);
                 data.BinaryHelper = bin.GetDataDescriptor.CreateBinaryData();
+               // if (bin.BinType == BlockType.CANInterface)
+               //     data.BusChannel = (bin as BinCanInterface)[BinCanInterface.BinProp.PhysicalNumber];
             }
 
             return data;
@@ -25,9 +27,10 @@ namespace RXD.Helpers
             if (data is null)
             {
                 ChannelDescriptor ChannelDesc = signal.GetDescriptor;
-
                 data = ddata.Add(id, ChannelName: ChannelDesc.Name, ChannelUnits: ChannelDesc.Units);
                 data.BinaryHelper = ChannelDesc.CreateBinaryData();
+                //if (bin.BinType == BlockType.CANInterface)
+                //    data.BusChannel = (bin as BinCanInterface)[BinCanInterface.BinProp.PhysicalNumber];
 
                 if (SourceAddress != 0xFF)
                     data.ChannelName += " [SA: " + SourceAddress.ToString("X2") + "]";

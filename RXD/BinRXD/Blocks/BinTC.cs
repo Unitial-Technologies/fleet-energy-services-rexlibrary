@@ -7,7 +7,7 @@ namespace RXD.Blocks
 {
     internal class BinTC: BinBase
     {
-        enum TcType: byte
+        internal enum TcType: byte
         {
             K, 
             J,
@@ -18,7 +18,7 @@ namespace RXD.Blocks
             T,
             E
         }
-        enum TcMode : byte
+        internal enum TcMode : byte
         {
             Normal,
             NoCalibration,
@@ -62,6 +62,7 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.ParA, typeof(Single));
                 data.AddProperty(BinProp.ParB, typeof(Single));
             });
+            AddOutput("UID");
         }
     }
 }

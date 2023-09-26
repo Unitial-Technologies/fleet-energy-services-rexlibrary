@@ -14,11 +14,13 @@ namespace InfluxShared.FileObjects
         public string FileNameSerialized { get; set; }
         public string FileNameNoExt => Path.GetFileNameWithoutExtension(FileName);
         public string FileLocation => Path.GetDirectoryName(FileName);
+        public List<A2LSettings> Settings { get; set; }
         public List<A2LItem> Items { get; set; }
 
         public A2L() 
         {
             Items = new List<A2LItem>();
+            Settings = new List<A2LSettings>();
         }
 
         public void AddToReferenceCollection(ReferenceCollection collection, byte BusChannel)
@@ -32,24 +34,14 @@ namespace InfluxShared.FileObjects
                     SignalName = item.Name
                 });
         }
-    }
 
-    public class A2LItem : BasicItemInfo
-    {
-        public A2LItem()
+        public override string ToString()
         {
-            
+            return Path.GetFileName(FileName);
         }
-
-        public uint Address { get; set; }
-        public A2LItemType MsgType { get; set; }
-        public A2LValueТype Datatype { get; set; }
-        public A2LByteOrder ByteOrder { get; set; }
-        public byte ShLeft { get; set; }
-        public byte ShRight { get; set; }
-        public uint BitMask { get; set; }
-        public string AddressHex { get => "0x" + Address.ToString("X4"); }
     }
+
+    
 
     public class ExportA2LItem
     {

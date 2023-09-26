@@ -36,6 +36,9 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.EnableUID, typeof(UInt16));
                 data.AddProperty(BinProp.DisableUID, typeof(UInt16));
             });
+            AddInput(BinProp.EnableUID.ToString());
+            AddInput(BinProp.DisableUID.ToString());
+            AddOutput("UID");
         }
 
     }

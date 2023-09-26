@@ -57,12 +57,15 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.InitialEnableState, typeof(bool));
                 data.AddProperty(BinProp.EnableUID, typeof(UInt16));
                 data.AddProperty(BinProp.DisableUID, typeof(UInt16));
+                AddInput(BinProp.EnableUID.ToString());
+                AddInput(BinProp.DisableUID.ToString());
             });
             Versions[4] = new Action(() =>
             {
                 Versions[3].DynamicInvoke();
                 data.AddProperty(BinProp.PartitionID, typeof(byte));
             });
+            AddInput("");
         }
 
     }
