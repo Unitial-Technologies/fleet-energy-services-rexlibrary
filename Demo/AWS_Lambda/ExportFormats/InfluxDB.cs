@@ -10,18 +10,8 @@ namespace AWSLambdaFileConvert.ExportFormats
 
     internal static class InfluxDBHelper
     {
-        internal class idbSettings
-        {
-            public bool enabled { get; set; }
-            public string url { get; set; }
-            public string token { get; set; }
-            public string org { get; set; }
-            public string bucket { get; set; }
-        }
 
-        public static ILambdaContext? Context { get; set; } //Used to write information to log filesS
-
-        public static async Task<bool> ToInfluxDB(this DoubleDataCollection ddc, idbSettings settings)
+        public static async Task<bool> ToInfluxDB(this DoubleDataCollection ddc)
         {
             static string PrepareChannelName(string chname)
             {
@@ -42,7 +32,7 @@ namespace AWSLambdaFileConvert.ExportFormats
             {
                 var ci = new CultureInfo("en-US", false);
 
-                using (var client = new InfluxDBClient(settings.url, settings.token))
+                using (var client = new InfluxDBClient(LambdaGlobals.InfluxDB.url, LambdaGlobals.InfluxDB.token))
                 {
                     client.EnableGzip();
                     var writeApi = client.GetWriteApiAsync();
@@ -70,8 +60,8 @@ namespace AWSLambdaFileConvert.ExportFormats
 
                             if (idbData.Count >= 5000)
                             {
-                                await writeApi.WriteRecordsAsync(idbData, WritePrecision.Ms, settings.bucket, settings.org);
-                                Context?.Logger.LogInformation($"{idbData.Count} records written");
+                                await writeApi.WriteRecordsAsync(idbData, WritePrecision.Ms, LambdaGlobals.InfluxDB.bucket, LambdaGlobals.InfluxDB.org);
+                                LambdaGlobals.Context?.Logger.LogInformation($"{idbData.Count} records written");
                                 idbData.Clear();
                             }
                         }
@@ -80,8 +70,8 @@ namespace AWSLambdaFileConvert.ExportFormats
                     }
                     if (idbData.Count > 0)
                     {
-                        await writeApi.WriteRecordsAsync(idbData, WritePrecision.Ms, settings.bucket, settings.org);
-                        Context?.Logger.LogInformation($"{idbData.Count} records written");
+                        await writeApi.WriteRecordsAsync(idbData, WritePrecision.Ms, LambdaGlobals.InfluxDB.bucket, LambdaGlobals.InfluxDB.org);
+                        LambdaGlobals.Context?.Logger.LogInformation($"{idbData.Count} records written");
                         idbData.Clear();
                     }
 
@@ -94,7 +84,7 @@ namespace AWSLambdaFileConvert.ExportFormats
             }
             catch (Exception e)
             {
-                Context?.Logger.LogInformation(e.Message);
+                LambdaGlobals.Context?.Logger.LogInformation(e.Message);
                 return false;
             }
 

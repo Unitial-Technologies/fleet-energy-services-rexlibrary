@@ -15,6 +15,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using System.Xml.Schema;
@@ -384,6 +385,21 @@ namespace RXD.Base
 
         public bool ToMF4(string outputfn,  ExportCollections frameSignals = null, Action<object> ProgressCallback = null)
         {
+            using (FileStream fs = new FileStream(outputfn, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                return ToMf4Stream(fs, frameSignals, ProgressCallback);
+            }
+        }
+
+        public Stream ToMF4(ExportCollections frameSignals = null, Action<object> ProgressCallback = null)
+        {
+            MemoryStream ms = new MemoryStream();
+            ToMf4Stream(ms, frameSignals, ProgressCallback);            
+            return ms;
+        }
+
+        bool ToMf4Stream(Stream mdfStream, ExportCollections frameSignals = null, Action<object> ProgressCallback = null)
+        {
             bool FindMessageFrameID(RecBase rec, out UInt16 GroupID, out byte DLC)
             {
                 if (rec is RecCanTrace)
@@ -426,122 +442,120 @@ namespace RXD.Base
                      this.Where(r => r.Value.RecType == RecordType.MessageData).
                      Select(dg => new { ID = (UInt16)dg.Key, Data = dg.Value.GetDataDescriptor }).
                      ToDictionary(dg => dg.ID, dg => dg.Data);
-
-                MDF mdf = new MDF(outputfn);
+                MDF mdf = new MDF();
                 mdf.BuildLoggerStruct(DatalogStartTime, 8/*Config[BinConfig.BinProp.TimeStampSize]*/, Config[BinConfig.BinProp.TimeStampPrecision], UseMf4Compression, Signals, frameSignals);
-                mdf.WriteHeader();
+                mdf.WriteHeader(mdfStream);                
 
                 Dictionary<FrameType, CGBlock> mdfGroups =
                     mdf.Where(r => r.Value is CGBlock).
                     Select(g => new { (g.Value as CGBlock).data.cg_record_id, g.Value }).
                     ToDictionary(g => (FrameType)g.cg_record_id, g => g.Value as CGBlock);
 
-                using (FileStream fw = new FileStream(outputfn, FileMode.Open, FileAccess.Write, FileShare.None))
+                mdfStream.Seek(0, SeekOrigin.End);
+                var DataBlock = UseMf4Compression ?
+                    mdf.FirstOrDefault(x => x.Value is DZBlock).Value :
+                    mdf.FirstOrDefault(x => x.Value is DTBlock).Value;
+                byte[] zipData = null;
+
+                using (MemoryStream memZippedStream = new MemoryStream())
                 {
-                    fw.Seek(0, SeekOrigin.End);
-                    var DataBlock = UseMf4Compression ?
-                        mdf.FirstOrDefault(x => x.Value is DZBlock).Value :
-                        mdf.FirstOrDefault(x => x.Value is DTBlock).Value;
-
-                    byte[] zipData = null;
-
-                    using (MemoryStream memZippedStream = new MemoryStream())
+                    using (ZlibStream zlStream = new ZlibStream(memZippedStream, CompressionMode.Compress, CompressionLevel.Level4))
                     {
-                        using (ZlibStream zlStream = new ZlibStream(memZippedStream, CompressionMode.Compress, CompressionLevel.Level4))
+                        using (RXDataReader dr = new(this))
                         {
-                            using (RXDataReader dr = new(this))
+                            UInt32 InitialTimestamp = dr.GetFilePreBufferInitialTimestamp;
+                            bool FirstTimestampRead = false;
+                            UInt32 FileTimestamp = 0;
+
+                            void WriteMdfFrame(BaseDataFrame frame, RecordType frameType)
                             {
-                                UInt32 InitialTimestamp = dr.GetFilePreBufferInitialTimestamp;
-                                bool FirstTimestampRead = false;
-                                UInt32 FileTimestamp = 0;
+                                if (frame == null)
+                                    return;
 
-                                void WriteMdfFrame(BaseDataFrame frame, RecordType frameType)
+                                if (mdfGroups.TryGetValue(frame.data.Type, out CGBlock cg))
+                                    cg.data.cg_cycle_count++;
+
+                                if (!FirstTimestampRead)
                                 {
-                                    if (frame == null)
-                                        return;
-
-                                    if (mdfGroups.TryGetValue(frame.data.Type, out CGBlock cg))
-                                        cg.data.cg_cycle_count++;
-
-                                    if (!FirstTimestampRead)
-                                    {
-                                        FirstTimestampRead = true;
-                                        FileTimestamp = (uint)(InitialTimestamp == 0 ? LowestTimestamp : Math.Min(InitialTimestamp, frame.data.Timestamp));
-                                    }
-
-                                    if (frameType == RecordType.LinTrace)
-                                            {
-                                        if (frame.data.Timestamp < LastTimestampLin)
-                                            TimeOffsetLin += 0x100000000;
-                                        LastTimestampLin = frame.data.Timestamp;
-                                        frame.data.Timestamp += TimeOffsetLin - FileTimestamp;
-                                    }
-                                    else
-                                    {
-                                        if (frame.data.Timestamp < LastTimestampCan)
-                                            TimeOffsetCan += 0x100000000;
-                                        LastTimestampCan = frame.data.Timestamp;
-                                        frame.data.Timestamp += TimeOffsetCan - FileTimestamp;
-                                    }
-                                    
-
-                                    if (UseMf4Compression)
-                                    {
-                                        byte[] data = frame.ToBytes();
-                                        zlStream.Write(data, 0, data.Length);
-
-                                        (DataBlock as DZBlock).data.dz_org_data_length += (UInt64)data.Length;
-                                    }
-                                    else
-                                        fw.Write(frame.ToBytes());
+                                    FirstTimestampRead = true;
+                                    FileTimestamp = (uint)(InitialTimestamp == 0 ? LowestTimestamp : Math.Min(InitialTimestamp, frame.data.Timestamp));
                                 }
 
-                                while (dr.ReadNext())
+                                if (frameType == RecordType.LinTrace)
                                 {
-                                    foreach (RecBase rec in dr.Messages)
-                                    {
-                                        foreach (var mdfframe in rec.ToMdfFrame())
-                                            WriteMdfFrame(mdfframe, rec.LinkedBin.RecType);
+                                    if (frame.data.Timestamp < LastTimestampLin)
+                                        TimeOffsetLin += 0x100000000;
+                                    LastTimestampLin = frame.data.Timestamp;
+                                    frame.data.Timestamp += TimeOffsetLin - FileTimestamp;
+                                }
+                                else
+                                {
+                                    if (frame.data.Timestamp < LastTimestampCan)
+                                        TimeOffsetCan += 0x100000000;
+                                    LastTimestampCan = frame.data.Timestamp;
+                                    frame.data.Timestamp += TimeOffsetCan - FileTimestamp;
+                                }
 
-                                        if (frameSignals != null)
-                                            if (FindMessageFrameID(rec, out UInt16 groupid, out byte DLC))
-                                                WriteMdfFrame(rec.ConvertToMdfMessageFrame(groupid, DLC), rec.LinkedBin.RecType);
-                                    }
-                                    ProgressCallback?.Invoke((int)dr.GetProgress);
+
+                                if (UseMf4Compression)
+                                {
+                                    byte[] data = frame.ToBytes();
+                                    zlStream.Write(data, 0, data.Length);
+
+                                    (DataBlock as DZBlock).data.dz_org_data_length += (UInt64)data.Length;
+                                }
+                                else
+                                {
+                                    byte[] data = frame.ToBytes();
+                                    mdfStream.Write(data, 0, data.Length);
                                 }
                             }
+
+                            while (dr.ReadNext())
+                            {
+                                foreach (RecBase rec in dr.Messages)
+                                {
+                                    foreach (var mdfframe in rec.ToMdfFrame())
+                                        WriteMdfFrame(mdfframe, rec.LinkedBin.RecType);
+
+                                    if (frameSignals != null)
+                                        if (FindMessageFrameID(rec, out UInt16 groupid, out byte DLC))
+                                            WriteMdfFrame(rec.ConvertToMdfMessageFrame(groupid, DLC), rec.LinkedBin.RecType);
+                                }
+                                ProgressCallback?.Invoke((int)dr.GetProgress);
+                            }
                         }
-
-                        if (UseMf4Compression)
-                            zipData = memZippedStream.ToArray();
                     }
-
                     if (UseMf4Compression)
-                    {
-                        fw.Write(zipData, 0, zipData.Length);
-                        fw.Flush();
-                    }
-
-                    Int64 eof = fw.Position;
-                    using (BinaryWriter bw = new BinaryWriter(fw))
-                    {
-                        DataBlock.header.length = (UInt64)(fw.Position - DataBlock.flink);
-                        if (DataBlock is DZBlock)
-                            (DataBlock as DZBlock).data.dz_data_length = (UInt64)zipData.Length;
-                        bw.Seek((int)DataBlock.flink, SeekOrigin.Begin);
-                        bw.Write(DataBlock.ToBytes(true));
-
-                        foreach (var cg in mdfGroups)
-                        {
-                            bw.Seek((int)cg.Value.flink, SeekOrigin.Begin);
-                            bw.Write(cg.Value.ToBytes());
-                        }
-                    }
-
-                    ProgressCallback?.Invoke(100);
-                    //Console.WriteLine("file written successfully");
-                    return true;
+                        zipData = memZippedStream.ToArray();
                 }
+                if (UseMf4Compression)
+                {
+                    mdfStream.Write(zipData, 0, zipData.Length);
+                    mdfStream.Flush();
+                }
+                Int64 eof = mdfStream.Position;
+
+                using (BinaryWriter bw = new BinaryWriter(mdfStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true), true))
+                {
+                    DataBlock.header.length = (UInt64)(mdfStream.Position - DataBlock.flink);
+                    if (DataBlock is DZBlock)
+                        (DataBlock as DZBlock).data.dz_data_length = (UInt64)zipData.Length;
+                    bw.Seek((int)DataBlock.flink, SeekOrigin.Begin);
+                    bw.Write(DataBlock.ToBytes(true));
+
+                    foreach (var cg in mdfGroups)
+                    {
+                        bw.Seek((int)cg.Value.flink, SeekOrigin.Begin);
+                        bw.Write(cg.Value.ToBytes());
+                    }
+                }              
+
+
+                ProgressCallback?.Invoke(100);
+                //Console.WriteLine("file written successfully");
+                return true;
+
             }
             catch (Exception e)
             {

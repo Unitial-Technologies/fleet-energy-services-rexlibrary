@@ -335,7 +335,9 @@ namespace Influx.Shared.Helpers
                     else if (ext.Equals(XmlHandler.Extension, StringComparison.OrdinalIgnoreCase))
                         return rxd.ToXML(outputPath);
                     else if (ext.Equals(MDF.Extension, StringComparison.OrdinalIgnoreCase))
+                    {                        
                         return rxd.ToMF4(outputPath, settings.SignalsDatabase, ProgressCallback);
+                    }
                 }
 
                 if (trace != null || rxd != null)

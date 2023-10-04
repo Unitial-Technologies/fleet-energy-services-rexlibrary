@@ -1,23 +1,51 @@
-﻿using RXD.Base;
-using Influx.Shared.Helpers;
-using InfluxShared.FileObjects;
-using Amazon.S3;
-using InfluxDB.Client.Api.Domain;
-using InfluxDB.Client;
-using System.Globalization;
-using System.Net.Security;
-using System.Text;
-using Amazon.Lambda.Core;
+﻿using Amazon.S3;
 using Amazon.S3.Model;
-using System.Net.Sockets;
-using Amazon.Runtime;
-using System;
+using InfluxShared.FileObjects;
+using RXD.Base;
+using System.Globalization;
+using System.Text;
 
 namespace AWSLambdaFileConvert.ExportFormats
 {
     internal static class CsvMultipartHelper
     {
-        public static ILambdaContext? Context { get; set; } //Used to write information to log filesS
+        internal static async Task<bool> ToCsv (string bucket, string destFile, BinRXD rxd, ExportDbcCollection signalsCollection)
+        {
+            LambdaGlobals.Context?.Logger.LogInformation($"Start CSV convert");
+            ProcessingRulesCollection rules = null;
+            try
+            {
+                if (LambdaGlobals.ConfigJson.CSV.enabled == true && LambdaGlobals.ConfigJson.CSV.resampling.enabled == true)
+                {
+                    rules = new ProcessingRulesCollection()
+                    {
+                        GeneralRules = new ProcessingRules(rules)
+                        {
+                            InitialTimestamp = SyncTimestampLogic.Zero,
+                            SampleAfterEnd = true,
+                            SampleBeforeBeginning = true,
+                            SamplingMethod = SamplingValueSource.LastValue,
+                            SamplingRate = LambdaGlobals.ConfigJson.CSV.resampling.rate
+                        }
+                    };
+                }
+            }
+            catch (Exception exc)
+            {
+                LambdaGlobals.Context?.Logger.LogInformation($"Processing Rule Exception {exc.Message}");
+            }
+
+            var exportCsv = new BinRXD.ExportSettings()
+            {
+                StorageCache = StorageCacheType.Memory,
+                SignalsDatabase = new() { dbcCollection = signalsCollection },
+                ProcessingRules = rules,
+            };
+            var ddcCsv = rxd.ToDoubleData(exportCsv);
+            LambdaGlobals.Context?.Logger.LogInformation($"ddc count {ddcCsv.Count}");
+            return await ddcCsv.ToCSVMultipart(LambdaGlobals.S3Client, bucket, destFile);
+            
+        }
 
         internal static async Task<bool> ToCSVMultipart(this DoubleDataCollection ddc, IAmazonS3 s3Client, string bucket, string key)
         {
@@ -32,12 +60,12 @@ namespace AWSLambdaFileConvert.ExportFormats
 
             try
             {
-                Context?.Logger.LogInformation($"Initiated multipart upload {initResponse.UploadId}");
+                LambdaGlobals.Context?.Logger.LogInformation($"Initiated multipart upload {initResponse.UploadId}");
 
                 var ci = new CultureInfo("en-US", false);
 
                 ddc.InitReading();
-                Context?.Logger.LogInformation($"ddc count {ddc.Count}");
+                LambdaGlobals.Context?.Logger.LogInformation($"ddc count {ddc.Count}");
                 int partId = 1;
                 MemoryStream csvStream = new MemoryStream();
                 using (StreamWriter stream = new StreamWriter(csvStream, new UTF8Encoding(false), 1024, true))
@@ -58,9 +86,9 @@ namespace AWSLambdaFileConvert.ExportFormats
                         };
 
                         // Upload a part and add the response to our list.
-                        Context?.Logger.LogInformation($"Uploading part {partId} with size {csvStream.Length}");
+                        LambdaGlobals.Context?.Logger.LogInformation($"Uploading part {partId} with size {csvStream.Length}");
                         uploadResponses.Add(await s3Client.UploadPartAsync(uploadRequest));
-                        Context?.Logger.LogInformation($"Uploaded part {partId}");
+                        LambdaGlobals.Context?.Logger.LogInformation($"Uploaded part {partId}");
                         partId++;
                         csvStream.Seek(0, SeekOrigin.Begin);
                         csvStream.Position = 0;
@@ -87,7 +115,7 @@ namespace AWSLambdaFileConvert.ExportFormats
 
                         Values = ddc.GetValues();
                     }
-                    Context?.Logger.LogInformation($"Final upload initiation. Length is:{csvStream.Length}");
+                    LambdaGlobals.Context?.Logger.LogInformation($"Final upload initiation. Length is:{csvStream.Length}");
                     if (csvStream.Length > 0)
                         await S3Upload();
 
@@ -108,7 +136,7 @@ namespace AWSLambdaFileConvert.ExportFormats
             }
             catch (Exception e)
             {
-                Context?.Logger.LogInformation($"An AmazonS3Exception was thrown: {e.Message}");
+                LambdaGlobals.Context?.Logger.LogInformation($"An AmazonS3Exception was thrown: {e.Message}");
                 
                 // Abort the upload.
                 AbortMultipartUploadRequest abortMPURequest = new AbortMultipartUploadRequest

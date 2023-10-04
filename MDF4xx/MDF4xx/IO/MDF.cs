@@ -4,6 +4,7 @@ using MDF4xx.Blocks;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 namespace MDF4xx.IO
 {
@@ -18,11 +19,8 @@ namespace MDF4xx.IO
         Int64 mdfFileSize = 0;
         public Int64 FileSize => mdfFileSize;
 
-        Stream mdfStream;
 
         public MDF(string path = "") => mdfFileName = path;
-
-        public MDF(Stream mdfStream) => this.mdfStream = mdfStream;
 
         public static MDF Open(string path)
         {
@@ -53,12 +51,11 @@ namespace MDF4xx.IO
             return mdf;
         }
 
-        public bool WriteHeader()
+        public bool WriteHeader(Stream stream)
         {
             try
             {
-                using (FileStream stream = new FileStream(FileName, FileMode.Create))
-                using (BinaryWriter bw = new BinaryWriter(stream))
+                using (BinaryWriter bw = new BinaryWriter(stream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true), true))
                 {
                     bw.Write(id.ToBytes());
                     foreach (KeyValuePair<Int64, BaseBlock> vp in this)
