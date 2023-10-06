@@ -7,6 +7,7 @@ using AWSLambdaFileConvert;
 using AWSLambdaFileConvert.ExportFormats;
 using DbcParserLib;
 using DbcParserLib.Influx;
+using Influx.Shared.Helpers;
 using InfluxDB.Client.Api.Domain;
 using InfluxShared.FileObjects;
 using InfluxShared.Generic;
@@ -33,6 +34,7 @@ public enum ConversionType
     Snapshot = 8,
     Rxc = 16,
     Mdf = 32,
+    Blf = 64,
 }
 
 public class Function
@@ -118,6 +120,8 @@ public class Function
             return ConversionType.Rxc;
         else if (conversion.ToLower() == "mdf")
             return ConversionType.Mdf;
+        else if (conversion.ToLower() == "blf")
+            return ConversionType.Blf;
         else
             return ConversionType.None;
     }
@@ -218,7 +222,9 @@ public class Function
                     convert |= ConversionType.Snapshot;
                 if (LambdaGlobals.ConfigJson.ContainsKey("MDF") && LambdaGlobals.ConfigJson.MDF.ContainsKey("enabled") && (LambdaGlobals.ConfigJson.MDF.enabled == true))
                     convert |= ConversionType.Mdf;
-                else
+                if (LambdaGlobals.ConfigJson.ContainsKey("BLF") && LambdaGlobals.ConfigJson.BLF.ContainsKey("enabled") && (LambdaGlobals.ConfigJson.BLF.enabled == true))
+                    convert |= ConversionType.Blf;
+                if (convert == 0)
                     LambdaGlobals.Context?.Logger.Log("No conversion settings enabled in Config.json");
             }
             else
@@ -279,7 +285,8 @@ public class Function
     public async Task<bool> ConvertRXD(string bucket, string filename, ConversionType conversion)
     {  
         if (!conversion.HasFlag(ConversionType.Csv) && !conversion.HasFlag(ConversionType.InfluxDB) &&
-                    !conversion.HasFlag(ConversionType.TimeStream) && !conversion.HasFlag(ConversionType.Mdf))
+                    !conversion.HasFlag(ConversionType.TimeStream) && !conversion.HasFlag(ConversionType.Mdf)
+                    && !conversion.HasFlag(ConversionType.Blf))
         {
             LambdaGlobals.Context?.Logger.LogInformation("No valid Conversion requested!");
             return false;
@@ -349,6 +356,24 @@ public class Function
                                 LambdaGlobals.Context?.Logger.LogInformation($"Mdf write to S3 failed");
                         }                            
                     }
+                    //BLF Export
+                    if (conversion.HasFlag(ConversionType.Blf))
+                    {
+                        LambdaGlobals.Context?.Logger.LogInformation($"Starting Blf conversion {rxd.Count}");
+                        MemoryStream blfStream = new();
+                        rxd.ToBLF(blfStream, null);
+                        if (blfStream is null)
+                            LambdaGlobals.Context?.Logger.LogInformation($"Blf Conversion failed");
+                        else
+                        {
+                            LambdaGlobals.Context?.Logger.LogInformation($"Blf Stream Size: {blfStream?.Length}");
+                            if (await LambdaGlobals.S3.UploadFileAsync(bucket, Path.ChangeExtension(LambdaGlobals.FileName, ".blf"), blfStream.ToArray()))
+                                LambdaGlobals.Context?.Logger.LogInformation($"Blf written successfuly");
+                            else
+                                LambdaGlobals.Context?.Logger.LogInformation($"Blf write to S3 failed");
+                        }
+                    }
+
                     //CSV Export
                     if (conversion.HasFlag(ConversionType.Csv))
                     {                        

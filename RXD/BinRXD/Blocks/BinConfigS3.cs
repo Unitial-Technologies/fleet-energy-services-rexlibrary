@@ -15,7 +15,7 @@ namespace RXD.Blocks
         {
             AWS,
             COMPATIBLE
-        }
+        }        
 
         internal enum BinProp
         {

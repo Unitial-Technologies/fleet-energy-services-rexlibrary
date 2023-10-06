@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace InfluxShared.FileObjects
 {
@@ -932,7 +933,7 @@ namespace InfluxShared.FileObjects
                 ObjectsSize = 0;
                 bufferPos = 0;
 
-                bw = new BinaryWriter(blfStream);
+                bw = new BinaryWriter(blfStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true), true);
                 bw.Seek(Marshal.SizeOf(typeof(Header)), SeekOrigin.Begin);
 
                 return true;
