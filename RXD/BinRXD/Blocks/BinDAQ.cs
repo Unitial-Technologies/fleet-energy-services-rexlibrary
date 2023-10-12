@@ -29,6 +29,9 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.Number, typeof(UInt16));
                 data.AddProperty(BinProp.SamplingRate, typeof(UInt32));
             });
+
+            AddInput("UID");
+            AddOutput("UID");
         }
     }
 }

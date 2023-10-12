@@ -37,6 +37,7 @@ namespace RXD.Blocks
 
             AddInput(BinProp.InputUID.ToString());
             AddOutput("UID");
+            AddOutput(BinProp.DAQID.ToString());
         }
 
     }

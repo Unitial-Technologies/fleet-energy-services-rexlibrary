@@ -1090,7 +1090,7 @@ namespace InfluxShared.FileObjects
 
         public void WriteCanFDMessage(UInt32 CanID, UInt64 Timestamp, byte BusChannel, bool isTx, bool isBRS, byte DLC, byte[] CanData)
         {
-            byte canLength = (byte)DlcFDList.IndexOf(DLC);
+            byte dlcBlf = (byte)DlcFDList.IndexOf(DLC);
 
             CanFDMessage msg = new CanFDMessage()
             {
@@ -1102,15 +1102,15 @@ namespace InfluxShared.FileObjects
                         m_HeaderSize = (UInt16)Marshal.SizeOf(typeof(ObjectHeader)),
                         m_HeaderVersion = 1,
                         m_ObjectType = ObjType.CAN_FD_MESSAGE_64,
-                        m_ObjectSize = (UInt32)(Marshal.SizeOf(typeof(CanFDMessage)) + canLength),
+                        m_ObjectSize = (UInt32)(Marshal.SizeOf(typeof(CanFDMessage)) + DLC),
                     },
                     m_Flags = 2,
                     m_TimeStamp = Timestamp * 1000,
                 },
                 m_Channel = BusChannel,
                 m_Flags = (uint)((1 << 12) | (isBRS.AsByte() << 13)),
-                m_DLC = DLC,
-                m_ValidDataBytes = canLength,
+                m_DLC = dlcBlf,
+                m_ValidDataBytes = DLC,
                 m_Dir = isTx.AsByte(),
                 m_ID = CanID,
             };
@@ -1124,8 +1124,8 @@ namespace InfluxShared.FileObjects
             byte[] data = Bytes.ObjectToBytes(msg);
             Array.Copy(data, 0, buffer, bufferPos, data.Length);
             bufferPos += (uint)data.Length;
-            Array.Copy(CanData, 0, buffer, bufferPos, canLength);
-            bufferPos += canLength;
+            Array.Copy(CanData, 0, buffer, bufferPos, DLC);
+            bufferPos += DLC;
         }
 
         public void WriteLinMessage(byte LinID, UInt64 Timestamp, byte BusChannel, bool isTx, byte DLC, byte[] LinData)
