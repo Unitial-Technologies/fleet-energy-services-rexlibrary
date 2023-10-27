@@ -671,7 +671,10 @@ namespace RXD.Base
                                     break;
                                 case RecordType.MessageData:
                                     if (Exportable(rec.LinkedBin))
+                                    {
+                                        ddata.Object(rec.LinkedBin).BusChannel = $"CAN{rec.BusChannel}";
                                         WriteData(ddata.Object(rec.LinkedBin), (rec as RecMessage).data.Timestamp, rec.VariableData, ref LastTimestampCan, ref TimeOffsetCan);
+                                    }
                                     break;
                                 default:
                                     break;

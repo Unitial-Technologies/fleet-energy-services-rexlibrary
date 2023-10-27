@@ -38,7 +38,7 @@ namespace AWSLambdaFileConvert.ExportFormats
                     for (int i = 1; i < Values.Length; i++)
                         if (!double.IsNaN(Values[i]))
                         {
-                            //long timeStamp = (long)Math.Truncate(((DateTime.Now.AddHours(-6).ToOADate() - 25569) * 86400 + Values[0]) * 1000); 
+                            //long timeStamp = (long)Math.Truncate(((DateTime.Now.AddHours(-6).ToOADate() - 25569) * 86400 + Values[0]) * 1000);   //
                             long timeStamp = (long)Math.Truncate((((ddc.RealTime.ToOADate() - 25569) * 86400 + Values[0]) - timeCorrection) * 1000);
                             //Context?.Logger.LogInformation($"Logger Timestamp is {(ddc.RealTime.ToOADate() - 25569) * 86400 + Values[0]}");
                             //Context?.Logger.LogInformation($"Corrected timestamp is: {timeStamp}");
@@ -55,11 +55,14 @@ namespace AWSLambdaFileConvert.ExportFormats
                                 MeasureValueType = MeasureValueType.DOUBLE,
                                 Time = timeStamp.ToString()
                             });
-                            if (ddc[i - 1].ChannelName == "Engine_temperature")
-                                LambdaGlobals.Context?.Logger.LogInformation($"Engine Temperature is: {Values[i]}");
+                            //LambdaGlobals.Context?.Logger.LogInformation($"Bus is: {ddc[i-1].BusChannel}");
+                            //LambdaGlobals.Context?.Logger.LogInformation($"Dimension: {string.Join(";", writeRecordsRequest.Records.Last().Dimensions.Select(d => $"{d.Name}={d.Value}"))}");
+                            //if (ddc[i - 1].ChannelName == "Engine_temperature")
+                            //    LambdaGlobals.Context?.Logger.LogInformation($"Engine Temperature is: {Values[i]}");
                             if (writeRecordsRequest.Records.Count >= 90)
                             {
-                                // Context?.Logger.LogInformation($"Writing {writeRecordsRequest.Records.Count} records");
+                                //LambdaGlobals.Context?.Logger.LogInformation($"Writing {writeRecordsRequest.Records.Count} records");
+                                //LambdaGlobals.Context?.Logger.LogInformation($"Writing {writeRecordsRequest.} records");
                                 await writeClient.LocalWriteRecordsAsync(writeRecordsRequest);                               
                                 writeRecordsRequest.Records.Clear();
                             }

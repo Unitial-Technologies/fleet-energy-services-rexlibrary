@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-
 namespace InfluxShared.FileObjects
 {
     public enum DBCByteOrder : byte { Intel, Motorola }
@@ -32,6 +31,7 @@ namespace InfluxShared.FileObjects
         public double Factor => Conversion.Type.HasFlag(ConversionType.Formula) ? Conversion.Formula.CoeffB : 1;
         public double Offset => Conversion.Type.HasFlag(ConversionType.Formula) ? Conversion.Formula.CoeffC : 0;
         public TableNumericConversion Table => Conversion.Type.HasFlag(ConversionType.TableNumeric) ? Conversion.TableNumeric : null;
+        internal DbcMessage Parent { get; set; }
 
         public static bool operator ==(DbcItem item1, DbcItem item2) =>
             item1.StartBit == item2.StartBit &&
@@ -66,8 +66,20 @@ namespace InfluxShared.FileObjects
 
     public class DbcMessage
     {
+        private uint _canId;
+
         public string Name { get; set; }
-        public uint CANID { get; set; }
+        public uint CANID { get => _canId; set => SetCanID(value); }
+
+        private void SetCanID(uint value)
+        {
+            _canId = value;
+            foreach (var item in Items)
+            {
+                item.Ident = _canId;
+            }
+        }
+
         public string HexIdent => "0x" + (isExtended ? CANID.ToString("X8") : CANID.ToString("X3"));
         public byte DLC { get; set; }
         public DBCMessageType MsgType { get; set; }

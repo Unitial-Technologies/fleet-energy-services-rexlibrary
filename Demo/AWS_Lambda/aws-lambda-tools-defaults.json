@@ -6,7 +6,7 @@
         "dotnet lambda help",
         "All the command line options for the Lambda command can be specified in this file."
     ],
-    "profile"     : "petko",
+    "profile"     : "swei",
     "region"      : "eu-central-1",
     "configuration" : "Release",
     "function-runtime" : "dotnet6",
@@ -14,7 +14,7 @@
     "function-timeout"     : 300,
     "function-handler"     : "AWSLambdaFileConvert::AWSLambdaConvert.Function::ConvertFiles",
     "framework"            : "net6.0",
-    "function-name"        : "FileConvert",
+    "function-name"        : "FileConvert_4CAN_IN",
     "function-description" : "",
     "package-type"         : "Zip",
     "function-architecture" : "x86_64",

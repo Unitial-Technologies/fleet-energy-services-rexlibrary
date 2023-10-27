@@ -122,7 +122,7 @@ namespace InfluxShared.FileObjects
                     var a2l = ObjLibrary.A2LFiles.FirstOrDefault(d => d.FileNameSerialized == channel.FileName);
                     if (a2l is null)
                         continue;
-                    var msg = a2l.Items.FirstOrDefault(m => m.Address == (channel as ReferenceA2LChannel).Address);
+                    var msg = a2l.Items.FirstOrDefault(m => m.Ident == (channel as ReferenceA2LChannel).Address);
                     if (msg is null)
                         break;
 

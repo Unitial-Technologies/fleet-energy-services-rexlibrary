@@ -30,7 +30,7 @@ namespace InfluxShared.FileObjects
                 {
                     BusChannelIndex = BusChannel,
                     FileName = FileNameSerialized,
-                    Address = item.Address,
+                    Address = item.Ident,
                     SignalName = item.Name
                 });
         }
