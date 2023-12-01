@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using LinkEnum = MDF4xx.Blocks.DZLinks;
 
 namespace MDF4xx.Blocks
 {
-    using LinkEnum = DZLinks;
-    enum DZLinks
+    internal enum DZLinks
     {
         linkcount
     };
@@ -12,7 +12,7 @@ namespace MDF4xx.Blocks
     /// <summary>
     /// Data Zipped Block
     /// </summary>
-    class DZBlock : BaseBlock
+    internal class DZBlock : BaseBlock
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
         internal class BlockData

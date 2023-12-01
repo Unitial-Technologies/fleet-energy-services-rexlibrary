@@ -1,9 +1,9 @@
 ﻿using System.Runtime.InteropServices;
+using LinkEnum = MDF4xx.Blocks.LDLinks;
 
 namespace MDF4xx.Blocks
 {
-    using LinkEnum = LDLinks;
-    enum LDLinks
+    internal enum LDLinks
     {
         linkcount
     };
@@ -11,7 +11,7 @@ namespace MDF4xx.Blocks
     /// <summary>
     /// List Data Block
     /// </summary>
-    class LDBlock : BaseBlock
+    internal class LDBlock : BaseBlock
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
         internal class BlockData

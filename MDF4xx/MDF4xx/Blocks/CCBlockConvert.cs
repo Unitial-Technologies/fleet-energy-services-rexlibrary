@@ -4,7 +4,7 @@ namespace MDF4xx.Blocks
 {
     partial class CCBlock : BaseBlock
     {
-        delegate double DCalculate(double input);
+        private delegate double DCalculate(double input);
 
         DCalculate Calculate;
 

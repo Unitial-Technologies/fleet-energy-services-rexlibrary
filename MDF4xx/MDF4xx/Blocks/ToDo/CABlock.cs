@@ -1,9 +1,9 @@
 ﻿using System.Runtime.InteropServices;
+using LinkEnum = MDF4xx.Blocks.CALinks;
 
 namespace MDF4xx.Blocks
 {
-    using LinkEnum = CALinks;
-    enum CALinks
+    internal enum CALinks
     {
         linkcount
     };
@@ -11,7 +11,7 @@ namespace MDF4xx.Blocks
     /// <summary>
     /// Channel Array Block
     /// </summary>
-    class CABlock : BaseBlock
+    internal class CABlock : BaseBlock
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
         internal class BlockData

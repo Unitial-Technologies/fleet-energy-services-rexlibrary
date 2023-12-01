@@ -39,7 +39,7 @@ namespace InfluxShared.FileObjects
             StartBit = StartBit,
             BitCount = BitCount,
             isIntel = true,
-            HexType =  typeof(UInt64),
+            HexType = typeof(UInt64),
             conversionType = ConversionType.Formula,
             Factor = Factor,
             Offset = Offset,
@@ -95,7 +95,7 @@ namespace InfluxShared.FileObjects
             Items = new List<LdfItem>();
         }
 
-         
+
     }
 
     public class LDF

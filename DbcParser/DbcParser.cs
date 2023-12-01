@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.IO;
-using int8_T = System.SByte;
-using uint8_T = System.Byte;
-using int16_T = System.Int16;
-using uint16_T = System.UInt16;
-using int32_T = System.Int32;
-using uint32_T = System.UInt32;
-using int64_T = System.Int64;
-using uint64_T = System.UInt64;
-using System.Globalization;
-using System.ComponentModel.DataAnnotations;
 using System.Collections.Specialized;
+using System.ComponentModel.DataAnnotations;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using int16_T = System.Int16;
+using int32_T = System.Int32;
+using int64_T = System.Int64;
+using int8_T = System.SByte;
+using uint16_T = System.UInt16;
+using uint32_T = System.UInt32;
+using uint64_T = System.UInt64;
+using uint8_T = System.Byte;
 
 /* 
  * ------------------------------------
@@ -28,15 +28,15 @@ namespace DbcParserLib
     public class Message
     {
         public uint ID { get; set; }
-        public enum MsgType { Standard, Extended, CanFDStandard, CanFDExtended, J1939PG, Lin , reserved}
+        public enum MsgType { Standard, Extended, CanFDStandard, CanFDExtended, J1939PG, Lin, reserved }
         public MsgType Type { get; set; }
         public bool BRS { get; set; } //1 == true
-        public string Name { get; set; } 
+        public string Name { get; set; }
         public byte DLC { get; set; }
-        public string Transmitter { get; set; } 
-        public string Comment { get; set; } 
+        public string Transmitter { get; set; }
+        public string Comment { get; set; }
         public int CycleTime { get; set; }
-        public List<Signal> Signals = new List<Signal>() ;
+        public List<Signal> Signals = new List<Signal>();
         public NameValueCollection AttrValues = new NameValueCollection();
     }
 
@@ -60,19 +60,19 @@ namespace DbcParserLib
         public string Multiplexing { get; set; }
         public NameValueCollection AttrValues = new NameValueCollection();
     }
- 
-/* ------------------------------------
- * Author:  Georgi Georgiev
- * Year:    2023
- * 
- * Company: Influx Technology LTD
- * ------------------------------------
- */
-    public enum DataType {Int, Hex, Float, Enum, String}
 
-    public enum ApplyTo {Project, Node, Message, Signal, EnvVar}
+    /* ------------------------------------
+     * Author:  Georgi Georgiev
+     * Year:    2023
+     * 
+     * Company: Influx Technology LTD
+     * ------------------------------------
+     */
+    public enum DataType { Int, Hex, Float, Enum, String }
 
-    public enum EnvVarType {Int, Float, String, Data}
+    public enum ApplyTo { Project, Node, Message, Signal, EnvVar }
+
+    public enum EnvVarType { Int, Float, String, Data }
 
     public class DBCAttribute
     {
@@ -96,11 +96,11 @@ namespace DbcParserLib
         public string Units;
         public bool AllowRead;
         public bool AllowWrite;
-        public string Comment;    
+        public string Comment;
         public NameValueCollection AttrValues = new NameValueCollection();
         public List<string> Nodes = new List<string>();
     }
-/* ------------------------------------*/
+    /* ------------------------------------*/
 
     [Obsolete("This class is obsolete and will be removed in the future. Use Parser class instead.", false)]
     public class DbcParser
@@ -230,22 +230,22 @@ namespace DbcParserLib
             if (records[2] != ":")    // signal is multiplexed
                 mux = 1;
 
-            sig.ID          = msgID;
-            sig.Name        = records[1];
-            sig.StartBit    = byte.Parse(records[3 + mux], CultureInfo.InvariantCulture);
-            sig.Length      = byte.Parse(records[4 + mux], CultureInfo.InvariantCulture);
-            sig.ByteOrder   = byte.Parse(records[5 + mux].Substring(0, 1), CultureInfo.InvariantCulture);   // 0 = MSB (Motorola), 1 = LSB (Intel)
+            sig.ID = msgID;
+            sig.Name = records[1];
+            sig.StartBit = byte.Parse(records[3 + mux], CultureInfo.InvariantCulture);
+            sig.Length = byte.Parse(records[4 + mux], CultureInfo.InvariantCulture);
+            sig.ByteOrder = byte.Parse(records[5 + mux].Substring(0, 1), CultureInfo.InvariantCulture);   // 0 = MSB (Motorola), 1 = LSB (Intel)
             if (records[5 + mux].Substring(1, 1) == "+")
                 sig.IsSigned = 0;
             else
                 sig.IsSigned = 1;
 
-            sig.Factor      = double.Parse(records[6 + mux].Split(new string[] { "," }, StringSplitOptions.None)[0], CultureInfo.InvariantCulture);
-            sig.Offset      = double.Parse(records[6 + mux].Split(new string[] { "," }, StringSplitOptions.None)[1], CultureInfo.InvariantCulture);
-            sig.Minimum     = double.Parse(records[7 + mux], CultureInfo.InvariantCulture);
-            sig.Maximum     = double.Parse(records[8 + mux], CultureInfo.InvariantCulture);
-            sig.Unit        = records[9 + mux].Split(new string[] { "\"" }, StringSplitOptions.None)[1];
-            sig.Receiver    = records[10 + mux].Split(new string[] { "," }, StringSplitOptions.None);  // can be multiple receivers splitted by ","
+            sig.Factor = double.Parse(records[6 + mux].Split(new string[] { "," }, StringSplitOptions.None)[0], CultureInfo.InvariantCulture);
+            sig.Offset = double.Parse(records[6 + mux].Split(new string[] { "," }, StringSplitOptions.None)[1], CultureInfo.InvariantCulture);
+            sig.Minimum = double.Parse(records[7 + mux], CultureInfo.InvariantCulture);
+            sig.Maximum = double.Parse(records[8 + mux], CultureInfo.InvariantCulture);
+            sig.Unit = records[9 + mux].Split(new string[] { "\"" }, StringSplitOptions.None)[1];
+            sig.Receiver = records[10 + mux].Split(new string[] { "," }, StringSplitOptions.None);  // can be multiple receivers splitted by ","
 
             Messages[idxMsg].Signals.Add(sig);
         }
@@ -254,7 +254,7 @@ namespace DbcParserLib
         {
             try
             {
-                string[] records = cycleStr.Split(new string[] {" " , ";" }, StringSplitOptions.RemoveEmptyEntries);
+                string[] records = cycleStr.Split(new string[] { " ", ";" }, StringSplitOptions.RemoveEmptyEntries);
 
                 ulong msgID = ulong.Parse(records[3], CultureInfo.InvariantCulture);
                 int idxMsg = Messages.FindIndex(x => x.ID == msgID);
@@ -270,7 +270,7 @@ namespace DbcParserLib
         {
             try
             {
-                string[] records = initStr.Split(new string[] {" " , ";" }, StringSplitOptions.RemoveEmptyEntries);
+                string[] records = initStr.Split(new string[] { " ", ";" }, StringSplitOptions.RemoveEmptyEntries);
 
                 string sigName = records[4];
                 foreach (var msg in Messages)
@@ -362,7 +362,7 @@ namespace DbcParserLib
                 (uint8_T)(msg >> 48),
                 (uint8_T)(msg >> 56)
             };
-            return   (((uint64_T)v[0] << 56)
+            return (((uint64_T)v[0] << 56)
                     | ((uint64_T)v[1] << 48)
                     | ((uint64_T)v[2] << 40)
                     | ((uint64_T)v[3] << 32)
@@ -389,12 +389,12 @@ namespace DbcParserLib
         /// <returns>Returns a 64 bit unsigned data message</returns>
         public uint64_T TxSignalPack(double value, Signal signal)
         {
-            int64_T iVal; 
+            int64_T iVal;
             uint64_T bitMask = (1UL << signal.Length) - 1;
 
             // Apply scaling
             iVal = (int64_T)Math.Round((value - signal.Offset) / signal.Factor);
-    
+
             // Apply overflow protection
             if (signal.IsSigned != 0)
                 iVal = CLAMP(iVal, -(int64_T)(bitMask >> 1) - 1, (int64_T)(bitMask >> 1));
@@ -402,8 +402,9 @@ namespace DbcParserLib
                 iVal = CLAMP(iVal, 0L, (int64_T)bitMask);
 
             // Manage sign bit (if signed)
-            if (signal.IsSigned != 0 && iVal < 0) {
-              iVal += (int64_T)(1UL << signal.Length);
+            if (signal.IsSigned != 0 && iVal < 0)
+            {
+                iVal += (int64_T)(1UL << signal.Length);
             }
 
             // Pack signal
@@ -422,10 +423,10 @@ namespace DbcParserLib
         public uint64_T TxStatePack(uint64_T value, Signal signal)
         {
             uint64_T bitMask = (1UL << signal.Length) - 1;
-    
+
             // Apply overflow protection
             value = CLAMP(value, 0UL, bitMask);
-    
+
             // Pack signal
             if (signal.ByteOrder != 0)  // Little endian (Intel)
                 return ((value & bitMask) << signal.StartBit);
@@ -441,7 +442,7 @@ namespace DbcParserLib
         /// <returns>Returns a double value representing the unpacked signal</returns>
         public double RxSignalUnpack(uint64_T RxMsg64, Signal signal)
         {
-            int64_T iVal; 
+            int64_T iVal;
             uint64_T bitMask = (1UL << signal.Length) - 1;
 
             // Unpack signal
@@ -451,8 +452,9 @@ namespace DbcParserLib
                 iVal = (int64_T)((MirrorMsg(RxMsg64) >> GetStartBitLE(signal)) & bitMask);
 
             // Manage sign bit (if signed)
-            if (signal.IsSigned != 0) {
-              iVal -= ((iVal >> (signal.Length - 1)) != 0) ? (1L << signal.Length) : 0L;
+            if (signal.IsSigned != 0)
+            {
+                iVal -= ((iVal >> (signal.Length - 1)) != 0) ? (1L << signal.Length) : 0L;
             }
 
             // Apply scaling
@@ -467,7 +469,7 @@ namespace DbcParserLib
         /// <returns>Returns an unsigned integer representing the unpacked state</returns>
         public uint64_T RxStateUnpack(uint64_T RxMsg64, Signal signal)
         {
-            uint64_T iVal; 
+            uint64_T iVal;
             uint64_T bitMask = (1UL << signal.Length) - 1;
 
             // Unpack signal

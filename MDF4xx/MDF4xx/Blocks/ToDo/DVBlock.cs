@@ -1,9 +1,9 @@
 ﻿using System.Runtime.InteropServices;
+using LinkEnum = MDF4xx.Blocks.DVLinks;
 
 namespace MDF4xx.Blocks
 {
-    using LinkEnum = DVLinks;
-    enum DVLinks
+    internal enum DVLinks
     {
         linkcount
     };
@@ -11,7 +11,7 @@ namespace MDF4xx.Blocks
     /// <summary>
     /// Data Values Block
     /// </summary>
-    class DVBlock : BaseBlock
+    internal class DVBlock : BaseBlock
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
         internal class BlockData

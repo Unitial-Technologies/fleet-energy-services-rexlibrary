@@ -24,6 +24,7 @@
     <PackageReference Include="AWSSDK.TimestreamWrite" Version="3.7.1.117" />
     <PackageReference Include="Iconic.Zlib.Netstandard" Version="1.0.0" />
     <PackageReference Include="InfluxDB.Client" Version="4.10.0-dev.9773" />
+    <PackageReference Include="Minio" Version="6.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="System.Security.Cryptography.Xml" Version="6.0.1" />
   </ItemGroup>

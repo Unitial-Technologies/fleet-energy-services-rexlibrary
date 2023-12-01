@@ -32,7 +32,7 @@ namespace RXD.Blocks
             Type,
         }
 
-            #region Do not touch these
+        #region Do not touch these
         public BinGNSSMessage(BinHeader hs = null) : base(hs) { }
 
         internal dynamic this[BinProp index]
@@ -81,7 +81,7 @@ namespace RXD.Blocks
         internal override ChannelDescriptor GetDataDescriptor => new()
         {
             StartBit = 0,
-            BitCount = (ushort)(8 *Marshal.SizeOf(GnssType[this[BinGNSSMessage.BinProp.Type]] as Type)),
+            BitCount = (ushort)(8 * Marshal.SizeOf(GnssType[this[BinGNSSMessage.BinProp.Type]] as Type)),
             isIntel = true,
             HexType = GnssType[this[BinGNSSMessage.BinProp.Type]],
             conversionType = ConversionType.None,

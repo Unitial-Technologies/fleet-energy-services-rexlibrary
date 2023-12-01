@@ -24,7 +24,7 @@ namespace RXD.Blocks
         internal enum BinProp
         {
             PhysicalNumber,
-            AssignOption,            
+            AssignOption,
             InputUIDActive,
             InputUIDDeactive,
             ActiveTimeout,
@@ -49,7 +49,7 @@ namespace RXD.Blocks
         {
             Versions[1] = new Action(() =>
             {
-                data.AddProperty(BinProp.PhysicalNumber, typeof(byte));                
+                data.AddProperty(BinProp.PhysicalNumber, typeof(byte));
                 data.AddProperty(BinProp.AssignOption, typeof(LED_Assign_Option));
                 data.AddProperty(BinProp.InputUIDActive, typeof(UInt16));
                 data.AddProperty(BinProp.InputUIDDeactive, typeof(UInt16));

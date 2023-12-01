@@ -2,7 +2,7 @@
 
 namespace RXD.Objects
 {
-    interface ITraceObj
+    internal interface ITraceObj
     {
         public RecordType TraceType { get; set; }
 

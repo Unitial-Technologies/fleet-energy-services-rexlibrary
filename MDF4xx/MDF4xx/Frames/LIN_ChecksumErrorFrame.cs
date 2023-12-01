@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace MDF4xx.Frames
 {
-    class LIN_ChecksumErrorFrame : BaseDataFrame
+    internal class LIN_ChecksumErrorFrame : BaseDataFrame
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
         internal new class FrameData : BaseDataFrame.FrameData

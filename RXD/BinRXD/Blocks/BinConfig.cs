@@ -3,13 +3,14 @@
 namespace RXD.Blocks
 {
     #region Enumerations for Property type definitions
-    
+
     public enum Encrypt_Type : byte
     {
         No_Encryption,
         RSA
     }
-    enum ConfigSleepMode : byte
+
+    internal enum ConfigSleepMode : byte
     {
         NO_SLEEP,
         DEEP_SLEEP,

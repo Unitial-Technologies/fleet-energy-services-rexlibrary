@@ -8,7 +8,7 @@ namespace MDF4xx.Blocks
     /// Header structure
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
-    class HeaderSection
+    internal class HeaderSection
     {
         /// <summary>
         /// Block type identifier - "##" + "id"

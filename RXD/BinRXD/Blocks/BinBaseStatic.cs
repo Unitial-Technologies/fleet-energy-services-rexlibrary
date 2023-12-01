@@ -32,7 +32,7 @@ namespace RXD.Blocks
         Digital_Output = 22,
         J1939DM = 23,
         Accelerometer = 24,
-        Gyro = 25, 
+        Gyro = 25,
         GNSSInterface = 26,
         GNSSMessage = 27,
         INTERNAL_PARAMETER = 28,

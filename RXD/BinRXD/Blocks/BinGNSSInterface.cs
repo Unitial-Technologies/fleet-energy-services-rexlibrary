@@ -4,7 +4,7 @@ using System.Text;
 
 namespace RXD.Blocks
 {
-    class BinGNSSInterface : BinBase
+    internal class BinGNSSInterface : BinBase
     {
         internal enum BinProp
         {

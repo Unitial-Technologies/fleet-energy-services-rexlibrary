@@ -33,7 +33,7 @@ namespace InfluxShared.FileObjects
                 SamplingMethod = rules.SamplingMethod,
                 InitialTimestamp = rules.InitialTimestamp,
                 SampleBeforeBeginning = rules.SampleBeforeBeginning,
-                SampleAfterEnd = rules.SampleAfterEnd,  
+                SampleAfterEnd = rules.SampleAfterEnd,
             };
         }
 

@@ -1,17 +1,14 @@
-﻿using Amazon.Lambda.Core;
-using InfluxDB.Client;
-using InfluxDB.Client.Api.Domain;
-using InfluxShared.FileObjects;
+﻿using InfluxShared.FileObjects;
 using InfluxShared.Helpers;
 using System.Globalization;
+using InfluxDB.Client;
 
-namespace AWSLambdaFileConvert.ExportFormats
+namespace Cloud.Export
 {
-
     internal static class InfluxDBHelper
     {
 
-        public static async Task<bool> ToInfluxDB(this DoubleDataCollection ddc)
+        public static async Task<bool> ToInfluxDB(this DoubleDataCollection ddc, ILogProvider log)
         {
             static string PrepareChannelName(string chname)
             {
@@ -32,7 +29,7 @@ namespace AWSLambdaFileConvert.ExportFormats
             {
                 var ci = new CultureInfo("en-US", false);
 
-                using (var client = new InfluxDBClient(LambdaGlobals.InfluxDB.url, LambdaGlobals.InfluxDB.token))
+                using (var client = new InfluxDBClient(Config.InfluxDB.url, Config.InfluxDB.token))
                 {
                     client.EnableGzip();
                     var writeApi = client.GetWriteApiAsync();
@@ -60,8 +57,8 @@ namespace AWSLambdaFileConvert.ExportFormats
 
                             if (idbData.Count >= 5000)
                             {
-                                await writeApi.WriteRecordsAsync(idbData, WritePrecision.Ms, LambdaGlobals.InfluxDB.bucket, LambdaGlobals.InfluxDB.org);
-                                LambdaGlobals.Context?.Logger.LogInformation($"{idbData.Count} records written");
+                                await writeApi.WriteRecordsAsync(idbData, InfluxDB.Client.Api.Domain.WritePrecision.Ms, Config.InfluxDB.bucket, Config.InfluxDB.org);
+                                //log?.Log($"{idbData.Count} records written");
                                 idbData.Clear();
                             }
                         }
@@ -70,27 +67,27 @@ namespace AWSLambdaFileConvert.ExportFormats
                     }
                     if (idbData.Count > 0)
                     {
-                        await writeApi.WriteRecordsAsync(idbData, WritePrecision.Ms, LambdaGlobals.InfluxDB.bucket, LambdaGlobals.InfluxDB.org);
-                        LambdaGlobals.Context?.Logger.LogInformation($"{idbData.Count} records written");
+                        await writeApi.WriteRecordsAsync(idbData, InfluxDB.Client.Api.Domain.WritePrecision.Ms, Config.InfluxDB.bucket, Config.InfluxDB.org);
+                        //log?.Log($"{idbData.Count} records written");
                         idbData.Clear();
                     }
-
+                    log?.Log($"Writing to InfluxDB finished");
                     //client.GetWriteApi().SetAnyProperty()
                 };
 
-                
+
 
                 return true;
             }
             catch (Exception e)
             {
-                LambdaGlobals.Context?.Logger.LogInformation(e.Message);
+                log?.Log(e.Message);
                 return false;
             }
 
         }
 
-      
+
 
     }
 }

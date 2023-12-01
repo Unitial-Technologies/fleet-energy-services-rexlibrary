@@ -32,7 +32,7 @@ namespace RXD.DataRecords
         DIR = 1 << 4,
     }
 
-    class RecCanTrace : RecBase
+    internal class RecCanTrace : RecBase
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
         internal class DataRecord
@@ -92,7 +92,7 @@ namespace RXD.DataRecords
         public override TraceCollection ToTraceRow(UInt32 TimestampPrecision)
         {
             var frames = base.ToTraceRow(TimestampPrecision);
-            
+
             TraceRow trace = new TraceRow()
             {
                 TraceType = LinkedBin.RecType,

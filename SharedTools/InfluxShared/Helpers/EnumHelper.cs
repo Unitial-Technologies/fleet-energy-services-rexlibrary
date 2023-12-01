@@ -43,7 +43,7 @@ namespace InfluxShared.Helpers
 
         public static T Next<T>(this T src) where T : struct
         {
-            if (!typeof(T).IsEnum) 
+            if (!typeof(T).IsEnum)
                 throw new ArgumentException(string.Format("Argument {0} is not an Enum", typeof(T).FullName));
 
             T[] Arr = (T[])Enum.GetValues(src.GetType());

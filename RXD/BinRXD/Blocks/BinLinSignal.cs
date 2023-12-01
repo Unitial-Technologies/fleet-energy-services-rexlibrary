@@ -4,11 +4,10 @@ using System;
 
 namespace RXD.Blocks
 {
-
-    class BinLinSignal : BinBase
+    internal class BinLinSignal : BinBase
     {
         internal enum BinProp
-        {            
+        {
             InputUID,
             MessageUID,
             StartBit,

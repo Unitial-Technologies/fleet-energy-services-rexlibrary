@@ -95,7 +95,7 @@ namespace InfluxShared.FileObjects
         public void InjectTransformer(ProcessingRules rules)
         {
             Transformer = new DataTransformer(rules)
-            { 
+            {
                 Writer = WriteDataToStorage,
             };
             WriteData = Transformer.Push;

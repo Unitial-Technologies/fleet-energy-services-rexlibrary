@@ -21,7 +21,7 @@ namespace RXD.Blocks
 
     #endregion
 
-    class BinCanMessage : BinBase
+    internal class BinCanMessage : BinBase
     {
         internal enum BinProp
         {

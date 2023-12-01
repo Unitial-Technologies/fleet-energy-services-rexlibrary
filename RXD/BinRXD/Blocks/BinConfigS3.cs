@@ -4,7 +4,7 @@ using System.Text;
 
 namespace RXD.Blocks
 {
-    public class BinConfigS3: BinBase
+    public class BinConfigS3 : BinBase
     {
         public enum S3_Connection_Type : byte
         {
@@ -15,11 +15,11 @@ namespace RXD.Blocks
         {
             AWS,
             COMPATIBLE
-        }        
+        }
 
         internal enum BinProp
         {
-            S3Type,                      
+            S3Type,
             EndPointSize,
             EndPoint,
             BucketSize,
@@ -63,7 +63,7 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.Bucket, typeof(string), BinProp.BucketSize);
                 data.AddProperty(BinProp.RegionSize, typeof(byte));
                 data.AddProperty(BinProp.Region, typeof(string), BinProp.RegionSize);
-                data.AddProperty(BinProp.ConnectionType, typeof(S3_Connection_Type)); 
+                data.AddProperty(BinProp.ConnectionType, typeof(S3_Connection_Type));
                 data.AddProperty(BinProp.ConnectionPort, typeof(UInt16));
                 data.AddProperty(BinProp.AccessKeySize, typeof(byte));
                 data.AddProperty(BinProp.AccessKey, typeof(string), BinProp.AccessKeySize);

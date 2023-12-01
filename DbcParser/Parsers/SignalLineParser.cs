@@ -1,7 +1,7 @@
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Globalization;
 
 namespace DbcParserLib.Parsers
 {
@@ -18,18 +18,18 @@ namespace DbcParserLib.Parsers
 
         private readonly ParsingStrategy m_parsingStrategy;
 
-        public SignalLineParser() 
+        public SignalLineParser()
             : this(false)
         { }
 
-        public SignalLineParser(bool withRegex) 
+        public SignalLineParser(bool withRegex)
         {
             m_parsingStrategy = withRegex ? (ParsingStrategy)AddSignalRegex : AddSignal;
         }
 
         public bool TryParse(string line, IDbcBuilder builder)
         {
-            if(line.TrimStart().StartsWith(SignalLineStarter) == false)
+            if (line.TrimStart().StartsWith(SignalLineStarter) == false)
                 return false;
 
             m_parsingStrategy(line, builder);
@@ -53,18 +53,25 @@ namespace DbcParserLib.Parsers
                 sig.Multiplexing = records[2];
             }
 
-            sig.Name        = records[1];
-            sig.StartBit    = ushort.Parse(records[3 + muxOffset], CultureInfo.InvariantCulture);
-            sig.Length      = byte.Parse(records[4 + muxOffset], CultureInfo.InvariantCulture);
-            sig.ByteOrder   = byte.Parse(records[5 + muxOffset].Substring(0, 1), CultureInfo.InvariantCulture);   // 0 = MSB (Motorola), 1 = LSB (Intel)
-            sig.IsSigned    = (byte)(records[5 + muxOffset][1] == '+' ? 0 : 1);
+            sig.Name = records[1];
+            sig.StartBit = ushort.Parse(records[3 + muxOffset], CultureInfo.InvariantCulture);
+            if (byte.TryParse(records[4 + muxOffset], NumberStyles.None, CultureInfo.InvariantCulture, out byte length) && length >= 0 && length <= 255)
+            {
+                sig.Length = length;
+            }
+            else
+            {
+                sig.Length = 8;
+            }
+            sig.ByteOrder = byte.Parse(records[5 + muxOffset].Substring(0, 1), CultureInfo.InvariantCulture);   // 0 = MSB (Motorola), 1 = LSB (Intel)
+            sig.IsSigned = (byte)(records[5 + muxOffset][1] == '+' ? 0 : 1);
 
-            sig.Factor      = double.Parse(records[6 + muxOffset].Split(m_commaSeparator, StringSplitOptions.None)[0], CultureInfo.InvariantCulture);
-            sig.Offset      = double.Parse(records[6 + muxOffset].Split(m_commaSeparator, StringSplitOptions.None)[1], CultureInfo.InvariantCulture);
-            sig.Minimum     = double.Parse(records[7 + muxOffset], CultureInfo.InvariantCulture);
-            sig.Maximum     = double.Parse(records[8 + muxOffset], CultureInfo.InvariantCulture);
-            sig.Unit        = records[9 + muxOffset].Split(new string[] { "\"" }, StringSplitOptions.None)[1];
-            sig.Receiver    = string.Join(Helpers.Space, records.Skip(10 + muxOffset)).Split(m_commaSpaceSeparator, StringSplitOptions.RemoveEmptyEntries);  // can be multiple receivers splitted by ","
+            sig.Factor = double.Parse(records[6 + muxOffset].Split(m_commaSeparator, StringSplitOptions.None)[0], CultureInfo.InvariantCulture);
+            sig.Offset = double.Parse(records[6 + muxOffset].Split(m_commaSeparator, StringSplitOptions.None)[1], CultureInfo.InvariantCulture);
+            sig.Minimum = double.Parse(records[7 + muxOffset], CultureInfo.InvariantCulture);
+            sig.Maximum = double.Parse(records[8 + muxOffset], CultureInfo.InvariantCulture);
+            sig.Unit = records[9 + muxOffset].Split(new string[] { "\"" }, StringSplitOptions.None)[1];
+            sig.Receiver = string.Join(Helpers.Space, records.Skip(10 + muxOffset)).Split(m_commaSpaceSeparator, StringSplitOptions.RemoveEmptyEntries);  // can be multiple receivers splitted by ","
 
             builder.AddSignal(sig);
         }

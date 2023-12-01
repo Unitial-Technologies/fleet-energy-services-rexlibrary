@@ -5,13 +5,13 @@ using System;
 namespace RXD.Blocks
 {
     #region Enumerations for Property type definitions
-    enum SignalByteOrder : byte
+    internal enum SignalByteOrder : byte
     {
         MOTOROLA,
         INTEL
     }
 
-    enum SignalDataType : byte
+    internal enum SignalDataType : byte
     {
         UNSIGNED,
         SIGNED,
@@ -19,14 +19,14 @@ namespace RXD.Blocks
         FLOAT64
     }
 
-    enum SignalInputType : byte
+    internal enum SignalInputType : byte
     {
         COMMON,
         MESSAGE
     }
     #endregion
 
-    class BinCanSignal : BinBase
+    internal class BinCanSignal : BinBase
     {
         internal enum BinProp
         {
@@ -55,12 +55,16 @@ namespace RXD.Blocks
         #endregion
 
         internal override ChannelDescriptor GetDataDescriptor => new ChannelDescriptor()
-        { 
-            StartBit = this[BinProp.StartBit], BitCount = this[BinProp.BitCount], 
-            isIntel = this[BinProp.Endian] == SignalByteOrder.INTEL, HexType = BinaryData.BinaryTypes[(int)this[BinProp.SignalType]], 
+        {
+            StartBit = this[BinProp.StartBit],
+            BitCount = this[BinProp.BitCount],
+            isIntel = this[BinProp.Endian] == SignalByteOrder.INTEL,
+            HexType = BinaryData.BinaryTypes[(int)this[BinProp.SignalType]],
             conversionType = ConversionType.Formula,
-            Factor = this[BinProp.ParA], Offset = this[BinProp.ParB], 
-            Name = GetName, Units = GetUnits 
+            Factor = this[BinProp.ParA],
+            Offset = this[BinProp.ParB],
+            Name = GetName,
+            Units = GetUnits
         };
 
         internal override void SetupVersions()

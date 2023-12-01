@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <Import Project="..\..\RXD\BinRXD\BinRXD.projitems" Label="Shared" />
+
+  <Import Project="..\..\DbcParser\DbcParser.projitems" Label="Shared" />
+
+  <Import Project="..\..\SharedTools\InfluxShared\InfluxShared.projitems" Label="Shared" />
+
+  <Import Project="..\..\Matlab\MatlabFile\MatlabFile.projitems" Label="Shared" />
+
+  <Import Project="..\..\MDF4xx\MDF4xx\MDF4xx.projitems" Label="Shared" />
+
+  <Import Project="..\..\Cloud\Cloud.projitems" Label="Shared" />
+
+  <ItemGroup>
+    <Compile Include="..\..\SharedTools\Shared\Helpers\DataHelper.cs" Link="DataHelper.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="InfluxDB.Client" Version="4.14.0" />
+    <PackageReference Include="Ionic.Zlib" Version="1.9.1.5" />
+    <PackageReference Include="Minio" Version="6.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="7.0.1" />
+  </ItemGroup>
+
+</Project>

@@ -6,7 +6,7 @@ namespace RXD.Blocks
     #region Enumerations for Property type definitions
     #endregion
 
-    class BinSDMessage : BinBase
+    internal class BinSDMessage : BinBase
     {
         internal enum BinProp
         {
@@ -19,7 +19,7 @@ namespace RXD.Blocks
             Period,
             TriggeringMessageUniqueID,
             DefaultHex,
-            InputMessageUID,            
+            InputMessageUID,
         }
 
         #region Do not touch these
@@ -47,11 +47,11 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.DefaultHex, typeof(byte[]), BinProp.DLC);
                 data.AddProperty(BinProp.InputMessageUID, typeof(UInt16));
             });
-           /* Versions[2] = new Action(() =>
-            {
-                Versions[1].DynamicInvoke();
-                data.AddProperty(BinProp.Downsampling, typeof(UInt32));
-            });*/
+            /* Versions[2] = new Action(() =>
+             {
+                 Versions[1].DynamicInvoke();
+                 data.AddProperty(BinProp.Downsampling, typeof(UInt32));
+             });*/
 
             AddInput(BinProp.InputMessageUID.ToString());
             AddOutput(BinProp.InterfaceUID.ToString());

@@ -45,7 +45,7 @@ namespace RXD.Blocks
         public void AddOutput(string prop)
         {
             Outputs.Add(prop);
-        }        
+        }
 
         public BinBase(BinHeader hs = null)
         {

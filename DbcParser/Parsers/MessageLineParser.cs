@@ -11,11 +11,11 @@ namespace DbcParserLib.Parsers
 
         public bool TryParse(string line, IDbcBuilder builder)
         {
-            if(line.Trim().StartsWith(MessageLineStarter) == false)
+            if (line.Trim().StartsWith(MessageLineStarter) == false)
                 return false;
-            
+
             var match = Regex.Match(line, MessageRegex);
-            if(match.Success)
+            if (match.Success)
             {
                 var msg = new Message()
                 {

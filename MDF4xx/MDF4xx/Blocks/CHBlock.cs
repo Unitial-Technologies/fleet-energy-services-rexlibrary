@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using LinkEnum = MDF4xx.Blocks.CHLinks;
 
 namespace MDF4xx.Blocks
 {
-    using LinkEnum = CHLinks;
-    enum CHLinks
+    internal enum CHLinks
     {
         /// <summary>
         /// Link to next sibling CHBLOCK (can be NIL)
@@ -29,7 +29,7 @@ namespace MDF4xx.Blocks
     /// <summary>
     /// Channel Hierarchy Block
     /// </summary>
-    class CHBlock : BaseBlock
+    internal class CHBlock : BaseBlock
     {
         public class HierarchyRecord
         {

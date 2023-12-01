@@ -14,7 +14,7 @@ namespace RXD.Blocks
             BitRate,
             ProtocolVersion,
             Time_Base,
-            Time_Jitter,            
+            Time_Jitter,
         }
 
         internal enum LINProtocolVersion : byte
@@ -42,7 +42,7 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.BitRate, typeof(UInt16));
                 data.AddProperty(BinProp.ProtocolVersion, typeof(LINProtocolVersion));
                 data.AddProperty(BinProp.Time_Base, typeof(UInt16));
-                data.AddProperty(BinProp.Time_Jitter, typeof(UInt16)); 
+                data.AddProperty(BinProp.Time_Jitter, typeof(UInt16));
             });
             AddOutput("UID");
         }

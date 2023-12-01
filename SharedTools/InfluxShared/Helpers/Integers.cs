@@ -47,13 +47,13 @@ namespace InfluxShared.Helpers
             int result;
             try
             {
-                result = Convert.ToInt32(value, value.Contains("0x")? 16 : 10);
+                result = Convert.ToInt32(value, value.Contains("0x") ? 16 : 10);
                 return result;
             }
             catch (Exception)
             {
                 return defaultValue;
-            } 
+            }
         }
     }
 }

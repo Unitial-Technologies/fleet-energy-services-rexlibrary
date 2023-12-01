@@ -93,7 +93,7 @@ namespace InfluxShared.FileObjects
             if (dn == "1")
                 dn = "";
 
-            return  (dn == "") ? (up == "")? "x": up : (up == "") ? $"1/{dn}": $"{up}/{dn}";
+            return (dn == "") ? (up == "") ? "x" : up : (up == "") ? $"1/{dn}" : $"{up}/{dn}";
         }
     }
 
@@ -101,7 +101,7 @@ namespace InfluxShared.FileObjects
     {
         public double Interpolate(double x)
         {
-            if (Count == 0) 
+            if (Count == 0)
                 return double.NaN;
 
             int idx = IndexOfKey(x);
@@ -119,7 +119,7 @@ namespace InfluxShared.FileObjects
         }
     }
 
-    public class TableVerbalConversion 
+    public class TableVerbalConversion
     {
         public int Count;
         public Dictionary<double, string> Pairs;

@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace RXD.DataRecords
 {
-    class RecMessage : RecBase
+    internal class RecMessage : RecBase
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
         internal class DataRecord

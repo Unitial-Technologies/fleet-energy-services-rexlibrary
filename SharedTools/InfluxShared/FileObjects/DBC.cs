@@ -7,7 +7,7 @@ using System.Linq;
 namespace InfluxShared.FileObjects
 {
     public enum DBCByteOrder : byte { Intel, Motorola }
-    public enum DBCMessageType : byte { Standard, Extended, CanFDStandard, CanFDExtended, J1939PG}
+    public enum DBCMessageType : byte { Standard, Extended, CanFDStandard, CanFDExtended, J1939PG }
     public enum DBCValueType : byte { Unsigned, Signed, IEEEFloat, IEEEDouble }
     public enum DBCSignalType : byte { Standard, Mode, ModeDependent }
     public enum DBCFileType : byte { None, Generic, CAN, CANFD, LIN, J1939, Ethernet, FlexRay };
@@ -41,7 +41,7 @@ namespace InfluxShared.FileObjects
             item1.ByteOrder == item2.ByteOrder &&
             item1.ValueType == item2.ValueType;
         public static bool operator !=(DbcItem item1, DbcItem item2) => !(item1 == item2);
-        public override bool Equals(object obj) 
+        public override bool Equals(object obj)
         {
             if (obj is DbcItem)
                 return this == (DbcItem)obj;

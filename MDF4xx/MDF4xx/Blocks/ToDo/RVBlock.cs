@@ -1,9 +1,9 @@
 ﻿using System.Runtime.InteropServices;
+using LinkEnum = MDF4xx.Blocks.RVLinks;
 
 namespace MDF4xx.Blocks
 {
-    using LinkEnum = RVLinks;
-    enum RVLinks
+    internal enum RVLinks
     {
         linkcount
     };
@@ -11,7 +11,7 @@ namespace MDF4xx.Blocks
     /// <summary>
     /// Reduction Values Block
     /// </summary>
-    class RVBlock : BaseBlock
+    internal class RVBlock : BaseBlock
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
         internal class BlockData

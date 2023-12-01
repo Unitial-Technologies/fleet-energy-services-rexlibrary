@@ -1,15 +1,15 @@
-﻿using System;
+﻿using InfluxShared.Helpers;
+using System;
 using System.Collections.Generic;
 using System.Text;
-using InfluxShared.Helpers;
 
 namespace InfluxShared.FileObjects
 {
     public class A2LSettings
     {
         public string Name { get; set; } = "";
-        public uint Cro { get; set; }   
-        public uint Dto { get; set; }        
+        public uint Cro { get; set; }
+        public uint Dto { get; set; }
         public ushort StationAddress { get; set; }
         public string CroHex
         {
@@ -30,7 +30,7 @@ namespace InfluxShared.FileObjects
         public uint Baudrate { get; set; }
         public uint BaudrateFD { get; set; }
         public byte RateIndex { get => GetRateIndex(); set => SetRate(value); }
-        public ushort OdtSize { get;set; }
+        public ushort OdtSize { get; set; }
         public ushort OdtEntrySize { get; set; }
         public ushort OdtCount { get => (ushort)Odts.Count; }
         public List<A2lOdt> Odts { get; set; }
@@ -45,7 +45,7 @@ namespace InfluxShared.FileObjects
         {
             if (Baudrate < 126000)
                 return 4;
-            else if (Baudrate <255000)
+            else if (Baudrate < 255000)
                 return 3;
             else if (Baudrate < 501000)
                 return 2;

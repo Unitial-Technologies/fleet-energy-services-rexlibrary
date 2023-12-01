@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Text;
+using LinkEnum = MDF4xx.Blocks.MDLinks;
 
 namespace MDF4xx.Blocks
 {
-    using LinkEnum = MDLinks;
-    enum MDLinks
+    internal enum MDLinks
     {
         linkcount
     }
@@ -13,7 +13,7 @@ namespace MDF4xx.Blocks
     /// <summary>
     /// Meta Data Block
     /// </summary>
-    class MDBlock : BaseBlock
+    internal class MDBlock : BaseBlock
     {
         /// <summary>
         /// XML string UTF-8 encoded, zero terminated, new line indicated by CR and LF.

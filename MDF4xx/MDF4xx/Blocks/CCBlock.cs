@@ -1,11 +1,11 @@
 ﻿using InfluxShared.Generic;
 using System;
 using System.Runtime.InteropServices;
+using LinkEnum = MDF4xx.Blocks.CCLinks;
 
 namespace MDF4xx.Blocks
 {
-    using LinkEnum = CCLinks;
-    enum CCLinks
+    internal enum CCLinks
     {
         /// <summary>
         /// Link to TXBLOCK with name (identifier) of conversion (can be NIL). Name must be according to naming rules stated in Naming Rules.
@@ -28,7 +28,7 @@ namespace MDF4xx.Blocks
         linkcount
     };
 
-    enum ConversionType : byte
+    internal enum ConversionType : byte
     {
         /// <summary>
         /// 1:1 conversion (in this case, the CCBLOCK can be omitted)

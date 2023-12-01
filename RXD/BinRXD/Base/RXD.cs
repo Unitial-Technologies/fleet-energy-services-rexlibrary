@@ -227,13 +227,13 @@ namespace RXD.Base
 
         private string FileNameToSerialNumber(string fn)
         {
-                const string pattern = "_\\d{7}_";
+            const string pattern = "_\\d{7}_";
 
-                foreach (var snstr in Regex.Matches(fn, pattern).Cast<Match>().Where(m => m.Success).Reverse())
-                    if (int.TryParse(snstr.Value.Substring(1, 7), out _))
-                        return snstr.Value.Substring(1, 7);
+            foreach (var snstr in Regex.Matches(fn, pattern).Cast<Match>().Where(m => m.Success).Reverse())
+                if (int.TryParse(snstr.Value.Substring(1, 7), out _))
+                    return snstr.Value.Substring(1, 7);
 
-                return "0";
+            return "0";
         }
 
         Stream GetStream => dataSource switch
@@ -349,7 +349,7 @@ namespace RXD.Base
                         // }
                     }
 
-                    using (BinaryWriter bw = new BinaryWriter(rxdStream))
+                    using (BinaryWriter bw = new BinaryWriter(rxdStream, Encoding.ASCII, true))
                     {
                         if (!StructOnly)
                             bw.Write((UInt32)ms.Length);
@@ -359,6 +359,7 @@ namespace RXD.Base
                             while (rxdStream.Position % RXDataReader.SectorSize != 0)
                                 bw.Write((byte)0);
                         bw.Flush();
+                        rxdStream.Position = 0;
                     }
                 }
 
@@ -383,7 +384,7 @@ namespace RXD.Base
             }
         }
 
-        public bool ToMF4(string outputfn,  ExportCollections frameSignals = null, Action<object> ProgressCallback = null)
+        public bool ToMF4(string outputfn, ExportCollections frameSignals = null, Action<object> ProgressCallback = null)
         {
             using (FileStream fs = new FileStream(outputfn, FileMode.Create, FileAccess.Write, FileShare.None))
             {
@@ -394,7 +395,7 @@ namespace RXD.Base
         public Stream ToMF4(ExportCollections frameSignals = null, Action<object> ProgressCallback = null)
         {
             MemoryStream ms = new MemoryStream();
-            ToMf4Stream(ms, frameSignals, ProgressCallback);            
+            ToMf4Stream(ms, frameSignals, ProgressCallback);
             return ms;
         }
 
@@ -431,6 +432,8 @@ namespace RXD.Base
 
             UInt64 LastTimestampCan = 0;
             UInt64 TimeOffsetCan = 0;
+            UInt64 LastTimestampCanError = 0;
+            UInt64 TimeOffsetCanError = 0;
             UInt64 LastTimestampLin = 0;
             UInt64 TimeOffsetLin = 0;
 
@@ -444,7 +447,7 @@ namespace RXD.Base
                      ToDictionary(dg => dg.ID, dg => dg.Data);
                 MDF mdf = new MDF();
                 mdf.BuildLoggerStruct(DatalogStartTime, 8/*Config[BinConfig.BinProp.TimeStampSize]*/, Config[BinConfig.BinProp.TimeStampPrecision], UseMf4Compression, Signals, frameSignals);
-                mdf.WriteHeader(mdfStream);                
+                mdf.WriteHeader(mdfStream);
 
                 Dictionary<FrameType, CGBlock> mdfGroups =
                     mdf.Where(r => r.Value is CGBlock).
@@ -481,21 +484,29 @@ namespace RXD.Base
                                     FileTimestamp = (uint)(InitialTimestamp == 0 ? LowestTimestamp : Math.Min(InitialTimestamp, frame.data.Timestamp));
                                 }
 
-                                if (frameType == RecordType.LinTrace)
+                                void CheckTimeOverlap(ref UInt64 LastTimestamp, ref UInt64 TimeOffset)
                                 {
-                                    if (frame.data.Timestamp < LastTimestampLin)
-                                        TimeOffsetLin += 0x100000000;
-                                    LastTimestampLin = frame.data.Timestamp;
-                                    frame.data.Timestamp += TimeOffsetLin - FileTimestamp;
-                                }
-                                else
-                                {
-                                    if (frame.data.Timestamp < LastTimestampCan)
-                                        TimeOffsetCan += 0x100000000;
-                                    LastTimestampCan = frame.data.Timestamp;
-                                    frame.data.Timestamp += TimeOffsetCan - FileTimestamp;
+                                    if (frame.data.Timestamp < LastTimestamp)
+                                        TimeOffset += 0x100000000;
+                                    LastTimestamp = frame.data.Timestamp;
+                                    frame.data.Timestamp += TimeOffset - FileTimestamp;
                                 }
 
+                                switch (frameType)
+                                {
+                                    case RecordType.CanTrace:
+                                        CheckTimeOverlap(ref LastTimestampCan, ref TimeOffsetCan);
+                                        break;
+                                    case RecordType.CanError:
+                                        CheckTimeOverlap(ref LastTimestampCanError, ref TimeOffsetCanError);
+                                        break;
+                                    case RecordType.LinTrace:
+                                        CheckTimeOverlap(ref LastTimestampLin, ref TimeOffsetLin);
+                                        break;
+                                    default:
+                                        CheckTimeOverlap(ref LastTimestampCan, ref TimeOffsetCan);
+                                        break;
+                                }
 
                                 if (UseMf4Compression)
                                 {
@@ -549,7 +560,7 @@ namespace RXD.Base
                         bw.Seek((int)cg.Value.flink, SeekOrigin.Begin);
                         bw.Write(cg.Value.ToBytes());
                     }
-                }              
+                }
 
 
                 ProgressCallback?.Invoke(100);
@@ -709,33 +720,23 @@ namespace RXD.Base
             double TimeOffsetCan = 0;
             double LastTimestampLin = 0;
             double TimeOffsetLin = 0;
+            double LastTimestampCanError = 0;
+            double TimeOffsetCanError = 0;
             UInt32 InitialTimestamp = 0;
 
-            void TraceAdd(TraceCollection tc)
+            void TraceAdd(TraceCollection tc, ref double LastTimestamp, ref double TimeOffset)
             {
-                void TimeCheck(int idx, ref double LastTimestamp, ref double TimeOffset)
-                {
-                    if (tc[idx]._Timestamp < LastTimestamp)
-                        TimeOffset += (double)0x100000000 * TimePrecison * 0.000001;
-                    LastTimestamp = tc[idx]._Timestamp;
-                    tc[idx]._Timestamp -= FileTimestamp;
-                    tc[idx]._Timestamp += TimeOffset;
-                }
-
                 for (int i = 0; i < tc.Count; i++)
                 {
                     if (Double.IsNaN(FileTimestamp))
                         FileTimestamp = (InitialTimestamp == 0 ? LowestTimestamp : InitialTimestamp) * TimestampCoeff;
-                        //FileTimestamp = (InitialTimestamp == 0 ? LowestTimestamp : Math.Min(LowestTimestamp, InitialTimestamp)) * TimestampCoeff;
-                    switch (tc[i].TraceType)
-                    {
-                        case RecordType.LinTrace:
-                            TimeCheck(i, ref LastTimestampLin, ref TimeOffsetLin);
-                            break;
-                        default:
-                            TimeCheck(i, ref LastTimestampCan, ref TimeOffsetCan);
-                            break;
-                    }
+                    //FileTimestamp = (InitialTimestamp == 0 ? LowestTimestamp : Math.Min(LowestTimestamp, InitialTimestamp)) * TimestampCoeff;
+
+                    if (tc[i]._Timestamp < LastTimestamp)
+                        TimeOffset += (double)0x100000000 * TimePrecison * 0.000001;
+                    LastTimestamp = tc[i]._Timestamp;
+                    tc[i]._Timestamp -= FileTimestamp;
+                    tc[i]._Timestamp += TimeOffset;
                 }
 
                 ProcessCallback(tc);
@@ -754,9 +755,13 @@ namespace RXD.Base
                             case RecordType.Unknown:
                                 break;
                             case RecordType.CanTrace:
+                                TraceAdd(rec.ToTraceRow(TimePrecison), ref LastTimestampCan, ref TimeOffsetCan);
+                                break;
                             case RecordType.CanError:
+                                TraceAdd(rec.ToTraceRow(TimePrecison), ref LastTimestampCanError, ref TimeOffsetCanError);
+                                break;
                             case RecordType.LinTrace:
-                                TraceAdd(rec.ToTraceRow(TimePrecison));
+                                TraceAdd(rec.ToTraceRow(TimePrecison), ref LastTimestampLin, ref TimeOffsetLin);
                                 break;
                             case RecordType.PreBuffer:
                                 ProcessCallback?.Invoke(rec.ToTraceRow(TimePrecison));
@@ -777,7 +782,7 @@ namespace RXD.Base
         {
             TraceCollection TraceList = new TraceCollection();
             TraceList.StartLogTime = DatalogStartTime;
-            ProcessTraceRecords((tc)=>TraceList.AddRange(tc), ProgressCallback);
+            ProcessTraceRecords((tc) => TraceList.AddRange(tc), ProgressCallback);
             return TraceList;
         }
 
@@ -787,9 +792,9 @@ namespace RXD.Base
             {
                 if (bin is null)
                     return null;
-                object[] xmlAttr = new object[1] { 
-                     new XAttribute("UID", bin.header.uniqueid) 
-                       
+                object[] xmlAttr = new object[1] {
+                     new XAttribute("UID", bin.header.uniqueid)
+
                 };
                 if (bin.external.ContainsKey("X"))
                 {
@@ -841,11 +846,11 @@ namespace RXD.Base
                     }
 
                 // XML Sequence grouping
-                Dictionary<string, PropertyData[]> SequenceGroups = 
+                Dictionary<string, PropertyData[]> SequenceGroups =
                     bin.data.Union(bin.external).
                     Where(p => p.Value.XmlSequenceGroup != string.Empty).
                     GroupBy(p => p.Value.XmlSequenceGroup).
-                    ToDictionary(p=>p.Key, p=>p.Where(pf=>pf.Value.PropType.IsArray).Select(s=>s.Value).ToArray());
+                    ToDictionary(p => p.Key, p => p.Where(pf => pf.Value.PropType.IsArray).Select(s => s.Value).ToArray());
                 foreach (var seq in SequenceGroups)
                 {
                     // Check if it is sequence
@@ -912,7 +917,7 @@ namespace RXD.Base
                     return null;
 
                 if (!UInt16.TryParse(node.Attribute("UID").Value, out hs.uniqueid))
-                    return null;                
+                    return null;
 
                 BinBase bin = (BinBase)Activator.CreateInstance(BinBase.BlockInfo[hs.type], hs);
                 XmlSchemaComplexType xsdBinType = xml.xsdNodeType(node);

@@ -9,7 +9,7 @@ namespace RXD.Blocks
     }
     #endregion
 
-    class BinJ1939DM : BinBase
+    internal class BinJ1939DM : BinBase
     {
         internal enum BinProp
         {
@@ -18,7 +18,7 @@ namespace RXD.Blocks
             Source,
         }
 
-      
+
         #region Do not touch these
         public BinJ1939DM(BinHeader hs = null) : base(hs) { }
 

@@ -31,7 +31,7 @@ namespace RXD.DataRecords
         Error = LPE | LCSE | LTE,
     }
 
-    class RecLinTrace : RecBase
+    internal class RecLinTrace : RecBase
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
         internal class DataRecord

@@ -1,9 +1,9 @@
 ﻿using System.Runtime.InteropServices;
+using LinkEnum = MDF4xx.Blocks.RILinks;
 
 namespace MDF4xx.Blocks
 {
-    using LinkEnum = RILinks;
-    enum RILinks
+    internal enum RILinks
     {
         linkcount
     };
@@ -11,7 +11,7 @@ namespace MDF4xx.Blocks
     /// <summary>
     /// Reduction Data Invalidation Block
     /// </summary>
-    class RIBlock : BaseBlock
+    internal class RIBlock : BaseBlock
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
         internal class BlockData

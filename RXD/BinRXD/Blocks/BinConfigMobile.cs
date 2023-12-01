@@ -27,8 +27,8 @@ namespace RXD.Blocks
             PIN,
             RealTimeSource,
             NoCommunicationRestartTimeOut,
-          //  NameSize,
-          //  Name,
+            //  NameSize,
+            //  Name,
         }
 
         #region Do not touch these
@@ -56,8 +56,8 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.PIN, typeof(string), BinProp.PinSize);
                 data.AddProperty(BinProp.RealTimeSource, typeof(RealTimeSourceType));
                 data.AddProperty(BinProp.NoCommunicationRestartTimeOut, typeof(UInt32));
-               // data.AddProperty(BinProp.NameSize, typeof(byte));
-               // data.AddProperty(BinProp.Name, typeof(string), BinProp.NameSize);
+                // data.AddProperty(BinProp.NameSize, typeof(byte));
+                // data.AddProperty(BinProp.Name, typeof(string), BinProp.NameSize);
             });
         }
     }

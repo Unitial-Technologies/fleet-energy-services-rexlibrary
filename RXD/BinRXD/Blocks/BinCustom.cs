@@ -5,7 +5,7 @@ namespace RXD.Blocks
     #region Enumerations for Property type definitions
     #endregion
 
-    class BinCustom : BinBase
+    internal class BinCustom : BinBase
     {
         internal enum BinProp
         {
@@ -14,7 +14,7 @@ namespace RXD.Blocks
             InputCount,
             InputUID,
         }
-               
+
 
         #region Do not touch these
         public BinCustom(BinHeader hs = null) : base(hs) { }
@@ -37,7 +37,7 @@ namespace RXD.Blocks
             });
 
             //AddInput(BinProp.InputUID.ToString());
-           // AddOutput("UID");
+            // AddOutput("UID");
         }
 
     }

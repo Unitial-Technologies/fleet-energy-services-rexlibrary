@@ -4,7 +4,7 @@ using System.Text;
 
 namespace RXD.Blocks
 {
-    internal class BinDAQItem: BinBase
+    internal class BinDAQItem : BinBase
     {
         internal enum BinProp
         {

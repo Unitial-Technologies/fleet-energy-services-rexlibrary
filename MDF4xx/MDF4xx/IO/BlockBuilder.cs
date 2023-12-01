@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace MDF4xx.IO
 {
-    class BlockBuilder : IDisposable
+    internal class BlockBuilder : IDisposable
     {
         internal Int64 lastlink;
         readonly BlockCollection collection;
@@ -114,7 +114,7 @@ namespace MDF4xx.IO
                 collection.Add(tx);
                 si.links.SetObject(SILinks.si_tx_name, tx);
             }
-            if (SourcePath!= "")
+            if (SourcePath != "")
             {
                 TXBlock tx = new TXBlock();
                 tx.tx_data = SourcePath;
@@ -169,7 +169,7 @@ namespace MDF4xx.IO
             cnTime.data.cn_data_type = CNDataType.IntelUnsigned;
             cnTime.data.cn_byte_offset = 0;
             cnTime.data.cn_bit_offset = 0;
-            cnTime.data.cn_bit_count = RecordSize*8;
+            cnTime.data.cn_bit_count = RecordSize * 8;
             cnTime.data.cn_flags = 0;
             cnTime.SetWriteFileLink(ref lastlink);
             collection.Add(cnTime);
@@ -282,7 +282,7 @@ namespace MDF4xx.IO
             cg.FlagPlainBusEvent = true;
             CNBlock cnTime = BuildTimeChannel(cg);
             CNBlock cnFrame = BuildFrameChannel(cg, cnTime.LastByteOffset, framename);
-            
+
             framename += (char)cg.data.cg_path_separator;
             cnFrame.AppendArrayChildCN(BuildCN(cnFrame, framename + "BusChannel", CNDataType.IntelUnsigned, 1 * 8));
             cnFrame.AppendArrayChildCN(BuildCN(cnFrame, framename + "ID", CNDataType.IntelUnsigned, 1 * 8));

@@ -1,9 +1,9 @@
 ﻿using System.Runtime.InteropServices;
+using LinkEnum = MDF4xx.Blocks.RDLinks;
 
 namespace MDF4xx.Blocks
 {
-    using LinkEnum = RDLinks;
-    enum RDLinks
+    internal enum RDLinks
     {
         linkcount
     };
@@ -11,7 +11,7 @@ namespace MDF4xx.Blocks
     /// <summary>
     /// Reduction Data Block
     /// </summary>
-    class RDBlock : BaseBlock
+    internal class RDBlock : BaseBlock
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
         internal class BlockData

@@ -1,5 +1,5 @@
-using System.Linq;
 using DbcParserLib.Model;
+using System.Linq;
 
 namespace DbcParserLib.Parsers
 {
@@ -9,10 +9,10 @@ namespace DbcParserLib.Parsers
 
         public bool TryParse(string line, IDbcBuilder builder)
         {
-            if(line.TrimStart().StartsWith(NodeLineStarter) == false)
+            if (line.TrimStart().StartsWith(NodeLineStarter) == false)
                 return false;
 
-            foreach(var nodeName in line.SplitBySpace().Skip(1))
+            foreach (var nodeName in line.SplitBySpace().Skip(1))
             {
                 var node = new Node()
                 {

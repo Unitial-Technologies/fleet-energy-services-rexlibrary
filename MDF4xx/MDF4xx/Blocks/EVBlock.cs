@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using LinkEnum = MDF4xx.Blocks.EVLinks;
 
 namespace MDF4xx.Blocks
 {
-    using LinkEnum = EVLinks;
-    enum EVLinks
+    internal enum EVLinks
     {
         /// <summary>
         /// Link to next EVBLOCK (linked list) (can be NIL)
@@ -43,7 +43,7 @@ namespace MDF4xx.Blocks
     /// <summary>
     /// Event Block
     /// </summary>
-    class EVBlock : BaseBlock
+    internal class EVBlock : BaseBlock
     {
         /// <summary>
         /// List of links to channels and channel groups to which the event applies (referencing links to CNBLOCKs or CGBLOCKs). This defines the "scope" of the event.

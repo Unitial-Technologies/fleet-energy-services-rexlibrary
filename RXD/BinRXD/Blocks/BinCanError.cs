@@ -2,7 +2,7 @@
 
 namespace RXD.Blocks
 {
-    class BinCanError : BinBase
+    internal class BinCanError : BinBase
     {
         internal enum BinProp
         {

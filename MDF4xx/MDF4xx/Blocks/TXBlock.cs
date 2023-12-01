@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Text;
+using LinkEnum = MDF4xx.Blocks.TXLinks;
 
 namespace MDF4xx.Blocks
 {
-    using LinkEnum = TXLinks;
-    enum TXLinks
+    internal enum TXLinks
     {
         linkcount
     }
@@ -13,7 +13,7 @@ namespace MDF4xx.Blocks
     /// <summary>
     /// Text Block
     /// </summary>
-    class TXBlock : BaseBlock
+    internal class TXBlock : BaseBlock
     {
         /// <summary>
         /// Plain text string UTF-8 encoded, zero terminated, new line indicated by CR and LF.

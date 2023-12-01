@@ -6,9 +6,9 @@ using System.Runtime.InteropServices;
 
 namespace MDF4xx.Blocks
 {
-    enum BlockType { Unknown, HD, MD, TX, FH, CH, AT, EV, DG, CG, SI, CN, CC, CA, DI, DT, DV, SR, RD, RI, RV, SD, DL, LD, DZ, HL };
+    internal enum BlockType { Unknown, HD, MD, TX, FH, CH, AT, EV, DG, CG, SI, CN, CC, CA, DI, DT, DV, SR, RD, RI, RV, SD, DL, LD, DZ, HL };
 
-    class BaseBlock
+    internal class BaseBlock
     {
         /// <summary>
         /// BlockType to Class reference dictionary

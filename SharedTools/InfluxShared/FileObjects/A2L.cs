@@ -5,8 +5,8 @@ using System.IO;
 namespace InfluxShared.FileObjects
 {
     public enum A2LItemType : byte { Measurement }
-    public enum A2LValueТype: byte { UnsignedByte, SignedByte, UnsignedWord, SignedWord, UnsignedLong, SignedLong, IEEEFloat, IEEEDouble }
-    public enum A2LByteOrder: byte { Intel, Motorola }  // MSBLast = Intel = Little Endian
+    public enum A2LValueТype : byte { UnsignedByte, SignedByte, UnsignedWord, SignedWord, UnsignedLong, SignedLong, IEEEFloat, IEEEDouble }
+    public enum A2LByteOrder : byte { Intel, Motorola }  // MSBLast = Intel = Little Endian
 
     public class A2L
     {
@@ -17,7 +17,7 @@ namespace InfluxShared.FileObjects
         public List<A2LSettings> Settings { get; set; }
         public List<A2LItem> Items { get; set; }
 
-        public A2L() 
+        public A2L()
         {
             Items = new List<A2LItem>();
             Settings = new List<A2LSettings>();
@@ -41,7 +41,7 @@ namespace InfluxShared.FileObjects
         }
     }
 
-    
+
 
     public class ExportA2LItem
     {

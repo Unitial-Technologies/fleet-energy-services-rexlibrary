@@ -13,8 +13,8 @@ namespace DbcParserLib.Model
             Group = group;
         }
 
-        public MultiplexingRole Role {get;}
-        public int Group {get;}
+        public MultiplexingRole Role { get; }
+        public int Group { get; }
     }
 
     public enum MultiplexingRole

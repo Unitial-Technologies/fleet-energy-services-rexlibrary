@@ -2,11 +2,13 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
   </PropertyGroup>
 
  <PropertyGroup>
     <RuntimeIdentifiers>win10-x64;linux-x64</RuntimeIdentifiers>
+    <AssemblyName>RxLinuxLib</AssemblyName>
+    <StartupObject>dotnetproject.Program</StartupObject>
  </PropertyGroup>
 
     <ItemGroup> 

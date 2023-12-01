@@ -4,12 +4,12 @@ using System.Text;
 
 namespace RXD.Blocks
 {
-    internal class BinDAQ: BinBase
+    internal class BinDAQ : BinBase
     {
         internal enum BinProp
         {
             Number,
-            SamplingRate,           
+            SamplingRate,
         }
 
         #region Do not touch these

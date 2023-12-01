@@ -41,7 +41,7 @@ namespace RXD.Blocks
             StatusSendTime,
             ConfigurationCheckTime,
             FirmwareCheckTime,
-            AutomaticFirmwareUpdate, 
+            AutomaticFirmwareUpdate,
             EncryptPass,
             UploadResume,
             NameSize,

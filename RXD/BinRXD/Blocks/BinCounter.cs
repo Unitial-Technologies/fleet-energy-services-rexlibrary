@@ -5,7 +5,7 @@ namespace RXD.Blocks
     #region Enumerations for Property type definitions
     #endregion
 
-    class BinCounter : BinBase
+    internal class BinCounter : BinBase
     {
         internal enum BinProp
         {

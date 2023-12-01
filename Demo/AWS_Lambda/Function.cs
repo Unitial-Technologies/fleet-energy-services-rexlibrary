@@ -1,22 +1,14 @@
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
-using Amazon.Lambda.S3Events;
 using Amazon.S3;
-using Amazon.S3.Model;
 using AWSLambdaFileConvert;
 using AWSLambdaFileConvert.ExportFormats;
-using DbcParserLib;
-using DbcParserLib.Influx;
-using Influx.Shared.Helpers;
-using InfluxDB.Client.Api.Domain;
-using InfluxShared.FileObjects;
-using InfluxShared.Generic;
+using AWSLambdaFileConvert.Providers;
+using Cloud;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RXD.Base;
 using System.Net;
-using System.Net.Sockets;
-using static AWSLambdaFileConvert.ExportFormats.TimeStreamHelper;
 
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -24,18 +16,6 @@ using static AWSLambdaFileConvert.ExportFormats.TimeStreamHelper;
 
 namespace AWSLambdaConvert;
 
-[Flags]
-public enum ConversionType
-{
-    None = 0,
-    Csv = 1,
-    TimeStream = 2,
-    InfluxDB = 4,
-    Snapshot = 8,
-    Rxc = 16,
-    Mdf = 32,
-    Blf = 64,
-}
 
 public class Function
 {    
@@ -106,60 +86,33 @@ public class Function
         return response;
     }*/
 
-    ConversionType StringToConversionType(string conversion)
+    Cloud.ConversionType StringToConversionType(string conversion)
     {
         if (conversion.ToLower() == "snapshot")
-            return ConversionType.Snapshot;
+            return Cloud.ConversionType.Snapshot;
         else if (conversion.ToLower() == "csv")
-            return ConversionType.Csv;
+            return Cloud.ConversionType.Csv;
         else if (conversion.ToLower() == "amazontimestream")
-            return ConversionType.TimeStream;
+            return Cloud.ConversionType.TimeStream;
         else if (conversion.ToLower() == "influxdb")
-            return ConversionType.InfluxDB;
+            return Cloud.ConversionType.InfluxDB;
         else if (conversion.ToLower() == "rxc")
-            return ConversionType.Rxc;
+            return Cloud.ConversionType.Rxc;
         else if (conversion.ToLower() == "mdf")
-            return ConversionType.Mdf;
+            return Cloud.ConversionType.Mdf;
         else if (conversion.ToLower() == "blf")
-            return ConversionType.Blf;
+            return Cloud.ConversionType.Blf;
         else
-            return ConversionType.None;
+            return Cloud.ConversionType.None;
     }
 
     async Task<bool> GetConversionJson(string bucket)
     {
-        var jsonStream = await LambdaGlobals.S3.GetStream(bucket, "FileConvert.json");
-        using (StreamReader reader = new(jsonStream))
-            LambdaGlobals.ConfigJson = JsonConvert.DeserializeObject(reader.ReadToEnd());
-        LambdaGlobals.Timestream = LambdaGlobals.ConfigJson.AmazonTimestream.ToObject<LambdaGlobals.TimestreamSettings>();
-        if (LambdaGlobals.Timestream.db_name == "default")
-            LambdaGlobals.Timestream.db_name = LambdaGlobals.Bucket;
-        if (LambdaGlobals.Timestream.table_name == "default")
-            LambdaGlobals.Timestream.table_name = "rxddata";
-
-        LambdaGlobals.Snapshot = LambdaGlobals.ConfigJson.Snapshot.ToObject<LambdaGlobals.SnapshotSettings>();
-        if (LambdaGlobals.Snapshot.db_name == "default")
-            LambdaGlobals.Snapshot.db_name = LambdaGlobals.Bucket;
-        if (LambdaGlobals.Snapshot.table_name == "default")
-            LambdaGlobals.Snapshot.table_name = "snapshot";
-
-        LambdaGlobals.InfluxDB = LambdaGlobals.ConfigJson.InfluxDB.ToObject<LambdaGlobals.InfluxDBSettings>();
-        string vars = "";
-        var vardict = Environment.GetEnvironmentVariables();
-        foreach (var item in vardict.Keys)
-        {
-            vars += $"Key:{item} ";
-        }
-        LambdaGlobals.Context?.Logger.LogInformation(vars);
-        LambdaGlobals.InfluxDB.token = Environment.GetEnvironmentVariable("influxdb_token");
-        if (LambdaGlobals.InfluxDB.token is null)
-        {
-            LambdaGlobals.Context?.Logger.LogInformation("InfluxDB access token missing. Add the Influx DB token as a Environment variable named influxdb_token");
-            LambdaGlobals.InfluxDB.token = "";
-        }
-        if (LambdaGlobals.InfluxDB.bucket == "default")
-            LambdaGlobals.InfluxDB.bucket = bucket;
-        return true;
+        var jsonStream = await LambdaGlobals.S3.GetStream(bucket, "FileConvert.json");  
+        bool res = Config.LoadSettings(jsonStream);
+        if (Config.InfluxDB.bucket == "default")
+            Config.InfluxDB.bucket = bucket;
+        return res;
     }
 
     //By using Stream as a parameter the function can be triggered by both S3 Event and Http request
@@ -169,7 +122,7 @@ public class Function
         {
             LambdaGlobals.Context = context;            
             string filename = "";
-            ConversionType convert = ConversionType.None;
+            Cloud.ConversionType convert = Cloud.ConversionType.None;
 
             LambdaGlobals.S3 = new S3Storage(LambdaGlobals.S3Client, context);
 
@@ -211,19 +164,19 @@ public class Function
                 LambdaGlobals.Bucket = s3Event.Records[0].s3.bucket.name;
                 filename = s3Event.Records[0].s3.@object.key;
                 await GetConversionJson(LambdaGlobals.Bucket);
-
-                if (LambdaGlobals.ConfigJson.ContainsKey("InfluxDB") && LambdaGlobals.ConfigJson.InfluxDB.ContainsKey("enabled") && (LambdaGlobals.ConfigJson.InfluxDB.enabled == true))
-                    convert |= ConversionType.InfluxDB;
-                if (LambdaGlobals.ConfigJson.ContainsKey("CSV") && LambdaGlobals.ConfigJson.CSV.ContainsKey("enabled") && (LambdaGlobals.ConfigJson.CSV.enabled == true))
-                    convert |= ConversionType.Csv;
-                if (LambdaGlobals.ConfigJson.ContainsKey("AmazonTimestream") && LambdaGlobals.ConfigJson.AmazonTimestream.ContainsKey("enabled") && (LambdaGlobals.ConfigJson.AmazonTimestream.enabled == true))
-                    convert |= ConversionType.TimeStream;
-                if (LambdaGlobals.ConfigJson.ContainsKey("Snapshot") && LambdaGlobals.ConfigJson.Snapshot.ContainsKey("enabled") && (LambdaGlobals.ConfigJson.Snapshot.enabled == true))
-                    convert |= ConversionType.Snapshot;
-                if (LambdaGlobals.ConfigJson.ContainsKey("MDF") && LambdaGlobals.ConfigJson.MDF.ContainsKey("enabled") && (LambdaGlobals.ConfigJson.MDF.enabled == true))
-                    convert |= ConversionType.Mdf;
-                if (LambdaGlobals.ConfigJson.ContainsKey("BLF") && LambdaGlobals.ConfigJson.BLF.ContainsKey("enabled") && (LambdaGlobals.ConfigJson.BLF.enabled == true))
-                    convert |= ConversionType.Blf;
+                convert = Config.GetConversions();
+                /*if (Config.ConfigJson.ContainsKey("InfluxDB") && Config.ConfigJson.InfluxDB.ContainsKey("enabled") && (Config.ConfigJson.InfluxDB.enabled == true))
+                    convert |= Cloud.ConversionType.InfluxDB;
+                if (Config.ConfigJson.ContainsKey("CSV") && Config.ConfigJson.CSV.ContainsKey("enabled") && (Config.ConfigJson.CSV.enabled == true))
+                    convert |= Cloud.ConversionType.Csv;
+                if (Config.ConfigJson.ContainsKey("AmazonTimestream") && Config.ConfigJson.AmazonTimestream.ContainsKey("enabled") && (Config.ConfigJson.AmazonTimestream.enabled == true))
+                    convert |= Cloud.ConversionType.TimeStream;
+                if (Config.ConfigJson.ContainsKey("Snapshot") && Config.ConfigJson.Snapshot.ContainsKey("enabled") && (Config.ConfigJson.Snapshot.enabled == true))
+                    convert |= Cloud.ConversionType.Snapshot;
+                if (Config.ConfigJson.ContainsKey("MDF") && Config.ConfigJson.MDF.ContainsKey("enabled") && (Config.ConfigJson.MDF.enabled == true))
+                    convert |= Cloud.ConversionType.Mdf;
+                if (Config.ConfigJson.ContainsKey("BLF") && Config.ConfigJson.BLF.ContainsKey("enabled") && (Config.ConfigJson.BLF.enabled == true))
+                    convert |= Cloud.ConversionType.Blf;*/
                 if (convert == 0)
                     LambdaGlobals.Context?.Logger.Log("No conversion settings enabled in Config.json");
             }
@@ -240,16 +193,19 @@ public class Function
 
             bool res = false;
             LambdaGlobals.Context?.Logger.LogInformation($"Bucket :{LambdaGlobals.Bucket}   Path: {filename}");
-            if (LambdaGlobals.FileName.Contains("Configuration.xml"))
+            //if (LambdaGlobals.FileName.Contains(".json") && convert.HasFlag(Cloud.ConversionType.Snapshot))
+            //    res = (bool)await WriteSnapshot(LambdaGlobals.Bucket);
+            if (LambdaGlobals.FileName.Contains(".rxd") || LambdaGlobals.FileName.Contains("Configuration.xml") || LambdaGlobals.FileName.Contains(".json"))
             {
-                XmlConverter xmlConverter = new XmlConverter();
-                res = (bool)await xmlConverter.ConvertXMLToRxc(LambdaGlobals.Bucket, LambdaGlobals.FileName);
+                if (LambdaGlobals.FileName.Contains("Configuration.xml"))
+                    convert = ConversionType.Rxc;
+                var log = new AwsLogProvider(LambdaGlobals.Context);
+                CloudConverter rxdConverter = new CloudConverter(log
+                    , new AwsS3StorageProvider(LambdaGlobals.S3Client)
+                    , new AwsTimeStreamProvider(log)
+                    ,LambdaGlobals.Bucket, LambdaGlobals.LoggerDir);
+                res = (bool) await rxdConverter.Convert(LambdaGlobals.Bucket, LambdaGlobals.FileName, convert);
             }
-            else if (LambdaGlobals.FileName.Contains(".json") && convert.HasFlag(ConversionType.Snapshot))
-                res = (bool)await WriteSnapshot(LambdaGlobals.Bucket);
-            else if (LambdaGlobals.FileName.Contains(".rxd"))
-                res = (bool)await ConvertRXD(LambdaGlobals.Bucket, LambdaGlobals.FileName, convert);
-
 
             if (res)
                 return CreateResponse(HttpStatusCode.OK, "Successfully converted input");
@@ -274,33 +230,33 @@ public class Function
         return response;
     }
 
-    public async Task<Stream> LoadDBC(string bucket, string dbcFilename)
+  /*   public async Task<Stream> LoadDBC(string bucket, string dbcFilename)
     {
         //The dbc must be in the same folder as the rxd file
         return await LambdaGlobals.S3.GetStream(bucket, Path.Combine(LambdaGlobals.LoggerDir, dbcFilename));
     }
 
-    
+   
 
-    public async Task<bool> ConvertRXD(string bucket, string filename, ConversionType conversion)
+    public async Task<bool> ConvertRXD(string bucket, string filename, Cloud.ConversionType conversion)
     {  
-        if (!conversion.HasFlag(ConversionType.Csv) && !conversion.HasFlag(ConversionType.InfluxDB) &&
-                    !conversion.HasFlag(ConversionType.TimeStream) && !conversion.HasFlag(ConversionType.Mdf)
-                    && !conversion.HasFlag(ConversionType.Blf))
+        if (!conversion.HasFlag(Cloud.ConversionType.Csv) && !conversion.HasFlag(Cloud.ConversionType.InfluxDB) &&
+                    !conversion.HasFlag(Cloud.ConversionType.TimeStream) && !conversion.HasFlag(Cloud.ConversionType.Mdf)
+                    && !conversion.HasFlag(Cloud.ConversionType.Blf))
         {
             LambdaGlobals.Context?.Logger.LogInformation("No valid Conversion requested!");
             return false;
         }
 
         List<DBC?> dbcList = await LoadDBCList(bucket);
-        Stream rxdStream = await LambdaGlobals.S3.GetStream(bucket, LambdaGlobals.FileName);
+        Stream rxdStream = await LambdaGlobals.S3.GetStream(bucket, filename);
 
         ExportDbcCollection signalsCollection = DbcToInfluxObj.LoadExportSignalsFromDBC(dbcList);
         
         //Stream xsdStream = await GetXSD(s3Event);
         try
         {
-            using (BinRXD rxd = BinRXD.Load("http://" + LambdaGlobals.FileName, rxdStream))
+            using (BinRXD rxd = BinRXD.Load("http://" + filename, rxdStream))
             {
                 if (rxd is null)
                 {
@@ -325,7 +281,7 @@ public class Function
                     DoubleDataCollection ddc = rxd.ToDoubleData(export);
 
                     //Write to InfluxDB
-                    if (conversion.HasFlag(ConversionType.InfluxDB))
+                    if (conversion.HasFlag(Cloud.ConversionType.InfluxDB))
                     {
                         LambdaGlobals.Context?.Logger.LogInformation("InfluxDB");
                         
@@ -333,7 +289,7 @@ public class Function
                     }
 
                     //Write to timestream table
-                    if (conversion.HasFlag(ConversionType.TimeStream))
+                    if (conversion.HasFlag(Cloud.ConversionType.TimeStream))
                     {                        
                         int idx = filename.LastIndexOf('/');                        
                         //Context?.Logger.LogInformation($"Correction in seconds is: {timeCorrection}");
@@ -341,7 +297,7 @@ public class Function
                     }                    
 
                     //Mdf Export
-                    if (conversion.HasFlag(ConversionType.Mdf))
+                    if (conversion.HasFlag(Cloud.ConversionType.Mdf))
                     {
                         LambdaGlobals.Context?.Logger.LogInformation($"Starting Mdf conversion {rxd.Count}");
                         MemoryStream mdfStream = (MemoryStream)rxd.ToMF4(export.SignalsDatabase);
@@ -357,7 +313,7 @@ public class Function
                         }                            
                     }
                     //BLF Export
-                    if (conversion.HasFlag(ConversionType.Blf))
+                    if (conversion.HasFlag(Cloud.ConversionType.Blf))
                     {
                         LambdaGlobals.Context?.Logger.LogInformation($"Starting Blf conversion {rxd.Count}");
                         MemoryStream blfStream = new();
@@ -375,7 +331,7 @@ public class Function
                     }
 
                     //CSV Export
-                    if (conversion.HasFlag(ConversionType.Csv))
+                    if (conversion.HasFlag(Cloud.ConversionType.Csv))
                     {                        
                         await CsvMultipartHelper.ToCsv(bucket, Path.ChangeExtension(LambdaGlobals.FileName, ".csv"), rxd, signalsCollection);
                     }
@@ -417,7 +373,7 @@ public class Function
             listDbc.Add(influxDBC);
         }
         return listDbc;
-    }
+    }*/
 
     
 

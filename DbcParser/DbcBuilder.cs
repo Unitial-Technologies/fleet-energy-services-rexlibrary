@@ -1,11 +1,11 @@
+using DbcParser.Parsers;
+using DbcParserLib.Model;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Xml.Linq;
-using DbcParser.Parsers;
-using DbcParserLib.Model;
 
 namespace DbcParserLib
 {
@@ -28,95 +28,100 @@ namespace DbcParserLib
 
             foreach (uint ID in AttributeDefaultParser.ID_List)
             {
-                foreach (KeyValuePair<string, string> attrtypes in AttributeDefaultParser.AttrTypes)
+                if (m_messages.ContainsKey(ID))
                 {
-
-                    if (attrtypes.Key.Equals("VFrameFormat"))
+                    foreach (KeyValuePair<string, string> attrtypes in AttributeDefaultParser.AttrTypes)
                     {
-                        if (m_messages[ID].AttrValues["VFrameFormat"] == null)
+
+                        if (attrtypes.Key.Equals("VFrameFormat"))
                         {
-
-                            switch (attrtypes.Value)
+                            if (m_messages[ID].AttrValues["VFrameFormat"] == null)
                             {
-                                case "StandardCAN": m_messages[ID].Type = Message.MsgType.Standard; break;
-                                case "ExtendedCAN": m_messages[ID].Type = Message.MsgType.Extended; break;
-                                case "CanFDStandard": m_messages[ID].Type = Message.MsgType.CanFDStandard; break;
-                                case "CanFDExtended": m_messages[ID].Type = Message.MsgType.CanFDExtended; break;
-                                case "J1939PG": m_messages[ID].Type = Message.MsgType.J1939PG; m_messages[ID].AttrValues["VFrameFormat"] = "3"; break;
-                                case "Lin": m_messages[ID].Type = Message.MsgType.Lin; break;
-                                case "reserved": m_messages[ID].Type = Message.MsgType.reserved; break;
-                                default: throw new Exception("VFrameFormat Not Recognized");
-                            }
 
-                        }
-                        else
-                        {
-                            switch (m_messages[ID].AttrValues["VFrameFormat"])
-                            {
-                                case "0": m_messages[ID].Type = Message.MsgType.Standard; break;
-                                case "1": m_messages[ID].Type = Message.MsgType.Extended; break;
-                                case "14": m_messages[ID].Type = Message.MsgType.CanFDStandard; break;
-                                case "15": m_messages[ID].Type = Message.MsgType.CanFDExtended; break;
-                                case "3": m_messages[ID].Type = Message.MsgType.J1939PG; break;
-                                case "Lin": m_messages[ID].Type = Message.MsgType.Lin; break;
-
+                                switch (attrtypes.Value)
+                                {
+                                    case "StandardCAN": m_messages[ID].Type = Message.MsgType.Standard; break;
+                                    case "ExtendedCAN": m_messages[ID].Type = Message.MsgType.Extended; break;
+                                    case "CanFDStandard": m_messages[ID].Type = Message.MsgType.CanFDStandard; break;
+                                    case "CanFDExtended": m_messages[ID].Type = Message.MsgType.CanFDExtended; break;
+                                    case "StandardCAN_FD": m_messages[ID].Type = Message.MsgType.CanFDStandard; break;
+                                    case "ExtendedCAN_FD": m_messages[ID].Type = Message.MsgType.CanFDExtended; break;
+                                    case "J1939PG": m_messages[ID].Type = Message.MsgType.J1939PG; m_messages[ID].AttrValues["VFrameFormat"] = "3"; break;
+                                    case "Lin": m_messages[ID].Type = Message.MsgType.Lin; break;
+                                    case "reserved": m_messages[ID].Type = Message.MsgType.reserved; break;
+                                    default: throw new Exception($"VFrameFormat Not Recognized:{attrtypes.Value}");
+                                }
 
                             }
-                        }
-                    }
-                    else if (attrtypes.Key.Equals("CANFD_BRS"))
-                    {
-                        if (m_messages[ID].AttrValues["CANFD_BRS"] == null)
-                        {
-
-                            m_messages[ID].AttrValues["CANFD_BRS"] = attrtypes.Value.ToString();
-                            if (attrtypes.Value == "1")
-                                m_messages[ID].BRS = true;
                             else
-                                m_messages[ID].BRS = false;
-                        }
-                        else
-                        {
-                            switch(attrtypes.Value)
                             {
-                                case "1": m_messages[ID].BRS = true; m_messages[ID].AttrValues["CABFD_BRS"] = "1";break;
-                                case "0": m_messages[ID].BRS = false; m_messages[ID].AttrValues["CABFD_BRS"] = "0";break;
+                                switch (m_messages[ID].AttrValues["VFrameFormat"])
+                                {
+                                    case "0": m_messages[ID].Type = Message.MsgType.Standard; break;
+                                    case "1": m_messages[ID].Type = Message.MsgType.Extended; break;
+                                    case "14": m_messages[ID].Type = Message.MsgType.CanFDStandard; break;
+                                    case "15": m_messages[ID].Type = Message.MsgType.CanFDExtended; break;
+                                    case "3": m_messages[ID].Type = Message.MsgType.J1939PG; break;
+                                    case "Lin": m_messages[ID].Type = Message.MsgType.Lin; break;
+
+
+                                }
+                            }
+                        }
+                        else if (attrtypes.Key.Equals("CANFD_BRS"))
+                        {
+
+                            if (m_messages[ID].AttrValues["CANFD_BRS"] == null)
+                            {
+
+                                m_messages[ID].AttrValues["CANFD_BRS"] = attrtypes.Value.ToString();
+                                if (attrtypes.Value == "1")
+                                    m_messages[ID].BRS = true;
+                                else
+                                    m_messages[ID].BRS = false;
+                            }
+                            else
+                            {
+                                switch (attrtypes.Value)
+                                {
+                                    case "1": m_messages[ID].BRS = true; m_messages[ID].AttrValues["CABFD_BRS"] = "1"; break;
+                                    case "0": m_messages[ID].BRS = false; m_messages[ID].AttrValues["CABFD_BRS"] = "0"; break;
+                                }
                             }
                         }
                     }
-
-                }
+                }                
             }
         }
 
-            /* Checking for J1939PG 
-            foreach (uint ID in Parser.ID_List)
+        /* Checking for J1939PG 
+        foreach (uint ID in Parser.ID_List)
+        {
+            if (m_messages[ID].AttrValues["VFrameFormat"] == null)
             {
-                if (m_messages[ID].AttrValues["VFrameFormat"] == null)
+
+
+
+                if(Parser.isJ1939)
                 {
-
-
-             
-                    if(Parser.isJ1939)
-                    {
-                        m_messages[ID].AttrValues["VFrameFormat"] = "3";
-                        m_messages[ID].Type = Message.MsgType.J1939PG;
-                    }
-
+                    m_messages[ID].AttrValues["VFrameFormat"] = "3";
+                    m_messages[ID].Type = Message.MsgType.J1939PG;
                 }
-                else
-                {
-                    if (m_messages[ID].AttrValues["VFrameFormat"] == "3")
-                        m_messages[ID].Type = Message.MsgType.J1939PG;
-                    else if (m_messages[ID].AttrValues["VFrameFormat"] == "14")
-                        m_messages[ID].Type = Message.MsgType.reserved;
-                }
+
             }
-            */
+            else
+            {
+                if (m_messages[ID].AttrValues["VFrameFormat"] == "3")
+                    m_messages[ID].Type = Message.MsgType.J1939PG;
+                else if (m_messages[ID].AttrValues["VFrameFormat"] == "14")
+                    m_messages[ID].Type = Message.MsgType.reserved;
+            }
+        }
+        */
 
 
 
-        
+
         public void AddNode(Node node)
         {
             m_nodes.Add(node);
@@ -146,14 +151,14 @@ namespace DbcParserLib
             }
         }
 
- /*       public void AddNodeComment(string nodeName, string comment)
-        {
-            var node = m_nodes.FirstOrDefault(n => n.Name.Equals(nodeName));
-            if (node != null)
-            {
-                node.Comment = comment;
-            }
-        }*/
+        /*       public void AddNodeComment(string nodeName, string comment)
+               {
+                   var node = m_nodes.FirstOrDefault(n => n.Name.Equals(nodeName));
+                   if (node != null)
+                   {
+                       node.Comment = comment;
+                   }
+               }*/
 
         public void AddMessageComment(uint messageID, string comment)
         {
@@ -182,7 +187,7 @@ namespace DbcParserLib
         {
             if (m_dbcattributes.TryGetValue(name, out var attribute))
                 return attribute;
-            
+
             return null;
         }
 
@@ -206,7 +211,7 @@ namespace DbcParserLib
 
         public Signal GetSignal(uint ID, string name)
         {
-            if(TryGetValueMessageSignal(ID, name, out var signal))
+            if (TryGetValueMessageSignal(ID, name, out var signal))
                 return signal;
 
             return null;
@@ -267,7 +272,7 @@ namespace DbcParserLib
                 return true;
             else if (b1 == null || b2 == null)
                 return false;
-            else if(b1.Name == b2.Name)
+            else if (b1.Name == b2.Name)
                 return true;
             else
                 return false;

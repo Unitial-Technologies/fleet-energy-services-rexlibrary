@@ -45,7 +45,7 @@ namespace RXD.Base
         {
             if (LowestTimestampDetected)
                 return;
-            
+
             LowestTimestampDetected = true;
             using (RXDataReader dr = new RXDataReader(this as BinRXD, ReadLogic.UpdateLowestTimestamp))
                 while (dr.ReadNext()) ;

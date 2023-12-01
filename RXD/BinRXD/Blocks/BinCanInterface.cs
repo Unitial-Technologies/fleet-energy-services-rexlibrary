@@ -9,19 +9,19 @@ namespace RXD.Blocks
         CAN_FD
     }
 
-    enum WakeUpMode : byte
+    internal enum WakeUpMode : byte
     {
         NO_WAKE_UP,
         WAKE_UP
     }
 
-    enum SleepMode : byte
+    internal enum SleepMode : byte
     {
         NO_SLEEP,
         SLEEP_NO_RX,
     }
 
-    enum FilterType : byte
+    internal enum FilterType : byte
     {
         CLASSIC,
         DUAL,
@@ -29,7 +29,7 @@ namespace RXD.Blocks
     }
     #endregion
 
-    class BinCanInterface : BinBase
+    internal class BinCanInterface : BinBase
     {
         internal enum BinProp
         {

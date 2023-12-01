@@ -6,9 +6,10 @@ using System.Text;
 
 namespace InfluxShared.Helpers
 {
-    public interface FDialog {
+    public interface FDialog
+    {
         public string Filter { get; set; }
-        public int FilterIndex { get;set; }
+        public int FilterIndex { get; set; }
     }
 
     public static class StringHelper
@@ -16,7 +17,7 @@ namespace InfluxShared.Helpers
         private static byte CaseLookupSize = 0xFF;
         private static char[] LowerLookup = new char[CaseLookupSize];
         private static char[] UpperLookup = new char[CaseLookupSize];
-        
+
         private static string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
         static StringHelper()

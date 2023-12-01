@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using LinkEnum = MDF4xx.Blocks.ATLinks;
 
 namespace MDF4xx.Blocks
 {
-    using LinkEnum = ATLinks;
-    enum ATLinks
+    internal enum ATLinks
     {
         /// <summary>
         /// Link to next ATBLOCK (linked list) (can be NIL)
@@ -31,7 +31,7 @@ namespace MDF4xx.Blocks
     /// <summary>
     /// Attachment Block
     /// </summary>
-    class ATBlock : BaseBlock
+    internal class ATBlock : BaseBlock
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
         internal class BlockData

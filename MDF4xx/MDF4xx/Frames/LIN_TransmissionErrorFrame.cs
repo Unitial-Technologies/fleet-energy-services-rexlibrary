@@ -2,7 +2,7 @@
 
 namespace MDF4xx.Frames
 {
-    class LIN_TransmissionErrorFrame : BaseDataFrame
+    internal class LIN_TransmissionErrorFrame : BaseDataFrame
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
         internal new class FrameData : BaseDataFrame.FrameData

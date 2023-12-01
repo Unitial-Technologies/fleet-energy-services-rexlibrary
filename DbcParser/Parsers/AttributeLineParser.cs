@@ -66,7 +66,7 @@ namespace DbcParserLib.Parsers
             {
 
             }
-            
+
 
             return false;
         }
@@ -98,7 +98,7 @@ namespace DbcParserLib.Parsers
             {
 
             }
-            
+
         }
 
         private static void AddAttributeDefault(string[] records, IDbcBuilder builder)

@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using LinkEnum = MDF4xx.Blocks.HDLinks;
 
 namespace MDF4xx.Blocks
 {
-    using LinkEnum = HDLinks;
-    enum HDLinks
+    internal enum HDLinks
     {
         /// <summary>
         /// Pointer to the first data group block (DGBLOCK) (can be NIL)
@@ -37,7 +37,7 @@ namespace MDF4xx.Blocks
     /// <summary>
     /// Header Block
     /// </summary>
-    class HDBlock : BaseBlock
+    internal class HDBlock : BaseBlock
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
         internal class BlockData

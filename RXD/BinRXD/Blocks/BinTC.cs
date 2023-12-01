@@ -5,11 +5,11 @@ using System.Text;
 
 namespace RXD.Blocks
 {
-    internal class BinTC: BinBase
+    internal class BinTC : BinBase
     {
-        internal enum TcType: byte
+        internal enum TcType : byte
         {
-            K, 
+            K,
             J,
             N,
             R,

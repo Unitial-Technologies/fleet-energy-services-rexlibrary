@@ -39,7 +39,7 @@ namespace InfluxShared.Objects
         readonly UInt16 canBytes;
         readonly UInt64 signBitmask;
 
-        delegate UInt64 ByteReadMethod(byte[] arr, int Offset, int ByteCount);
+        private delegate UInt64 ByteReadMethod(byte[] arr, int Offset, int ByteCount);
         readonly ByteReadMethod ByteRead;
         public delegate double CalcValueMethod(ref HexStruct hex);
         public readonly CalcValueMethod CalcValue;
@@ -116,11 +116,20 @@ namespace InfluxShared.Objects
 
         public static UInt64 ByteReadIntel(byte[] arr, int Offset, int ByteCount)
         {
-            UInt64 data = 0;
-            for (int hp = 0; hp < ByteCount; hp++)
-                data |= (UInt64)arr[Offset + hp] << BytePos[hp];
+            try
+            {
+                UInt64 data = 0;
+                for (int hp = 0; hp < ByteCount; hp++)
+                    data |= (UInt64)arr[Offset + hp] << BytePos[hp];
 
-            return data;
+                return data;
+            }
+            catch (Exception e)
+            {
+
+                return 0;
+            }
+            
         }
 
         public static UInt64 ByteReadMotorola(byte[] arr, int Offset, int ByteCount)
@@ -138,7 +147,7 @@ namespace InfluxShared.Objects
             hex = new HexStruct() { };
 
             // Check if data exist
-            if (byteOffset + canBytes > HexMessage.Length)
+            if (byteOffset + canBytes > HexMessage.Length || canBytes > 8)
                 return false;
 
             // Extract raw data

@@ -36,7 +36,7 @@ namespace InfluxShared.Objects
                     //Flush(true);
                     //Close();
                     //if (File.Exists(FilePath))
-                        //File.Delete(FilePath);
+                    //File.Delete(FilePath);
                     //base.Dispose();
                 }
 

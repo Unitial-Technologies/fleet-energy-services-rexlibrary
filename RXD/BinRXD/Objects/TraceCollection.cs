@@ -14,7 +14,7 @@ namespace RXD.Objects
 
         }
 
-        public string asASCII 
+        public string asASCII
         {
             get
             {

@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using LinkEnum = MDF4xx.Blocks.FHLinks;
 
 namespace MDF4xx.Blocks
 {
-    using LinkEnum = FHLinks;
-    enum FHLinks
+    internal enum FHLinks
     {
         /// <summary>
         /// Link to next FHBLOCK (can be NIL if list finished)
@@ -20,7 +20,7 @@ namespace MDF4xx.Blocks
     /// <summary>
     /// File History Block
     /// </summary>
-    class FHBlock : BaseBlock
+    internal class FHBlock : BaseBlock
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
         internal class BlockData

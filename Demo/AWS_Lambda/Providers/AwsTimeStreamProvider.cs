@@ -1,29 +1,31 @@
-﻿using Amazon.Lambda.Core;
-using Amazon.S3.Model;
+﻿using Amazon.S3.Model;
 using Amazon.TimestreamWrite;
 using Amazon.TimestreamWrite.Model;
-using InfluxDB.Client.Api.Domain;
 using InfluxShared.FileObjects;
 using InfluxShared.Generic;
 using Newtonsoft.Json;
-using System.Net.Sockets;
+using Cloud;
 
-namespace AWSLambdaFileConvert.ExportFormats
+namespace AWSLambdaFileConvert.Providers
 {
-    internal static class TimeStreamHelper
+    public class AwsTimeStreamProvider : ITimeStreamProvider
     {
-
-        public static async Task<bool> ToAwsTimeStream(this DoubleDataCollection ddc, string filename)
+        ILogProvider Log;
+        public AwsTimeStreamProvider(ILogProvider log)
+        {
+            Log = log;
+        }
+        public async Task<bool> ToTimeStream(DoubleDataCollection ddc, string filename)
         {
             int idx = filename.LastIndexOf('/');
-            LambdaGlobals.Context?.Logger.LogInformation($"Table is: {LambdaGlobals.Timestream.table_name}");
+            Log?.Log($"Table is: {Config.Timestream.table_name}");
 
             long timeCorrection = await GetUTCCorrection(LambdaGlobals.Bucket);
             var writeClient = new AmazonTimestreamWriteClient();
             var writeRecordsRequest = new WriteRecordsRequest
             {
-                DatabaseName = LambdaGlobals.Timestream.db_name,
-                TableName = LambdaGlobals.Timestream.table_name,
+                DatabaseName = Config.Timestream.db_name,
+                TableName = Config.Timestream.table_name,
                 Records = new()
             };
 
@@ -55,15 +57,15 @@ namespace AWSLambdaFileConvert.ExportFormats
                                 MeasureValueType = MeasureValueType.DOUBLE,
                                 Time = timeStamp.ToString()
                             });
-                            //LambdaGlobals.Context?.Logger.LogInformation($"Bus is: {ddc[i-1].BusChannel}");
-                            //LambdaGlobals.Context?.Logger.LogInformation($"Dimension: {string.Join(";", writeRecordsRequest.Records.Last().Dimensions.Select(d => $"{d.Name}={d.Value}"))}");
+                            //Log?.Log($"Bus is: {ddc[i-1].BusChannel}");
+                            //Log?.Log($"Dimension: {string.Join(";", writeRecordsRequest.Records.Last().Dimensions.Select(d => $"{d.Name}={d.Value}"))}");
                             //if (ddc[i - 1].ChannelName == "Engine_temperature")
-                            //    LambdaGlobals.Context?.Logger.LogInformation($"Engine Temperature is: {Values[i]}");
+                            //    Log?.Log($"Engine Temperature is: {Values[i]}");
                             if (writeRecordsRequest.Records.Count >= 90)
                             {
-                                //LambdaGlobals.Context?.Logger.LogInformation($"Writing {writeRecordsRequest.Records.Count} records");
-                                //LambdaGlobals.Context?.Logger.LogInformation($"Writing {writeRecordsRequest.} records");
-                                await writeClient.LocalWriteRecordsAsync(writeRecordsRequest);                               
+                                //Log?.Log($"Writing {writeRecordsRequest.Records.Count} records");
+                                //Log?.Log($"Writing {writeRecordsRequest.} records");
+                                await LocalWriteRecordsAsync(writeClient, writeRecordsRequest);
                                 writeRecordsRequest.Records.Clear();
                             }
                         }
@@ -71,9 +73,9 @@ namespace AWSLambdaFileConvert.ExportFormats
                 }
                 if (writeRecordsRequest.Records.Count > 0)
                 {
-                   // Context?.Logger.LogInformation($"Writing {writeRecordsRequest.Records.Count} records");
-                    await writeClient.LocalWriteRecordsAsync(writeRecordsRequest);
-                  //  Context?.Logger.LogInformation($"Records {writeRecordsRequest.Records.Count} written");
+                    // Context?.Logger.LogInformation($"Writing {writeRecordsRequest.Records.Count} records");
+                    await LocalWriteRecordsAsync(writeClient, writeRecordsRequest);
+                    //  Context?.Logger.LogInformation($"Records {writeRecordsRequest.Records.Count} written");
                     writeRecordsRequest.Records.Clear();
                 }
 
@@ -81,44 +83,44 @@ namespace AWSLambdaFileConvert.ExportFormats
             }
             catch (Exception e)
             {
-                LambdaGlobals.Context?.Logger.LogInformation(e.Message);
+                Log?.Log(e.Message);
                 return false;
             }
         }
 
-        private static async Task<bool> LocalWriteRecordsAsync(this AmazonTimestreamWriteClient writeClient, WriteRecordsRequest request)
+        private async Task<bool> LocalWriteRecordsAsync(AmazonTimestreamWriteClient writeClient, WriteRecordsRequest request)
         {
-           // Context?.Logger.LogInformation("Writing records");
+            // Context?.Logger.LogInformation("Writing records");
 
             try
             {
-                LambdaGlobals.Context?.Logger.LogInformation($"Request is:{request}");
+                Log?.Log($"Request is:{request}");
                 WriteRecordsResponse response = await writeClient.WriteRecordsAsync(request);
-                LambdaGlobals.Context?.Logger.LogInformation($"Write records status code: {response.HttpStatusCode.ToString()}");
+                Log?.Log($"Write records status code: {response.HttpStatusCode.ToString()}");
             }
             catch (RejectedRecordsException e)
             {
-                LambdaGlobals.Context?.Logger.LogInformation("RejectedRecordsException:" + e.ToString());
+                Log?.Log("RejectedRecordsException:" + e.ToString());
                 foreach (RejectedRecord rr in e.RejectedRecords)
-                    LambdaGlobals.Context?.Logger.LogInformation("RecordIndex " + rr.RecordIndex + " : " + rr.Reason);
+                    Log?.Log("RecordIndex " + rr.RecordIndex + " : " + rr.Reason);
 
-                LambdaGlobals.Context?.Logger.LogInformation("Other records were written successfully. ");
+                Log?.Log("Other records were written successfully. ");
             }
             catch (Exception e)
             {
-                LambdaGlobals.Context?.Logger.LogInformation("Write records failure:" + e.ToString());
+                Log?.Log("Write records failure:" + e.ToString());
             }
 
             return true;
         }
 
-        static async Task<bool>WriteSnapshot(string device_id, string json)
+        public async Task<bool> WriteSnapshot(string device_id, string json)
         {
             var writeClient = new AmazonTimestreamWriteClient();
             var writeRecordsRequest = new WriteRecordsRequest
             {
-                DatabaseName = LambdaGlobals.Snapshot.db_name,
-                TableName = LambdaGlobals.Snapshot.table_name,
+                DatabaseName = Config.Snapshot.db_name,
+                TableName = Config.Snapshot.table_name,
                 Records = new()
             };
 
@@ -127,16 +129,16 @@ namespace AWSLambdaFileConvert.ExportFormats
                 var snapshot = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(json);
                 if (snapshot is null)
                 {
-                    LambdaGlobals.Context?.Logger.LogInformation("Couldn't parse Snapshot json");
+                    Log?.Log("Couldn't parse Snapshot json");
                     return false;
-                }                
+                }
                 List<Dimension> dimensions = new List<Dimension>
                 {
                     new Dimension { Name = "device_id", Value = device_id }
                 };
                 long timeStamp = snapshot["RTC_UNIX"] * 1000;
-                LambdaGlobals.Context?.Logger.LogInformation($"Snapshot timestamp is: {(ulong)snapshot["RTC_UNIX"]}");
-                LambdaGlobals.Context?.Logger.LogInformation($"Created Dimension, writing to {LambdaGlobals.Timestream.table_name}");
+                Log?.Log($"Snapshot timestamp is: {(ulong)snapshot["RTC_UNIX"]}");
+                Log?.Log($"Created Dimension, writing to {Config.Timestream.table_name}");
                 foreach (var signal in snapshot)
                 {
                     if (signal.Key != "RTC_UNIX")
@@ -153,12 +155,12 @@ namespace AWSLambdaFileConvert.ExportFormats
                         //Context?.Logger.LogInformation($"Record: {JsonConvert.SerializeObject(record)}"); 
                     }
                 }
-                
+
                 if (writeRecordsRequest.Records.Count > 0)
                 {
-                    LambdaGlobals.Context?.Logger.LogInformation($"Writing {writeRecordsRequest.Records.Count} records");
-                    await writeClient.LocalWriteRecordsAsync(writeRecordsRequest);
-                    LambdaGlobals.Context?.Logger.LogInformation($"Records {writeRecordsRequest.Records.Count} written");
+                    Log?.Log($"Writing {writeRecordsRequest.Records.Count} records");
+                    await LocalWriteRecordsAsync(writeClient, writeRecordsRequest);
+                    Log?.Log($"Records {writeRecordsRequest.Records.Count} written");
                     writeRecordsRequest.Records.Clear();
                 }
 
@@ -166,31 +168,12 @@ namespace AWSLambdaFileConvert.ExportFormats
             }
             catch (Exception e)
             {
-                LambdaGlobals.Context?.Logger.LogInformation(e.Message);
+                Log?.Log(e.Message);
                 return false;
             }
         }
 
-        public static async Task<bool> WriteSnapshot(string bucket)
-        {
-
-            int startIndex = LambdaGlobals.FilePath.IndexOf("_SN") + 3;
-            string sn = LambdaGlobals.FilePath.Substring(startIndex, 7);
-            LambdaGlobals.Context?.Logger.LogInformation($"Snapshot Timestream for SN{sn}");
-            if (!LambdaGlobals.FileName.ToLower().Contains("snapshot"))
-            {
-                LambdaGlobals.Context?.Logger.LogInformation($"File {LambdaGlobals.FileName} ignored. Not a snapshot.");
-                return false;
-            }
-            var jsonStream = await LambdaGlobals.S3.GetStream(bucket, LambdaGlobals.FileName);
-            string json;
-            using (StreamReader reader = new(jsonStream))
-                json = reader.ReadToEnd();
-            await WriteSnapshot(sn, json);
-            return true;
-        }
-
-        static async Task<long> GetUTCCorrection(string bucket)
+        async Task<long> GetUTCCorrection(string bucket)
         {
             var jsonstream = await LambdaGlobals.S3.GetStream(bucket, Path.Combine(LambdaGlobals.FilePath, "Status.json"));
             if (jsonstream is null)
@@ -202,8 +185,8 @@ namespace AWSLambdaFileConvert.ExportFormats
                 {
                     string json = reader.ReadToEnd();
                     dynamic status = JsonConvert.DeserializeObject(json);
-                    LambdaGlobals.Context?.Logger.LogInformation($"UTC Time is: {((DateTimeOffset)fileDateTime).ToUnixTimeSeconds()} ::: {fileDateTime.ToString()}");
-                    LambdaGlobals.Context?.Logger.LogInformation($"Logger Time is: {status.RTC_UNIX} ::: {DateUtility.FromUnixTimestamp((ulong)status.RTC_UNIX)}");
+                    Log?.Log($"UTC Time is: {((DateTimeOffset)fileDateTime).ToUnixTimeSeconds()} ::: {fileDateTime.ToString()}");
+                    Log?.Log($"Logger Time is: {status.RTC_UNIX} ::: {DateUtility.FromUnixTimestamp((ulong)status.RTC_UNIX)}");
                     if (status != null)
                     {
                         //if ((ulong)((DateTimeOffset)DateTime.UtcNow).ToUnixTimeSeconds() < (ulong)status.RTC_UNIX)
@@ -215,7 +198,7 @@ namespace AWSLambdaFileConvert.ExportFormats
             return 0;
         }
 
-        static async Task<DateTime> GetFileCreationDateTime(string bucket, string filename)
+        async Task<DateTime> GetFileCreationDateTime(string bucket, string filename)
         {
             try
             {
@@ -233,10 +216,6 @@ namespace AWSLambdaFileConvert.ExportFormats
             {
                 return DateTime.MinValue;
             }
-        }
+        }        
     }
-
-
-
-
 }

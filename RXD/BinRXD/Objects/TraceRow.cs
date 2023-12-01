@@ -110,7 +110,7 @@ namespace RXD.Objects
                         return "0x" + _CanID.ToString("X2");
                     case RecordType.Unknown:
                         return "UID: " + _CanID.ToString();
-                    default: 
+                    default:
                         return "";
                 }
             }
@@ -125,15 +125,15 @@ namespace RXD.Objects
                     case RecordType.CanTrace:
                     case RecordType.LinTrace:
                         return LinError ? LinErrors : BitConverter.ToString(_Data).Replace("-", " ");
-                    case RecordType.CanError: 
+                    case RecordType.CanError:
                         return $"{BaseDataFrame.ErrorName[ErrorCode]}, Code: {ErrorCode}, Count: {ErrorCount}";
-                    case RecordType.PreBuffer: 
+                    case RecordType.PreBuffer:
                         return "Trigger event";
                     case RecordType.MessageData:
                         return _Value.ToString();
                     case RecordType.Unknown:
                         return BitConverter.ToString(_Data).Replace("-", " ");
-                    default: 
+                    default:
                         return "";
                 }
             }
@@ -260,7 +260,7 @@ namespace RXD.Objects
                 //  frmGlobal.IVDReader.MessageToStringFull(Data, true) + ' 0 0 0' + sLineBreak;
                 return "";
             }
-    }
+        }
 
         public string asTRC
         {

@@ -17,7 +17,7 @@ namespace InfluxShared.FileObjects
         /// <br/>SizeOf = 144 (0x90)
         /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
-        struct Header
+        private struct Header
         {
             /// <summary>
             /// BLF file signature ("LOGG")
@@ -88,7 +88,7 @@ namespace InfluxShared.FileObjects
             public UInt32[] m_NotUSed;
         }
 
-        enum ObjType : UInt32
+        private enum ObjType : UInt32
         {
             UNKNOWN = 0,
             CAN_MESSAGE = 1,
@@ -219,7 +219,7 @@ namespace InfluxShared.FileObjects
         /// <br/>SizeOf = 16 (0x10)
         /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
-        struct ObjectHeaderBase
+        private struct ObjectHeaderBase
         {
             /// <summary>
             /// Signature (BLF_OBJECT_SIGNATURE)
@@ -249,7 +249,7 @@ namespace InfluxShared.FileObjects
         /// <br/>SizeOf = 32 (0x20)
         /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
-        struct ObjectHeader
+        private struct ObjectHeader
         {
             /// <summary>
             /// Base header
@@ -277,7 +277,7 @@ namespace InfluxShared.FileObjects
         /// <br/>SizeOf = 32 (0x20)
         /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
-        struct LogContainer
+        private struct LogContainer
         {
             /// <summary>
             /// BLF object header
@@ -306,7 +306,7 @@ namespace InfluxShared.FileObjects
         /// <br/>SizeOf = 48 (0x30)
         /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
-        struct CanMessage
+        private struct CanMessage
         {
             /// <summary>
             /// BLF object header
@@ -339,7 +339,7 @@ namespace InfluxShared.FileObjects
         /// Structure that describes CAN Error in BLF file
         /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
-        struct CanError
+        private struct CanError
         {
             /// <summary>
             /// BLF object header
@@ -417,7 +417,7 @@ namespace InfluxShared.FileObjects
         /// <br/>SizeOf = 48 (0x30)
         /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
-        struct CanFDMessage
+        private struct CanFDMessage
         {
             /// <summary>
             /// BLF object header
@@ -477,7 +477,7 @@ namespace InfluxShared.FileObjects
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
-        struct FlexRayMessage
+        private struct FlexRayMessage
         {
             /// <summary>
             /// BLF object header
@@ -553,7 +553,7 @@ namespace InfluxShared.FileObjects
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
-        struct LinBusEvent
+        private struct LinBusEvent
         {
             /// <summary>
             /// Timestamp of frame/event start
@@ -575,7 +575,7 @@ namespace InfluxShared.FileObjects
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
-        struct LinSynchFieldEvent
+        private struct LinSynchFieldEvent
         {
             /// <summary>
             /// Common LIN bus event header. See 0
@@ -592,7 +592,7 @@ namespace InfluxShared.FileObjects
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
-        struct LinMessageDescriptor
+        private struct LinMessageDescriptor
         {
             /// <summary>
             /// Common LIN bus event header. See 3.1.5
@@ -626,7 +626,7 @@ namespace InfluxShared.FileObjects
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
-        struct LinTimestampEvent
+        private struct LinTimestampEvent
         {
             /// <summary>
             /// Common LIN bus event header. See 3.1.6
@@ -640,7 +640,7 @@ namespace InfluxShared.FileObjects
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
-        struct LinMessage2
+        private struct LinMessage2
         {
             /// <summary>
             /// BLF object header
@@ -711,7 +711,7 @@ namespace InfluxShared.FileObjects
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
-        struct LinCrcError
+        private struct LinCrcError
         {
             /// <summary>
             /// BLF object header
@@ -765,7 +765,7 @@ namespace InfluxShared.FileObjects
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
-        struct LinSendError
+        private struct LinSendError
         {
             /// <summary>
             /// BLF object header
@@ -802,7 +802,7 @@ namespace InfluxShared.FileObjects
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
-        struct SystemVariable
+        private struct SystemVariable
         {
             /// <summary>
             /// BLF object header
@@ -915,7 +915,7 @@ namespace InfluxShared.FileObjects
         public static byte VectorError(byte AsamError, bool IsRx = true) =>
             (byte)(AsamErrorMap[AsamError >= AsamErrorMap.Count ? 0 : AsamError] | ((IsRx ? 2 : 3) << 6));
 
-        public static UInt16 VectorErrorExt(byte AsamError, bool IsRx = true)=>
+        public static UInt16 VectorErrorExt(byte AsamError, bool IsRx = true) =>
             (UInt16)((VectorError(AsamError, IsRx) << 6) | ((IsRx ? 1 : 0) << 5));
 
         public bool CreateFile(string FileName, DateTime LogTime)
@@ -1149,7 +1149,7 @@ namespace InfluxShared.FileObjects
                     m_TimeStamp = Timestamp * 1000,
                 },
                 m_LinTimestampEvent = new LinTimestampEvent()
-                { 
+                {
                     m_LinMsgDescrEvent = new LinMessageDescriptor()
                     {
                         m_LinSynchFieldEvent = new LinSynchFieldEvent()

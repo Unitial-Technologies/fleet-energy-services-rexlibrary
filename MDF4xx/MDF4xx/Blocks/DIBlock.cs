@@ -1,9 +1,9 @@
 ﻿using System.Runtime.InteropServices;
+using LinkEnum = MDF4xx.Blocks.DILinks;
 
 namespace MDF4xx.Blocks
 {
-    using LinkEnum = DILinks;
-    enum DILinks
+    internal enum DILinks
     {
         linkcount
     };
@@ -11,7 +11,7 @@ namespace MDF4xx.Blocks
     /// <summary>
     /// Invalidation Data Block
     /// </summary>
-    class DIBlock : BaseBlock
+    internal class DIBlock : BaseBlock
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
         internal class BlockData

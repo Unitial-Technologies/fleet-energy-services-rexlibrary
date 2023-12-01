@@ -1,11 +1,11 @@
-﻿using RXD.Objects;
+﻿using RXD.Blocks;
+using RXD.Objects;
 using System;
 using System.Runtime.InteropServices;
-using RXD.Blocks;
 
 namespace RXD.DataRecords
 {
-    class RecPreBuffer : RecBase
+    internal class RecPreBuffer : RecBase
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
         internal class DataRecord
@@ -48,7 +48,7 @@ namespace RXD.DataRecords
                 data.PreCurrentSector -= SectorOffset;
                 data.PreEndSector -= SectorOffset;
                 //if (data.PreCurrentSector < data.PreEndSector)
-                    //data.PreCurrentSector += 1;
+                //data.PreCurrentSector += 1;
             }
 
             if (data.ContainPostBufferInfo)

@@ -1,7 +1,7 @@
+using DbcParserLib.Model;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Collections.Generic;
-using DbcParserLib.Model;
 
 namespace DbcParserLib
 {
@@ -31,10 +31,10 @@ namespace DbcParserLib
         {
             if (string.IsNullOrWhiteSpace(signal.ValueTable))
                 yield break;
-            
-            using(var reader = new StringReader(signal.ValueTable))
+
+            using (var reader = new StringReader(signal.ValueTable))
             {
-                while(reader.Peek() > -1)
+                while (reader.Peek() > -1)
                 {
                     var tokens = reader.ReadLine().Split(' ');
                     yield return new KeyValuePair<int, string>(int.Parse(tokens[0]), tokens[1]);
@@ -48,17 +48,17 @@ namespace DbcParserLib
 
         public static MultiplexingInfo MultiplexingInfo(this Signal signal)
         {
-            if(string.IsNullOrWhiteSpace(signal.Multiplexing))
+            if (string.IsNullOrWhiteSpace(signal.Multiplexing))
                 return new MultiplexingInfo(MultiplexingRole.None);
 
-            if(signal.Multiplexing.Equals(MultiplexorLabel))
+            if (signal.Multiplexing.Equals(MultiplexorLabel))
                 return new MultiplexingInfo(MultiplexingRole.Multiplexor);
-            
-            if(signal.Multiplexing.StartsWith(MultiplexedLabel))
+
+            if (signal.Multiplexing.StartsWith(MultiplexedLabel))
             {
                 var substringLength = signal.Multiplexing.Length - (signal.Multiplexing.EndsWith(MultiplexorLabel) ? 2 : 1);
 
-                if(int.TryParse(signal.Multiplexing.Substring(1, substringLength), out var group))
+                if (int.TryParse(signal.Multiplexing.Substring(1, substringLength), out var group))
                     return new MultiplexingInfo(MultiplexingRole.Multiplexed, group);
             }
 

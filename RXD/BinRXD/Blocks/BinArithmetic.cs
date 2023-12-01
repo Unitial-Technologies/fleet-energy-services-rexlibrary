@@ -3,7 +3,7 @@
 namespace RXD.Blocks
 {
     #region Enumerations for Property type definitions
-    enum ArithmeticType : byte
+    internal enum ArithmeticType : byte
     {
         SUM,
         SUB,
@@ -14,7 +14,7 @@ namespace RXD.Blocks
     }
     #endregion
 
-    class BinArithmetic : BinBase
+    internal class BinArithmetic : BinBase
     {
         internal enum BinProp
         {

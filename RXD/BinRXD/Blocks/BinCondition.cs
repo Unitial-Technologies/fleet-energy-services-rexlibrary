@@ -19,7 +19,7 @@ namespace RXD.Blocks
     }
     #endregion
 
-    class BinCondition : BinBase
+    internal class BinCondition : BinBase
     {
         internal enum BinProp
         {

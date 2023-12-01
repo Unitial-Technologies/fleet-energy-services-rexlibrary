@@ -1,0 +1,18 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34024.191
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Cloud", "Cloud.shproj", "{11DD53D9-3BC3-470F-AD9F-089970CD943B}"
+EndProject
+Global
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {84DA41CB-E1B8-4A07-BC68-DA421BE1AD12}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		Cloud.projitems*{11dd53d9-3bc3-470f-ad9f-089970cd943b}*SharedItemsImports = 13
+	EndGlobalSection
+EndGlobal

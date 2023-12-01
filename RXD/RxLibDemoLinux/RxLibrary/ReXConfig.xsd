@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<xs:schema targetNamespace="http://www.influxtechnology.com/xml/ReXgen" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://www.influxtechnology.com/xml/ReXgen" xmlns:rg="http://www.influxtechnology.com/xml/ReXgen" elementFormDefault="qualified" version="0.6">
+<xs:schema targetNamespace="http://www.influxtechnology.com/xml/ReXgen" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://www.influxtechnology.com/xml/ReXgen" xmlns:rg="http://www.influxtechnology.com/xml/ReXgen" elementFormDefault="qualified" version="0.12">
 	<xs:element name="REXGENCONFIG">
 		<xs:annotation>
 			<xs:documentation>Root element</xs:documentation>
@@ -8,6 +8,9 @@
 			<xs:all minOccurs="1" maxOccurs="1">
 				<xs:element name="BLOCKS" type="BLOCKS" minOccurs="1" maxOccurs="1"/>
 				<xs:element name="CONFIG" type="CONFIG" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="CONFIG_FTP" type="CONFIG_FTP" minOccurs="0" maxOccurs="1"/>
+				<xs:element name="CONFIG_MOBILE" type="CONFIG_MOBILE" minOccurs="0" maxOccurs="1"/>
+				<xs:element name="CONFIG_S3" type="CONFIG_S3" minOccurs="0" maxOccurs="1"/>
 				<xs:element name="VERSION-TYPE" type="VERSION-TYPE" minOccurs="1" maxOccurs="1"/>
 			</xs:all>
 		</xs:complexType>
@@ -81,6 +84,18 @@
 			<xs:enumeration value="SAME"/>
 		</xs:restriction>
 	</xs:simpleType>
+	<xs:simpleType name="Counter_Type">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="LOOP"/>
+			<xs:enumeration value="SINGLE"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="DAQ_File_Type">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="JSON"/>
+			<xs:enumeration value="XML"/>
+		</xs:restriction>
+	</xs:simpleType>
 	<xs:simpleType name="Digital_Active_State">
 		<xs:restriction base="xs:string">
 			<xs:enumeration value="HI"/>
@@ -107,15 +122,42 @@
 			<xs:enumeration value="DM1"/>
 		</xs:restriction>
 	</xs:simpleType>
+	<xs:simpleType name="Encrypt_Type">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="No_Encryption"/>
+			<xs:enumeration value="RSA"/>
+		</xs:restriction>
+	</xs:simpleType>
 	<xs:simpleType name="EndianType">
 		<xs:restriction base="xs:string">
 			<xs:enumeration value="MOTOROLA"/>
 			<xs:enumeration value="INTEL"/>
 		</xs:restriction>
 	</xs:simpleType>
+	<xs:simpleType name="FTP_Connection_Option">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="USE_IP"/>
+			<xs:enumeration value="USE_SERVERNAME"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="FTP_Mode">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Active"/>
+			<xs:enumeration value="Passive"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="FTP_Type">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="FTP"/>
+			<xs:enumeration value="FTPS"/>
+		</xs:restriction>
+	</xs:simpleType>
 	<xs:simpleType name="GNSSType">
 		<xs:restriction base="xs:string">
+			<xs:enumeration value="HORIZONTAL_ACCURACY"/>
 			<xs:enumeration value="LATITUDE"/>
+			<xs:enumeration value="SPEED_ACCURACY"/>
+			<xs:enumeration value="VERTICAL_ACCURACY"/>
 			<xs:enumeration value="LONGITUDE"/>
 			<xs:enumeration value="ALTITUDE"/>
 			<xs:enumeration value="DATETIME"/>
@@ -130,6 +172,35 @@
 	<xs:simpleType name="GUIDType">
 		<xs:restriction base="xs:string">
 			<xs:pattern value="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="LED_Assign_Option">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="DEFAULT"/>
+			<xs:enumeration value="MODEL"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="LED_DisplayOption">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="OFF"/>
+			<xs:enumeration value="ON"/>
+			<xs:enumeration value="NORMAL"/>
+			<xs:enumeration value="FAST"/>
+			<xs:enumeration value="SLOW"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="LIN_SignalDataType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="UNSIGNED"/>
+			<xs:enumeration value="SIGNED"/>
+			<xs:enumeration value="FLOAT32"/>
+			<xs:enumeration value="FLOAT64"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="LINProtovolVersion">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="V_1_3"/>
+			<xs:enumeration value="V_2_0"/>
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:simpleType name="LogFormatType">
@@ -153,6 +224,26 @@
 			<xs:enumeration value="RTC"/>
 			<xs:enumeration value="Serial_Number"/>
 			<xs:enumeration value="TimeStamp"/>
+			<xs:enumeration value="Mobile_Loop_Status"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="RealTime_Source_Type">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Mobile"/>
+			<xs:enumeration value="No"/>
+			<xs:enumeration value="NTP"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="S3_Connection_Type">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="PLAIN"/>
+			<xs:enumeration value="SSL"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="S3_TYPE">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="AWS"/>
+			<xs:enumeration value="COMPATIBLE"/>
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:simpleType name="SleepOptionType">
@@ -162,15 +253,38 @@
 			<xs:enumeration value="DEEP_SLEEP"/>
 		</xs:restriction>
 	</xs:simpleType>
+	<xs:simpleType name="TC_Mode">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="NoCalibration"/>
+			<xs:enumeration value="NoCJC"/>
+			<xs:enumeration value="Normal"/>
+			<xs:enumeration value="RAW"/>
+			<xs:enumeration value="OnlyCJC"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="TC_Type">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="B"/>
+			<xs:enumeration value="E"/>
+			<xs:enumeration value="J"/>
+			<xs:enumeration value="K"/>
+			<xs:enumeration value="N"/>
+			<xs:enumeration value="R"/>
+			<xs:enumeration value="S"/>
+			<xs:enumeration value="T"/>
+		</xs:restriction>
+	</xs:simpleType>
 	<xs:simpleType name="Value_Type">
 		<xs:restriction base="xs:string">
 			<xs:enumeration value="FLOAT32"/>
 			<xs:enumeration value="FLOAT64"/>
 			<xs:enumeration value="SBYTE"/>
 			<xs:enumeration value="SLONG"/>
+			<xs:enumeration value="SLONGLONG"/>
 			<xs:enumeration value="SWORD"/>
 			<xs:enumeration value="UBYTE"/>
 			<xs:enumeration value="ULONG"/>
+			<xs:enumeration value="ULONGLONG"/>
 			<xs:enumeration value="UWORD"/>
 		</xs:restriction>
 	</xs:simpleType>
@@ -212,8 +326,10 @@
 			<xs:element name="RangeLow" type="xs:float" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="SamplingRate" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
 		</xs:all>
-		<xs:attribute name="UID" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
 		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
 	</xs:complexType>
 	<xs:element name="ADC" type="ADC"/>
 	<xs:complexType name="ADC">
@@ -224,16 +340,20 @@
 			<xs:element name="Rate" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
 		</xs:all>
 		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
 		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
 	</xs:complexType>
 	<xs:element name="ARITHMETIC" type="ARITHMETIC"/>
 	<xs:complexType name="ARITHMETIC">
 		<xs:all>
-			<xs:element name="AritmeticAction" type="ArithmeticType" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="ArithmeticAction" type="ArithmeticType" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="Input1UID" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="Input2UID" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
 		</xs:all>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
 		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
 		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
 	</xs:complexType>
 	<xs:element name="BLOCKS" type="BLOCKS"/>
@@ -309,6 +429,27 @@
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
+			<xs:element name="DAQ_LIST" minOccurs="0" maxOccurs="1">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="DAQ" type="DAQ" minOccurs="1" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="DAQFILE_LIST" minOccurs="0" maxOccurs="1">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="DAQFILE" type="DAQFILE" minOccurs="1" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="DAQITEM_LIST" minOccurs="0" maxOccurs="1">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="DAQITEM" type="DAQITEM" minOccurs="1" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
 			<xs:element name="DIGITAL_INPUT_LIST" minOccurs="0" maxOccurs="1">
 				<xs:complexType>
 					<xs:sequence>
@@ -352,6 +493,34 @@
 				</xs:complexType>
 			</xs:element>
 			<xs:element name="J1939DM_LIST" type="J1939DM_LIST" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="LED_LIST" minOccurs="0" maxOccurs="1">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="LED" type="LED" minOccurs="1" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="LININTERFACE_LIST" minOccurs="0" maxOccurs="1">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="LININTERFACE" type="LININTERFACE" minOccurs="1" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="LINMESSAGE_LIST" minOccurs="0" maxOccurs="1">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="LINMESSAGE" type="LINMESSAGE" minOccurs="1" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="LINSIGNAL_LIST" minOccurs="0" maxOccurs="1">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="LINSIGNAL" type="LINSIGNAL" minOccurs="1" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
 			<xs:element name="RATIONAL_FORMULA_LIST" minOccurs="0" maxOccurs="1">
 				<xs:complexType>
 					<xs:sequence>
@@ -377,6 +546,13 @@
 				<xs:complexType>
 					<xs:sequence>
 						<xs:element name="SWITCH" type="SWITCH" minOccurs="1" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="TC_LIST" minOccurs="0" maxOccurs="1">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="TC" type="TC" minOccurs="1" maxOccurs="unbounded"/>
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
@@ -408,7 +584,9 @@
 		<xs:all>
 			<xs:element name="InterfaceID" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
 		</xs:all>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
 		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
 		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
 	</xs:complexType>
 	<xs:element name="CANINTERFACE" type="CANINTERFACE"/>
@@ -438,6 +616,8 @@
 		</xs:all>
 		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
 		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
 	</xs:complexType>
 	<xs:element name="CANINTERFACE_FILTER_TYPE" type="CANINTERFACE_FILTER_TYPE"/>
 	<xs:complexType name="CANINTERFACE_FILTER_TYPE">
@@ -455,23 +635,27 @@
 			<xs:element name="CANFD_Option" type="CAN_FD_MessageType" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="CANMessage_Custom" type="CANMESSAGE_CUSTOM_TYPE" minOccurs="0" maxOccurs="1"/>
 			<xs:element name="DefaultHex" type="xs:hexBinary" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="Delay" type="xs:unsignedInt" minOccurs="0" maxOccurs="1" default="0"/>
 			<xs:element name="Direction" type="DirectionType" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="DLC" type="xs:unsignedByte" minOccurs="1" maxOccurs="1"/>
-			<xs:element name="Downsampling" type="xs:unsignedInt" minOccurs="1" maxOccurs="1"/>
-			<xs:element name="InputMessageUID" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="Downsampling" type="xs:unsignedInt" minOccurs="0" maxOccurs="1" default="0"/>
+			<xs:element name="InputMessageUID" type="xs:unsignedShort" minOccurs="0" maxOccurs="1" default="0"/>
 			<xs:element name="InterfaceUID" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
-			<xs:element name="IsExtended" type="xs:boolean" minOccurs="1" maxOccurs="1"/>
-			<xs:element name="isJ1939" type="xs:boolean" minOccurs="1" maxOccurs="1"/>
-			<xs:element name="J1939Destination" type="xs:unsignedByte" minOccurs="1" maxOccurs="1"/>
-			<xs:element name="J1939Source" type="xs:unsignedByte" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="IsExtended" type="xs:boolean" minOccurs="0" maxOccurs="1" default="false"/>
+			<xs:element name="isJ1939" type="xs:boolean" minOccurs="0" maxOccurs="1" default="false"/>
+			<xs:element name="J1939Destination" type="xs:unsignedByte" minOccurs="0" maxOccurs="1" default="0"/>
+			<xs:element name="J1939Source" type="xs:unsignedByte" minOccurs="0" maxOccurs="1" default="0"/>
 			<xs:element name="MessageIdentEnd" type="xs:unsignedInt" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="MessageIdentStart" type="xs:unsignedInt" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="Name" type="xs:string" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="NextOutputMessageID" type="xs:unsignedShort" minOccurs="0" maxOccurs="1" default="0"/>
 			<xs:element name="Period" type="xs:unsignedInt" minOccurs="1" maxOccurs="1"/>
-			<xs:element name="TriggeringMessageUniqueID" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="TriggeringMessageUniqueID" type="xs:unsignedShort" minOccurs="0" maxOccurs="1" default="0"/>
 		</xs:all>
 		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
 		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
 	</xs:complexType>
 	<xs:element name="CANMESSAGE_CUSTOM_TYPE" type="CANMESSAGE_CUSTOM_TYPE"/>
 	<xs:complexType name="CANMESSAGE_CUSTOM_TYPE">
@@ -486,19 +670,34 @@
 		<xs:all>
 			<xs:element name="BitCount" type="xs:unsignedByte" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="COMMENT" type="xs:string" minOccurs="0" maxOccurs="1"/>
-			<xs:element name="DefaultValue" type="xs:float" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="DefaultValue" type="xs:float" minOccurs="0" maxOccurs="1" default="0"/>
 			<xs:element name="Endian" type="EndianType" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="InputType" type="CAN_SignalType" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="InputUID" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="MessageUID" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="Name" type="xs:string" minOccurs="0" maxOccurs="1"/>
-			<xs:element name="ParA" type="xs:float" minOccurs="1" maxOccurs="1"/>
-			<xs:element name="ParB" type="xs:float" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="ParA" type="xs:float" minOccurs="1" maxOccurs="1" default="1"/>
+			<xs:element name="ParB" type="xs:float" minOccurs="1" maxOccurs="1" default="0"/>
 			<xs:element name="SignalType" type="CAN_SignalDataType" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="StartBit" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
 		</xs:all>
 		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
 		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
+	</xs:complexType>
+	<xs:element name="CASE" type="CASE"/>
+	<xs:complexType name="CASE">
+		<xs:sequence minOccurs="1" maxOccurs="1">
+			<xs:element name="CaseValue" type="xs:unsignedInt" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="InputUID" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="CASE_LIST" type="CASE_LIST"/>
+	<xs:complexType name="CASE_LIST">
+		<xs:sequence minOccurs="1">
+			<xs:element name="CASE" type="CASE" minOccurs="1" maxOccurs="unbounded"/>
+		</xs:sequence>
 	</xs:complexType>
 	<xs:element name="CONDITION" type="CONDITION"/>
 	<xs:complexType name="CONDITION">
@@ -509,7 +708,9 @@
 			<xs:element name="InputConditionUID2" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="OperatorCondition" type="ConditionType" minOccurs="1" maxOccurs="1"/>
 		</xs:all>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
 		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
 		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
 	</xs:complexType>
 	<xs:element name="CONFIG" type="CONFIG"/>
@@ -519,9 +720,14 @@
 			<xs:element name="CANReceiveTimeout" type="xs:unsignedShort" minOccurs="0" maxOccurs="1"/>
 			<xs:element name="CANSilentDelay" type="xs:unsignedShort" minOccurs="0" maxOccurs="1"/>
 			<xs:element name="ConfigurationVersion" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="EncryptDataLog" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="EncryptKey" type="xs:string" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="EncryptType" type="Encrypt_Type" minOccurs="0" maxOccurs="1"/>
 			<xs:element name="GUID" type="GUIDType" minOccurs="1" maxOccurs="1" default="00000000-0000-0000-0000-000000000000"/>
 			<xs:element name="InterfaceCount" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="LockDevice" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
 			<xs:element name="Name" type="xs:string" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="NTPServer" type="xs:string" minOccurs="0" maxOccurs="1"/>
 			<xs:element name="SleepMode" type="SleepOptionType" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="TimeStampPrecision" type="xs:unsignedInt" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="TimeStampSize" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
@@ -535,25 +741,137 @@
 		</xs:all>
 		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
 		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
+	</xs:complexType>
+	<xs:element name="CONFIG_FTP" type="CONFIG_FTP"/>
+	<xs:complexType name="CONFIG_FTP">
+		<xs:all>
+			<xs:element name="AutomaticFirmwareUpdate" type="xs:boolean" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="ConfigurationCheckTime" type="xs:unsignedInt" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="EncryptPass" type="xs:boolean" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="FirmwareCheckTime" type="xs:unsignedInt" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="Mode" type="FTP_Mode" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="Name" type="xs:string" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="Pass" type="xs:string" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="Port" type="xs:unsignedInt" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="ServerIP" type="xs:string" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="ServerName" type="xs:string" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="ServerName_IP_Connection_Option" type="FTP_Connection_Option" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="StatusSendTime" type="xs:unsignedInt" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="Type" type="FTP_Type" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="UploadResume" type="xs:boolean" minOccurs="0" maxOccurs="1" default="true"/>
+			<xs:element name="User" type="xs:string" minOccurs="1" maxOccurs="1"/>
+		</xs:all>
+		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
+	</xs:complexType>
+	<xs:element name="CONFIG_MOBILE" type="CONFIG_MOBILE"/>
+	<xs:complexType name="CONFIG_MOBILE">
+		<xs:all>
+			<xs:element name="APN" type="xs:string" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="GetRealTimeFromMobile" type="xs:boolean" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="Name" type="xs:string" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="NoCommunicationRestartTimeOut" type="xs:unsignedInt" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="Pass" type="xs:string" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="PIN" type="xs:string" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="RealTimeSource" type="RealTime_Source_Type" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="UseAPN" type="xs:boolean" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="UsePIN" type="xs:boolean" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="User" type="xs:string" minOccurs="1" maxOccurs="1"/>
+		</xs:all>
+		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
+	</xs:complexType>
+	<xs:element name="CONFIG_S3" type="CONFIG_S3"/>
+	<xs:complexType name="CONFIG_S3">
+		<xs:all>
+			<xs:element name="AccessKey" type="xs:string" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="AutomaticFirmwareUpdate" type="xs:boolean" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="Bucket" type="xs:string" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="ConfigurationCheckTime" type="xs:unsignedInt" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="ConnectionPort" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="ConnectionType" type="S3_Connection_Type" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="EncryptPass" type="xs:boolean" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="EndPoint" type="xs:string" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="FirmwareCheckTime" type="xs:unsignedInt" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="KeepLogFilesOnDevice" type="xs:boolean" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="Region" type="xs:string" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="RootCertificate" type="xs:string" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="S3Type" type="S3_TYPE" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="SecretKey" type="xs:string" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="StatusSendTime" type="xs:unsignedLong" minOccurs="1" maxOccurs="1"/>
+		</xs:all>
+		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
+		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
 	</xs:complexType>
 	<xs:element name="CONSTANT" type="CONSTANT"/>
 	<xs:complexType name="CONSTANT">
 		<xs:all>
 			<xs:element name="Value" type="xs:float" minOccurs="1" maxOccurs="1"/>
 		</xs:all>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
 		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
 		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
 	</xs:complexType>
 	<xs:element name="COUNTER" type="COUNTER"/>
 	<xs:complexType name="COUNTER">
 		<xs:all>
+			<xs:element name="CounterType" type="Counter_Type" minOccurs="0" maxOccurs="1"/>
 			<xs:element name="Cycle" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
-			<xs:element name="InitialVlaue" type="xs:unsignedInt" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="Delay" type="xs:unsignedInt" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="InitialValue" type="xs:unsignedInt" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="MaxValue" type="xs:unsignedInt" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="Seed" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
 		</xs:all>
 		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
 		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
+	</xs:complexType>
+	<xs:element name="DAQ" type="DAQ"/>
+	<xs:complexType name="DAQ">
+		<xs:all>
+			<xs:element name="Number" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="SamplingRate" type="xs:unsignedInt" minOccurs="1" maxOccurs="1"/>
+		</xs:all>
+		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
+		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
+	</xs:complexType>
+	<xs:element name="DAQFILE" type="DAQFILE"/>
+	<xs:complexType name="DAQFILE">
+		<xs:all>
+			<xs:element name="FileType" type="DAQ_File_Type" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="InputTypeID" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="InputUID" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="Name" type="xs:string" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="UploadRate" type="xs:unsignedInt" minOccurs="1" maxOccurs="1"/>
+		</xs:all>
+		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
+		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
+	</xs:complexType>
+	<xs:element name="DAQITEM" type="DAQITEM"/>
+	<xs:complexType name="DAQITEM">
+		<xs:all>
+			<xs:element name="DAQID" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="InputUID" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="Name" type="xs:string" minOccurs="1" maxOccurs="1"/>
+		</xs:all>
+		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
+		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
 	</xs:complexType>
 	<xs:element name="DIGITAL_INPUT" type="DIGITAL_INPUT"/>
 	<xs:complexType name="DIGITAL_INPUT">
@@ -563,8 +881,10 @@
 			<xs:element name="PhysicalNumber" type="xs:unsignedByte" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="SamplingRate" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
 		</xs:all>
-		<xs:attribute name="UID" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
 		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
 	</xs:complexType>
 	<xs:element name="DIGITAL_OUTPUT" type="DIGITAL_OUTPUT"/>
 	<xs:complexType name="DIGITAL_OUTPUT">
@@ -575,8 +895,10 @@
 			<xs:element name="PhysicalNumber" type="xs:unsignedByte" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="PWMFrequency" type="xs:unsignedInt" minOccurs="1" maxOccurs="1"/>
 		</xs:all>
-		<xs:attribute name="UID" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
 		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
 	</xs:complexType>
 	<xs:element name="GNSSINTERFACE" type="GNSSINTERFACE"/>
 	<xs:complexType name="GNSSINTERFACE">
@@ -584,8 +906,10 @@
 			<xs:element name="PhysicalNumber" type="xs:unsignedByte" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="SamplingRate" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
 		</xs:all>
-		<xs:attribute name="UID" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
 		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
 	</xs:complexType>
 	<xs:element name="GNSSMESSAGE" type="GNSSMESSAGE"/>
 	<xs:complexType name="GNSSMESSAGE">
@@ -593,8 +917,10 @@
 			<xs:element name="InterfaceUID" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="Type" type="GNSSType" minOccurs="1" maxOccurs="1"/>
 		</xs:all>
-		<xs:attribute name="UID" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
 		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
 	</xs:complexType>
 	<xs:element name="GYRO" type="GYRO"/>
 	<xs:complexType name="GYRO">
@@ -605,18 +931,23 @@
 			<xs:element name="RangeLow" type="xs:float" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="SamplingRate" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
 		</xs:all>
-		<xs:attribute name="UID" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
 		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
 	</xs:complexType>
 	<xs:element name="INTERNAL_PARAMETER" type="INTERNAL_PARAMETER"/>
 	<xs:complexType name="INTERNAL_PARAMETER">
 		<xs:all>
+			<xs:element name="InputUID" type="xs:unsignedShort" minOccurs="0" maxOccurs="1" default="0"/>
 			<xs:element name="Parameter_Type" type="Parameter_Type" minOccurs="1" maxOccurs="1"/>
-			<xs:element name="SamplingRate" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="SamplingRate" type="xs:unsignedShort" minOccurs="0" maxOccurs="1" default="1000"/>
 			<xs:element name="Value_Type" type="Value_Type" minOccurs="1" maxOccurs="1"/>
 		</xs:all>
-		<xs:attribute name="UID" use="optional" type="xs:unsignedShort"/>
-		<xs:attribute name="Version" use="optional" type="Parameter_Type"/>
+		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
+		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
 	</xs:complexType>
 	<xs:element name="J1939DM" type="J1939DM"/>
 	<xs:complexType name="J1939DM">
@@ -625,14 +956,88 @@
 			<xs:element name="InputUID" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="Source" type="xs:unsignedByte" minOccurs="1" maxOccurs="1"/>
 		</xs:all>
-		<xs:attribute name="UID" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
 		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
 	</xs:complexType>
 	<xs:element name="J1939DM_LIST" type="J1939DM_LIST"/>
 	<xs:complexType name="J1939DM_LIST">
 		<xs:sequence>
 			<xs:element name="J1939DM" type="J1939DM" minOccurs="1" maxOccurs="unbounded"/>
 		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="LED" type="LED"/>
+	<xs:complexType name="LED">
+		<xs:all>
+			<xs:element name="ActiveTimeout" type="xs:unsignedInt" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="AssignOption" type="LED_Assign_Option" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="DeactiveTimeout" type="xs:unsignedInt" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="InputUIDActive" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="InputUIDDeactive" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="PhysicalNumber" type="xs:unsignedByte" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="WhenActive" type="LED_DisplayOption" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="WhenDeactive" type="LED_DisplayOption" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="WhenNotActive" type="LED_DisplayOption" minOccurs="1" maxOccurs="1"/>
+		</xs:all>
+		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
+		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
+	</xs:complexType>
+	<xs:element name="LININTERFACE" type="LININTERFACE"/>
+	<xs:complexType name="LININTERFACE">
+		<xs:all>
+			<xs:element name="BitRate" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="MasterMode" type="xs:boolean" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="PhysicalNumber" type="xs:unsignedByte" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="ProtocolVersion" type="LINProtovolVersion" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="Time_Base" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="Time_Jitter" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
+		</xs:all>
+		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
+		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
+	</xs:complexType>
+	<xs:element name="LINMESSAGE" type="LINMESSAGE"/>
+	<xs:complexType name="LINMESSAGE">
+		<xs:all>
+			<xs:element name="DefaultHex" type="xs:hexBinary" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="Delay" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="DLC" type="xs:unsignedByte" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="InputUID" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="InterfaceID" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="MessageIdentEnd" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="MessageIdentStart" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="Name" type="xs:string" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="Respond" type="xs:boolean" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="ScheduleTablePosition" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
+		</xs:all>
+		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
+		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
+	</xs:complexType>
+	<xs:element name="LINSIGNAL" type="LINSIGNAL"/>
+	<xs:complexType name="LINSIGNAL">
+		<xs:all>
+			<xs:element name="BitCount" type="xs:unsignedByte" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="COMMENT" type="xs:string" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="DefaultValue" type="xs:float" minOccurs="0" maxOccurs="1" default="0"/>
+			<xs:element name="Endian" type="EndianType" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="InputUID" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="MessageUID" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="Name" type="xs:string" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="ParA" type="xs:float" minOccurs="1" maxOccurs="1" default="1"/>
+			<xs:element name="ParB" type="xs:float" minOccurs="1" maxOccurs="1" default="0"/>
+			<xs:element name="SignalType" type="LIN_SignalDataType" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="StartBit" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
+		</xs:all>
+		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
+		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
 	</xs:complexType>
 	<xs:element name="RATIONAL_FORMULA" type="RATIONAL_FORMULA"/>
 	<xs:complexType name="RATIONAL_FORMULA">
@@ -645,7 +1050,9 @@
 			<xs:element name="ParE" type="xs:float" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="ParF" type="xs:float" minOccurs="1" maxOccurs="1"/>
 		</xs:all>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
 		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
 		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
 	</xs:complexType>
 	<xs:element name="SDINTERFACE" type="SDINTERFACE"/>
@@ -670,6 +1077,8 @@
 		</xs:all>
 		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
 		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
 	</xs:complexType>
 	<xs:element name="SDMESSAGE" type="SDMESSAGE"/>
 	<xs:complexType name="SDMESSAGE">
@@ -685,20 +1094,38 @@
 			<xs:element name="Period" type="xs:unsignedInt" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="TriggeringMessageUniqueID" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
 		</xs:all>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
 		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
 		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
 	</xs:complexType>
 	<xs:element name="SWITCH" type="SWITCH"/>
 	<xs:complexType name="SWITCH">
 		<xs:all>
-			<xs:element name="CaseValue" type="xs:int" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="CASE_LIST" type="CASE_LIST" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="InputCount" type="xs:unsignedInt" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="InputDefaultUID" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="InputSwitchUID" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
-			<xs:element name="InputUID" type="xs:unsignedShort" minOccurs="1" maxOccurs="1"/>
+		</xs:all>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
+		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
+	</xs:complexType>
+	<xs:element name="TC" type="TC"/>
+	<xs:complexType name="TC">
+		<xs:all minOccurs="0" maxOccurs="1">
+			<xs:element name="Mode" type="TC_Mode" minOccurs="0" maxOccurs="1" default="Normal"/>
+			<xs:element name="ParA" type="xs:float" minOccurs="0" maxOccurs="1" default="1"/>
+			<xs:element name="ParB" type="xs:float" minOccurs="0" maxOccurs="1" default="0"/>
+			<xs:element name="PhysicalNumber" type="xs:unsignedByte" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="Rate" type="xs:unsignedShort" minOccurs="0" maxOccurs="1" default="1000"/>
+			<xs:element name="Type" type="TC_Type" minOccurs="0" maxOccurs="1" default="K"/>
 		</xs:all>
 		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
 		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
 	</xs:complexType>
 	<xs:element name="TRIGGER" type="TRIGGER"/>
 	<xs:complexType name="TRIGGER">
@@ -712,11 +1139,15 @@
 		</xs:all>
 		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
 		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
 	</xs:complexType>
 	<xs:element name="USBINTERFACE" type="USBINTERFACE"/>
 	<xs:complexType name="USBINTERFACE">
 		<xs:all/>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
 		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
 		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
 	</xs:complexType>
 	<xs:element name="USBMESSAGE" type="USBMESSAGE"/>
@@ -732,7 +1163,9 @@
 			<xs:element name="MessageIdentStart" type="xs:unsignedInt" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="Period" type="xs:unsignedInt" minOccurs="1" maxOccurs="1"/>
 		</xs:all>
+		<xs:attribute name="X" use="optional" type="xs:unsignedInt"/>
 		<xs:attribute name="UID" use="required" type="xs:unsignedShort"/>
+		<xs:attribute name="Y" use="optional" type="xs:unsignedInt"/>
 		<xs:attribute name="Version" use="optional" type="xs:unsignedShort"/>
 	</xs:complexType>
 	<xs:element name="WAKEUP_SOURCE" type="WAKEUP_SOURCE"/>

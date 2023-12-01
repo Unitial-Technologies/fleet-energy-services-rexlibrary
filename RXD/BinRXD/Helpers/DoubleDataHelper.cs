@@ -13,8 +13,8 @@ namespace RXD.Helpers
             {
                 data = ddata.Add(bin.header.uniqueid, ChannelName: bin.GetName, ChannelUnits: bin.GetUnits);
                 data.BinaryHelper = bin.GetDataDescriptor.CreateBinaryData();
-               // if (bin.BinType == BlockType.CANInterface)
-               //     data.BusChannel = (bin as BinCanInterface)[BinCanInterface.BinProp.PhysicalNumber];
+                // if (bin.BinType == BlockType.CANInterface)
+                //     data.BusChannel = (bin as BinCanInterface)[BinCanInterface.BinProp.PhysicalNumber];
             }
 
             return data;

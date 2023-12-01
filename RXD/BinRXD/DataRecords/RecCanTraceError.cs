@@ -1,5 +1,5 @@
-﻿using RXD.Blocks;
-using MDF4xx.Frames;
+﻿using MDF4xx.Frames;
+using RXD.Blocks;
 using RXD.Objects;
 using System;
 using System.Collections.Generic;
@@ -19,7 +19,7 @@ namespace RXD.DataRecords
         DIR = 1 << 1,
     }
 
-    class RecCanTraceError : RecBase
+    internal class RecCanTraceError : RecBase
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
         internal class DataRecord

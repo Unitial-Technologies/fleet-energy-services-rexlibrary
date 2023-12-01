@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using LinkEnum = MDF4xx.Blocks.SRLinks;
 
 namespace MDF4xx.Blocks
 {
-    using LinkEnum = SRLinks;
-    enum SRLinks
+    internal enum SRLinks
     {
         /// <summary>
         /// Pointer to next sample reduction block (SRBLOCK) (can be NIL)
@@ -21,7 +21,7 @@ namespace MDF4xx.Blocks
     /// <summary>
     /// Sample Reduction Block
     /// </summary>
-    class SRBlock : BaseBlock
+    internal class SRBlock : BaseBlock
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
         internal class BlockData

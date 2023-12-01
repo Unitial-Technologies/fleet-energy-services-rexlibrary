@@ -22,6 +22,9 @@ namespace dotnetproject
             string encryption = (args.Length > 2) ? args[2] : "";
             bool result;
 
+            if (File.Exists(args[0]))
+                Console.WriteLine(args[0] + " exists");
+
             if (Path.GetExtension(inputpath).ToLower() == ".xml")
                 result = RxLib.XmlToRxc(inputpath, outputpath);
             else

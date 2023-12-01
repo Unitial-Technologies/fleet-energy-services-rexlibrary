@@ -7,7 +7,7 @@ namespace InfluxShared.FileObjects
 {
     internal class DataTransformer
     {
-        class Sample
+        private class Sample
         {
             internal double time;
             internal double value;

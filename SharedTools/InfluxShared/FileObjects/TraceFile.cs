@@ -21,10 +21,10 @@ namespace InfluxShared.FileObjects
     {
         public const string Extension = ".trc";
         public const string Filter = "Peak Can Trace File (*.trc)|*.trc";
-        
+
         private Int64 rowid = 0;
 
-        public override void WriteHeader(DateTime LogTime) 
+        public override void WriteHeader(DateTime LogTime)
         {
             traceWriter.WriteLine(";$FILEVERSION=2.1");
             traceWriter.WriteLine(";$STARTTIME=" + LogTime.ToOADate().ToString());

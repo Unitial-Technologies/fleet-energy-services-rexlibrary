@@ -6,7 +6,7 @@ namespace DbcParserLib.Parsers
 
         public bool TryParse(string line, IDbcBuilder builder)
         {
-            if(line.TrimStart().StartsWith(ValueTableLineStarter) == false)
+            if (line.TrimStart().StartsWith(ValueTableLineStarter) == false)
                 return false;
 
             var records = line
@@ -23,13 +23,13 @@ namespace DbcParserLib.Parsers
 
                 return true;
             }
-            
+
             var parsed = false;
-            if(line.TrimStart().StartsWith("VAL_ "))
+            if (line.TrimStart().StartsWith("VAL_ "))
             {
                 parsed = true;
 
-                if(uint.TryParse(records[1], out var messageId))
+                if (uint.TryParse(records[1], out var messageId))
                 {
                     if (records.Length == 4)
                     {
@@ -40,9 +40,9 @@ namespace DbcParserLib.Parsers
                     {
                         builder.LinkTableValuesToSignal(messageId, records[2], Helpers.ConvertToMultiLine(records, 3));
                     }
-                }         
+                }
             }
-            
+
             return parsed;
         }
     }

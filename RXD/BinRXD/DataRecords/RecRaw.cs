@@ -23,7 +23,7 @@ namespace RXD.DataRecords
 
         public override string ToString()
         {
-            return $"UID: {header.UID}; Infsize: {header.InfSize}; DLC: {header.DLC}; Timestamp: " + BitConverter.ToUInt32(Data, 0) + ";   Data: " + BitConverter.ToString(Data) + ";   VariableData: " + BitConverter.ToString(VariableData) + "\r\n";
+            return $"UID: {header.UID}; Infsize: {header.InfSize}; DLC: {header.DLC};    Data: " + BitConverter.ToString(Data) + ";   VariableData: " + BitConverter.ToString(VariableData) + "\r\n";
         }
 
         public static RecRaw Read(ref IntPtr src)

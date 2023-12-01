@@ -364,7 +364,7 @@ namespace InfluxShared.FileObjects
                             {
                                 stream.WriteLine(
                                     DisplayName + "," +
-                                    this[i-1].ChannelName + ',' +
+                                    this[i - 1].ChannelName + ',' +
                                     Values[i].ToString(ci) + ',' +
                                     DateTime.FromOADate(RealTime.ToOADate() + Values[0] / 86400).ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss.fffZ")
                                 );

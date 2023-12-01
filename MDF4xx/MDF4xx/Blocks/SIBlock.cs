@@ -1,9 +1,9 @@
 ﻿using System.Runtime.InteropServices;
+using LinkEnum = MDF4xx.Blocks.SILinks;
 
 namespace MDF4xx.Blocks
 {
-    using LinkEnum = SILinks;
-    enum SILinks
+    internal enum SILinks
     {
         /// <summary>
         /// Pointer to TXBLOCK with name (identification) of source (can be NIL). The source name must be according to naming rules stated in Naming Rules.
@@ -24,7 +24,7 @@ namespace MDF4xx.Blocks
         linkcount
     };
 
-    enum SIType : byte
+    internal enum SIType : byte
     {
         /// <summary>
         /// 0 = OTHER source type does not fit into given categories or is unknown 
@@ -52,7 +52,7 @@ namespace MDF4xx.Blocks
         User
     }
 
-    enum SIBusType : byte
+    internal enum SIBusType : byte
     {
         /// <summary>
         /// 0 = NONE no bus
@@ -95,7 +95,7 @@ namespace MDF4xx.Blocks
     /// <summary>
     /// Source Information Block
     /// </summary>
-    class SIBlock : BaseBlock
+    internal class SIBlock : BaseBlock
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
         internal class BlockData

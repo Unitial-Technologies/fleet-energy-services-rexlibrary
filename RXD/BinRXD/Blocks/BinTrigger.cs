@@ -6,7 +6,7 @@ namespace RXD.Blocks
 
     #endregion
 
-    class BinTrigger : BinBase
+    internal class BinTrigger : BinBase
     {
         internal enum BinProp
         {
@@ -35,8 +35,8 @@ namespace RXD.Blocks
             {
                 data.AddProperty(BinProp.KeepActiveTime, typeof(UInt32));
                 data.AddProperty(BinProp.DoNotActivateTimeout, typeof(UInt32));
-                data.AddProperty(BinProp.InputUID1, typeof(UInt16)); 
-                data.AddProperty(BinProp.InputUID2, typeof(UInt16)); 
+                data.AddProperty(BinProp.InputUID1, typeof(UInt16));
+                data.AddProperty(BinProp.InputUID2, typeof(UInt16));
                 data.AddProperty(BinProp.OperatorCondition, typeof(ConditionType));
                 AddInput(BinProp.InputUID1.ToString());
                 AddInput(BinProp.InputUID2.ToString());

@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace MDF4xx.Frames
 {
-    class CAN_DataFrame : BaseDataFrame
+    internal class CAN_DataFrame : BaseDataFrame
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
         internal new class FrameData : BaseDataFrame.FrameData

@@ -1,11 +1,11 @@
 ﻿using InfluxShared.Helpers;
 using System;
 using System.Runtime.InteropServices;
+using LinkEnum = MDF4xx.Blocks.CGLinks;
 
 namespace MDF4xx.Blocks
 {
-    using LinkEnum = CGLinks;
-    enum CGLinks
+    internal enum CGLinks
     {
         /// <summary>
         /// Pointer to next channel group block (CGBLOCK) (can be NIL)
@@ -43,11 +43,11 @@ namespace MDF4xx.Blocks
         /// Further details see: 4.14.3 Remote Master Link. Valid since MDF 4.2.0.
         /// </summary>
         cg_cg_master,*/
-        linkcount 
+        linkcount
     }
 
     [Flags]
-    enum CGFlags : UInt16
+    internal enum CGFlags : UInt16
     {
         /// <summary>
         /// Bit 0: VLSD channel group flag.
@@ -88,7 +88,7 @@ namespace MDF4xx.Blocks
     /// <summary>
     /// Channel Group Block
     /// </summary>
-    class CGBlock : BaseBlock
+    internal class CGBlock : BaseBlock
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
         internal class BlockData

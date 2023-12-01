@@ -4,13 +4,13 @@ using System.Collections.Generic;
 namespace RXD.Blocks
 {
     #region Enumerations for Property type definitions
-    enum LogFormatType : byte 
-    { 
-        InfluxGeneric1 
+    internal enum LogFormatType : byte
+    {
+        InfluxGeneric1
     }
     #endregion
 
-    class BinSDInterface : BinBase
+    internal class BinSDInterface : BinBase
     {
         internal enum BinProp
         {

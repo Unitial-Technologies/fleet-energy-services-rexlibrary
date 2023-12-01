@@ -5,7 +5,7 @@ using System.Text;
 
 namespace InfluxShared.FileObjects
 {
-    public  class A2lOdt
+    public class A2lOdt
     {
         public string Name { get; set; }
         public uint Ident { get; set; }

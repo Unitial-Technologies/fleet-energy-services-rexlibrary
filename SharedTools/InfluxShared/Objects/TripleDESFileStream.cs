@@ -29,7 +29,7 @@ namespace InfluxShared.Objects
             else if (mode == CryptoStreamMode.Write)
             {
                 fstream = new FileStream(LogFileName, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-                
+
                 byte[] previous = null;
                 int previousLength = 0;
 
@@ -130,7 +130,7 @@ namespace InfluxShared.Objects
                 cstream.CopyTo(memstream);
                 memstream.Seek(0, SeekOrigin.Begin);
                 return new StreamReader(memstream).ReadToEnd();
-            }             
+            }
         }
     }
 }

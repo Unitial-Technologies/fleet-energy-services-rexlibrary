@@ -1,12 +1,12 @@
-using int8_T = System.SByte;
-using uint8_T = System.Byte;
-using int16_T = System.Int16;
-using uint16_T = System.UInt16;
-using int32_T = System.Int32;
-using uint32_T = System.UInt32;
-using int64_T = System.Int64;
-using uint64_T = System.UInt64;
 using System;
+using int16_T = System.Int16;
+using int32_T = System.Int32;
+using int64_T = System.Int64;
+using int8_T = System.SByte;
+using uint16_T = System.UInt16;
+using uint32_T = System.UInt32;
+using uint64_T = System.UInt64;
+using uint8_T = System.Byte;
 
 namespace DbcParserLib
 {
@@ -20,12 +20,12 @@ namespace DbcParserLib
         /// <returns>Returns a 64 bit unsigned data message</returns>
         public static uint64_T TxSignalPack(double value, Signal signal)
         {
-            int64_T iVal; 
+            int64_T iVal;
             uint64_T bitMask = (1UL << signal.Length) - 1;
 
             // Apply scaling
             iVal = (int64_T)Math.Round((value - signal.Offset) / signal.Factor);
-    
+
             // Apply overflow protection
             if (signal.IsSigned != 0)
                 iVal = CLAMP(iVal, -(int64_T)(bitMask >> 1) - 1, (int64_T)(bitMask >> 1));
@@ -33,8 +33,9 @@ namespace DbcParserLib
                 iVal = CLAMP(iVal, 0L, (int64_T)bitMask);
 
             // Manage sign bit (if signed)
-            if (signal.IsSigned != 0 && iVal < 0) {
-              iVal += (int64_T)(1UL << signal.Length);
+            if (signal.IsSigned != 0 && iVal < 0)
+            {
+                iVal += (int64_T)(1UL << signal.Length);
             }
 
             // Pack signal
@@ -53,10 +54,10 @@ namespace DbcParserLib
         public static uint64_T TxStatePack(uint64_T value, Signal signal)
         {
             uint64_T bitMask = (1UL << signal.Length) - 1;
-    
+
             // Apply overflow protection
             value = CLAMP(value, 0UL, bitMask);
-    
+
             // Pack signal
             if (signal.ByteOrder != 0)  // Little endian (Intel)
                 return ((value & bitMask) << signal.StartBit);
@@ -72,7 +73,7 @@ namespace DbcParserLib
         /// <returns>Returns a double value representing the unpacked signal</returns>
         public static double RxSignalUnpack(uint64_T RxMsg64, Signal signal)
         {
-            int64_T iVal; 
+            int64_T iVal;
             uint64_T bitMask = (1UL << signal.Length) - 1;
 
             // Unpack signal
@@ -82,8 +83,9 @@ namespace DbcParserLib
                 iVal = (int64_T)((MirrorMsg(RxMsg64) >> GetStartBitLE(signal)) & bitMask);
 
             // Manage sign bit (if signed)
-            if (signal.IsSigned != 0) {
-              iVal -= ((iVal >> (signal.Length - 1)) != 0) ? (1L << signal.Length) : 0L;
+            if (signal.IsSigned != 0)
+            {
+                iVal -= ((iVal >> (signal.Length - 1)) != 0) ? (1L << signal.Length) : 0L;
             }
 
             // Apply scaling
@@ -98,7 +100,7 @@ namespace DbcParserLib
         /// <returns>Returns an unsigned integer representing the unpacked state</returns>
         public static uint64_T RxStateUnpack(uint64_T RxMsg64, Signal signal)
         {
-            uint64_T iVal; 
+            uint64_T iVal;
             uint64_T bitMask = (1UL << signal.Length) - 1;
 
             // Unpack signal
@@ -110,7 +112,7 @@ namespace DbcParserLib
             // Apply scaling
             return iVal;
         }
-        
+
         private static int64_T CLAMP(int64_T x, int64_T low, int64_T high)
         {
             return Math.Max(low, Math.Min(x, high));
@@ -137,7 +139,7 @@ namespace DbcParserLib
                 (uint8_T)(msg >> 48),
                 (uint8_T)(msg >> 56)
             };
-            return   (((uint64_T)v[0] << 56)
+            return (((uint64_T)v[0] << 56)
                     | ((uint64_T)v[1] << 48)
                     | ((uint64_T)v[2] << 40)
                     | ((uint64_T)v[3] << 32)

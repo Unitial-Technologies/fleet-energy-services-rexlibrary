@@ -33,9 +33,9 @@ namespace RXD.Base
 
         private readonly Stream rxStream;
         private readonly PinObj rxBlock;
-        private bool disposedValue; 
+        private bool disposedValue;
 
-        delegate void ParseBufferLogic(IntPtr source);
+        private delegate void ParseBufferLogic(IntPtr source);
         ParseBufferLogic ParseBuffer = null;
 
         public RecordCollection Messages = null;
@@ -46,9 +46,10 @@ namespace RXD.Base
         protected UInt64 SectorID = 0;
         protected List<(UInt32, UInt32)> SectorMap = null;
         protected int SectorMapID = -1;
-        delegate int ReadSectorLogic(byte[] array, int offset, int count);
+
+        private delegate int ReadSectorLogic(byte[] array, int offset, int count);
         private ReadSectorLogic ReadSector = null;
-        
+
         public RXDataReader(BinRXD bcollection, ReadLogic logic = ReadLogic.ReadData)
         {
             this.logic = logic;
@@ -199,18 +200,30 @@ namespace RXD.Base
 
         void ParseBufferData(IntPtr source)
         {
+            StringBuilder sb = null;
+            StringBuilder dbg = null;
             if (CreateDebugFiles)
-                using (var reclog = File.AppendText(Path.ChangeExtension(collection.rxdUri, ".records")))
-                    reclog.WriteLine("New block");
+            {
+                sb = new StringBuilder();
+                sb.AppendLine("New block");
+                dbg = new StringBuilder();
+            }
+            dbg = new StringBuilder();
 
             GetBlockBounds(ref source, out IntPtr endptr);
             while ((long)source < (long)endptr)
             {
                 RecRaw rec = RecRaw.Read(ref source);
 
+                if (rec.header.UID == 0xFFFF)
+                    dbg.Append(Encoding.ASCII.GetString(rec.VariableData));
                 if (CreateDebugFiles)
-                    using (var reclog = File.AppendText(Path.ChangeExtension(collection.rxdUri, ".records")))
-                        reclog.Write(rec);
+                {
+                    if (rec.header.UID == 0xFFFF)
+                        dbg.Append(Encoding.ASCII.GetString(rec.VariableData));
+                    else
+                        sb.Append(rec.ToString());
+                }
 
                 if (!collection.TryGetValue(rec.header.UID, out rec.LinkedBin))
                     continue;
@@ -228,6 +241,19 @@ namespace RXD.Base
             }
 
             CheckForMultiFrame();
+
+            if (CreateDebugFiles)
+            {
+                if (sb.Length > 0)
+                    using (var reclog = File.AppendText(Path.ChangeExtension(collection.rxdUri, ".records")))
+                        reclog.Write(sb.ToString());
+                if (dbg.Length > 0)
+                    using (var reclog = File.AppendText(Path.ChangeExtension(collection.rxdUri, ".aws")))
+                        reclog.Write(dbg.ToString());
+            }
+            if (dbg.Length > 0)
+                using (var reclog = File.AppendText(Path.ChangeExtension(collection.rxdUri, ".aws")))
+                    reclog.Write(dbg.ToString());
         }
 
         void ParseBufferTimestamps(IntPtr source)

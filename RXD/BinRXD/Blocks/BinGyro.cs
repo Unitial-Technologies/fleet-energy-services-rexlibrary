@@ -3,7 +3,6 @@ using System;
 
 namespace RXD.Blocks
 {
-
     public enum AxisType : byte
     {
         X,
@@ -34,7 +33,7 @@ namespace RXD.Blocks
 
         internal override string GetName => $"Gyroscope {this[BinProp.Axis]}";
         internal override string GetUnits => "dps";
-        internal override ChannelDescriptor GetDataDescriptor => new ChannelDescriptor() 
+        internal override ChannelDescriptor GetDataDescriptor => new ChannelDescriptor()
         { StartBit = 0, BitCount = 32, isIntel = true, HexType = typeof(Single), conversionType = ConversionType.None, Name = GetName, Units = GetUnits };
 
         internal override void SetupVersions()

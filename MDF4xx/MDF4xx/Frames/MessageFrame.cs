@@ -2,7 +2,7 @@
 
 namespace MDF4xx.Frames
 {
-    class MessageFrame : BaseDataFrame
+    internal class MessageFrame : BaseDataFrame
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
         internal new class FrameData : BaseDataFrame.FrameData

@@ -19,7 +19,7 @@ namespace RXD.Blocks
     }
     #endregion
 
-    class BinDigitalIn : BinBase
+    internal class BinDigitalIn : BinBase
     {
         internal enum BinProp
         {
@@ -52,7 +52,7 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.DigitalType, typeof(DigitalType));
                 data.AddProperty(BinProp.ActiveState, typeof(DigitalActiveState));
             });
-            
+
             AddOutput("UID");
         }
     }
