@@ -170,10 +170,11 @@ namespace Cloud
             List<DBC?> listDbc = new();
             for (int i = 0; i < 4; i++)
             {
-                Stream dbcStream = await Storage.GetFile(bucket, Path.Combine(LoggerDir, $"dbc_can{i}.dbc").Replace("\\","/"));
+                string dbcPath = Path.Combine(LoggerDir, $"dbc_can{i}.dbc").Replace("\\", "/");
+                Stream dbcStream = await Storage.GetFile(bucket, dbcPath);
                 if (dbcStream is null)
                 {
-                    Log?.Log("DBC File Not Found!");
+                    Log?.Log($"DBC File Not Found! {dbcPath}");
                     listDbc.Add(null);
                     continue;
                 }

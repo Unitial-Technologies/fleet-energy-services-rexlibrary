@@ -204,7 +204,7 @@ public class Function
                     , new AwsS3StorageProvider(LambdaGlobals.S3Client)
                     , new AwsTimeStreamProvider(log)
                     ,LambdaGlobals.Bucket, LambdaGlobals.LoggerDir);
-                res = (bool) await rxdConverter.Convert(LambdaGlobals.Bucket, LambdaGlobals.FileName, convert);
+                res = (bool) await rxdConverter.Convert(LambdaGlobals.LoggerDir, LambdaGlobals.FileName, convert);
             }
 
             if (res)
