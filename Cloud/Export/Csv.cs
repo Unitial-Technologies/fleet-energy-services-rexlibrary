@@ -1,4 +1,5 @@
-﻿using InfluxShared.FileObjects;
+﻿using InfluxDB.Client.Api.Domain;
+using InfluxShared.FileObjects;
 using RXD.Base;
 using System;
 using System.Collections.Generic;
@@ -84,6 +85,7 @@ namespace Cloud.Export
                     if (csvStream.Length > 0)
                     {
                         csvStream.Seek(0, SeekOrigin.Begin);
+                        log?.Log($"Memory after CSV created: {GC.GetTotalMemory(false) / (1024 * 1024)} MB");
                         await storage.UploadFile(bucket, key, csvStream);
                     }
                     return true;

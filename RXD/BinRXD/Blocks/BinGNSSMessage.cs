@@ -20,12 +20,31 @@ namespace RXD.Blocks
         QUALITY,
         HORIZONTAL_ACCURACY,
         VERTICAL_ACCURACY,
-        SPEED_ACCURACY
+        SPEED_ACCURACY,
+        VEHICLE_ROLL,
+        VEHICLE_PITCH,
+        VEHICLE_HEADING,
+        VEHICLE_ROLL_ACCURACY,
+        VEHICLE_PITCH_ACCURACY,
+        VEHICLE_HEADING_ACCURACY,
+        ACCELERATION_X,
+        ACCELERATION_Y,
+        ACCELERATION_Z,
+        ANGULAR_RATE_X,
+        ANGULAR_RATE_Y,
+        ANGULAR_RATE_Z,
+        GEOFENCE_1,
+        GEOFENCE_2,
+        GEOFENCE_3,
+        GEOFENCE_4,
+        GNSS_TIMESTAMP
     }
+    
     #endregion
 
     public class BinGNSSMessage : BinBase
-    {
+    {        
+
         internal enum BinProp
         {
             InterfaceUID,
@@ -57,6 +76,23 @@ namespace RXD.Blocks
             { TypeGNSS.HORIZONTAL_ACCURACY, "Horizontal accuracy" },
             { TypeGNSS.VERTICAL_ACCURACY, "Vertical accuracy" },
             { TypeGNSS.SPEED_ACCURACY, "Speed accuracy" },
+            { TypeGNSS.VEHICLE_ROLL, "Vehicle Roll" },
+            { TypeGNSS.VEHICLE_PITCH, "Vehicle Pitch" },
+            { TypeGNSS.VEHICLE_HEADING, "Vehicle Heading" },
+            { TypeGNSS.VEHICLE_ROLL_ACCURACY, "Vehicle Roll Accuracy" },
+            { TypeGNSS.VEHICLE_PITCH_ACCURACY, "Vehicle Pitch Accuracy" },
+            { TypeGNSS.VEHICLE_HEADING_ACCURACY, "Vehicle Heading Accuracy" },
+            { TypeGNSS.ACCELERATION_X, "Acceleration X" },
+            { TypeGNSS.ACCELERATION_Y, "Acceleration Y" },
+            { TypeGNSS.ACCELERATION_Z, "Acceleration Z" },
+            { TypeGNSS.ANGULAR_RATE_X, "Angular Rate X" },
+            { TypeGNSS.ANGULAR_RATE_Y, "Angular Rate Y" },
+            { TypeGNSS.ANGULAR_RATE_Z, "Angular Rate Z" },
+            { TypeGNSS.GEOFENCE_1, "Geofence 1" },
+            { TypeGNSS.GEOFENCE_2, "Geofence 2" },
+            { TypeGNSS.GEOFENCE_3, "Geofence 3" },
+            { TypeGNSS.GEOFENCE_4, "Geofence 4" },
+            { TypeGNSS.GNSS_TIMESTAMP, "GNSS Timestamp" }
         };
 
         internal static Dictionary<TypeGNSS, Type> GnssType = new()
@@ -74,7 +110,24 @@ namespace RXD.Blocks
             { TypeGNSS.HORIZONTAL_ACCURACY, typeof(Single) },
             { TypeGNSS.VERTICAL_ACCURACY, typeof(Single) },
             { TypeGNSS.SPEED_ACCURACY, typeof(Single) },
-        };
+            { TypeGNSS.VEHICLE_ROLL, typeof(Single) },
+            { TypeGNSS.VEHICLE_PITCH, typeof(Single) },
+            { TypeGNSS.VEHICLE_HEADING, typeof(Single) },
+            { TypeGNSS.VEHICLE_ROLL_ACCURACY, typeof(Single) },
+            { TypeGNSS.VEHICLE_PITCH_ACCURACY, typeof(Single) },
+            { TypeGNSS.VEHICLE_HEADING_ACCURACY, typeof(Single) },
+            { TypeGNSS.ACCELERATION_X, typeof(Single) },
+            { TypeGNSS.ACCELERATION_Y, typeof(Single) },
+            { TypeGNSS.ACCELERATION_Z, typeof(Single) },
+            { TypeGNSS.ANGULAR_RATE_X, typeof(Single) },
+            { TypeGNSS.ANGULAR_RATE_Y, typeof(Single) },
+            { TypeGNSS.ANGULAR_RATE_Z, typeof(Single) },
+            { TypeGNSS.GEOFENCE_1, typeof(Single) },
+            { TypeGNSS.GEOFENCE_2, typeof(Single) },
+            { TypeGNSS.GEOFENCE_3, typeof(Single) },
+            { TypeGNSS.GEOFENCE_4, typeof(Single) } ,
+            { TypeGNSS.GNSS_TIMESTAMP, typeof(UInt32) }
+    };
 
         internal override string GetName => this[BinProp.Type].ToString();
         //internal override string GetUnits => "";

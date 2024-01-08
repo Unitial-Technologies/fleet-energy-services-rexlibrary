@@ -208,15 +208,12 @@ namespace RXD.Base
                 sb.AppendLine("New block");
                 dbg = new StringBuilder();
             }
-            dbg = new StringBuilder();
 
             GetBlockBounds(ref source, out IntPtr endptr);
             while ((long)source < (long)endptr)
             {
                 RecRaw rec = RecRaw.Read(ref source);
 
-                if (rec.header.UID == 0xFFFF)
-                    dbg.Append(Encoding.ASCII.GetString(rec.VariableData));
                 if (CreateDebugFiles)
                 {
                     if (rec.header.UID == 0xFFFF)
@@ -224,6 +221,9 @@ namespace RXD.Base
                     else
                         sb.Append(rec.ToString());
                 }
+
+                if (rec.header.InfSize < 4)
+                    continue;
 
                 if (!collection.TryGetValue(rec.header.UID, out rec.LinkedBin))
                     continue;
@@ -251,29 +251,28 @@ namespace RXD.Base
                     using (var reclog = File.AppendText(Path.ChangeExtension(collection.rxdUri, ".aws")))
                         reclog.Write(dbg.ToString());
             }
-            if (dbg.Length > 0)
-                using (var reclog = File.AppendText(Path.ChangeExtension(collection.rxdUri, ".aws")))
-                    reclog.Write(dbg.ToString());
         }
 
         void ParseBufferTimestamps(IntPtr source)
         {
-            UInt32 tmpTime;
             GetBlockBounds(ref source, out IntPtr endptr);
             while ((long)source < (long)endptr)
             {
                 RecRaw rec = RecRaw.Read(ref source);
-                tmpTime = BitConverter.ToUInt32(rec.Data, 0);
-                if (!collection[rec.header.UID].DataFound)
+                if (collection.TryGetValue(rec.header.UID, out BinBase bin) && !bin.DataFound)
                 {
-                    collection[rec.header.UID].LowestTimestamp = tmpTime;
-                    collection[rec.header.UID].DataFound = true;
+                    bin.LowestTimestamp = BitConverter.ToUInt32(rec.Data, 0);
+                    //collection[rec.header.UID].HighestTimestamp = tmpTime;
+                    bin.DataFound = true;
                 }
             }
         }
 
         void OffsetTimestamps(IntPtr source)
         {
+            if (TimeOffset == 0)
+                return;
+
             GetBlockBounds(ref source, out IntPtr endptr);
             while ((long)source < (long)endptr)
                 RecRaw.ApplyTimestampOffset(ref source, TimeOffset);
@@ -339,7 +338,7 @@ namespace RXD.Base
 
                 Messages = new RecordCollection();
                 ParseBuffer?.Invoke(rxBlock);
-                if (logic == ReadLogic.OffsetTimestamps)
+                if (logic == ReadLogic.OffsetTimestamps && TimeOffset != 0)
                 {
                     rxStream.Seek(-SectorSize, SeekOrigin.Current);
                     rxStream.Write(rxBlock, 0, SectorSize);
@@ -350,6 +349,40 @@ namespace RXD.Base
             catch (Exception)
             {
                 return false;
+            }
+        }
+
+        public UInt32 ReadSectorHighestTimestamp(Int64 fileposTimeOffset)
+        {
+            try
+            {
+                rxStream.Seek(fileposTimeOffset, SeekOrigin.Begin);
+                if (rxStream.Read(rxBlock, 0, SectorSize) != SectorSize)
+                    return 0;
+
+                UInt16 blocksize = (UInt16)Marshal.ReadInt16(rxBlock);
+                int blocks = ((2 + blocksize + 0x1ff) & ~(UInt16)0x1ff) / SectorSize;
+                if (blocks > 1)
+                    ReadSector(rxBlock, SectorSize, (blocks - 1) * SectorSize);
+
+                UInt32 LastTime = 0;
+                IntPtr source = rxBlock;
+                GetBlockBounds(ref source, out IntPtr endptr);
+                while ((long)source < (long)endptr)
+                {
+                    RecRaw rec = RecRaw.Read(ref source);
+
+                    if (!collection.TryGetValue(rec.header.UID, out rec.LinkedBin))
+                        continue;
+
+                    LastTime = Math.Max(LastTime, BitConverter.ToUInt32(rec.Data, 0));
+                }
+
+                return LastTime;
+            }
+            catch (Exception)
+            {
+                return 0;
             }
         }
 

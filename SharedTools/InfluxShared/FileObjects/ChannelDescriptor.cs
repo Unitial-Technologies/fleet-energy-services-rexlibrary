@@ -33,6 +33,7 @@ namespace InfluxShared.FileObjects
             ConversionType.Formula => new BinaryData(StartBit, BitCount, isIntel, TypeIndex, Factor, Offset),
             ConversionType.TableNumeric => new BinaryData(StartBit, BitCount, isIntel, TypeIndex, Table),
             ConversionType.FormulaAndTableNumeric => new BinaryData(StartBit, BitCount, isIntel, TypeIndex, Factor, Offset, Table),
+            ConversionType.FormulaAndTableVerbal => new BinaryData(StartBit, BitCount, isIntel, TypeIndex, Factor, Offset),
             _ => new BinaryData(StartBit, BitCount, isIntel, TypeIndex),
         };
 

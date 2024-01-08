@@ -25,6 +25,7 @@ namespace Cloud
         }
         public async Task<bool> Convert(string loggerDir, string filename, ConversionType conversion)
         {
+            LoggerDir = loggerDir;
             if (!conversion.HasFlag(ConversionType.Csv) && !conversion.HasFlag(ConversionType.InfluxDB) &&
                    !conversion.HasFlag(ConversionType.TimeStream) && !conversion.HasFlag(ConversionType.Mdf)
                    && !conversion.HasFlag(ConversionType.Blf) && !conversion.HasFlag(ConversionType.Rxc)
@@ -149,6 +150,7 @@ namespace Cloud
                             //CSV Export
                             if (conversion.HasFlag(Cloud.ConversionType.Csv))
                             {
+                                Log?.Log($"Memory used before CSV: {GC.GetTotalMemory(false) / (1024 * 1024)} MB");
                                 await CsvMultipartHelper.ToCsv(Storage, Bucket, Path.ChangeExtension(filename, ".csv"), rxd, signalsCollection, Log);
                             }
                         }

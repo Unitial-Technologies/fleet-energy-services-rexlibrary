@@ -35,8 +35,8 @@ namespace RXD.DataRecords
         internal byte[] VariableData;
         protected virtual int VariableDataSize { get => (VariableData == null) ? 0 : VariableData.Length; }
 
+        internal virtual UInt32 RawTimestamp { get; set; }
         internal byte BusChannel;
-
         internal BinBase LinkedBin = null;
 
         internal bool NotExportable = false;

@@ -414,6 +414,7 @@ namespace MDF4xx.IO
             switch (conversion.Type)
             {
                 case InfluxShared.FileObjects.ConversionType.Formula:
+                case InfluxShared.FileObjects.ConversionType.FormulaAndTableVerbal:
                     return BuildCCRational(
                         cn,
                         new double[] {
@@ -436,7 +437,6 @@ namespace MDF4xx.IO
                         cn,
                         conversion.TableNumeric.ApplyFxToArray(conversion.Formula.CoeffB, conversion.Formula.CoeffC)
                     );
-                case InfluxShared.FileObjects.ConversionType.FormulaAndTableVerbal: return null;
                 default: return null;
             }
         }

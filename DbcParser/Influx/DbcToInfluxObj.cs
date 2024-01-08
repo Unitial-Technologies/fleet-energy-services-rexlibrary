@@ -12,6 +12,8 @@ namespace DbcParserLib.Influx
             DBC influxDBC = new DBC();
             foreach (var msg in dbc.Messages)
             {
+                if (msg.ID == 0xC0000000)
+                    continue;
                 DbcMessage msgI = new DbcMessage();
                 msgI.CANID = msg.ID;
                 msgI.DLC = msg.DLC;

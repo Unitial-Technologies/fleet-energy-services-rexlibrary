@@ -116,20 +116,11 @@ namespace InfluxShared.Objects
 
         public static UInt64 ByteReadIntel(byte[] arr, int Offset, int ByteCount)
         {
-            try
-            {
-                UInt64 data = 0;
-                for (int hp = 0; hp < ByteCount; hp++)
-                    data |= (UInt64)arr[Offset + hp] << BytePos[hp];
+            UInt64 data = 0;
+            for (int hp = 0; hp < ByteCount; hp++)
+                data |= (UInt64)arr[Offset + hp] << BytePos[hp];
 
-                return data;
-            }
-            catch (Exception e)
-            {
-
-                return 0;
-            }
-            
+            return data;
         }
 
         public static UInt64 ByteReadMotorola(byte[] arr, int Offset, int ByteCount)

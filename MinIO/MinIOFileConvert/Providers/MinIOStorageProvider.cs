@@ -3,7 +3,9 @@ using Minio;
 using Minio.DataModel.Args;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Security.AccessControl;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -66,15 +68,25 @@ namespace MinIOFileConvert.Providers
             }
         }
 
-        public Task<string> InitiateMultipartUpload(string bucket, string file)
+        public async Task<string> InitiateMultipartUpload(string bucket, string file)
         {
+            /*await _Minio.PutObjectAsync(
+                new PutObjectArgs()
+                .WithBucket(bucket)
+                .WithObject(file)
+                .WithStreamData(stream)
+                .WithObjectSize(stream.Length));
+
+            var initResponse = await _Minio.PutObjectAsync() (bucket, file);
+
+            return initResponse.UploadId;*/
             throw new NotImplementedException();
         }
 
         public async Task<bool> UploadFile(string bucketName, string objectName, Stream stream)
         {
             await _Minio.PutObjectAsync(
-                new PutObjectArgs()
+                new PutObjectArgs() 
                 .WithBucket(bucketName)
                 .WithObject(objectName)
                 .WithStreamData(stream)
@@ -82,7 +94,7 @@ namespace MinIOFileConvert.Providers
             return true;
         }
 
-        public Task<bool> UploadPart(MemoryStream fileStream, string bucket, string key, string uploadId, int partId)
+        public async Task<bool> UploadPart(MemoryStream fileStream, string bucket, string key, string uploadId, int partId)
         {
             throw new NotImplementedException();
         }

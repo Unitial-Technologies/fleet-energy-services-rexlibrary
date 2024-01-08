@@ -57,10 +57,13 @@ namespace RXD.Base
                     if (firsttime)
                     {
                         LowestTimestamp = bin.Value.LowestTimestamp;
+                        //HighestTimestamp = bin.Value.HighestTimestamp;
                         firsttime = false;
                     }
                     else if (bin.Value.LowestTimestamp < LowestTimestamp)
                         LowestTimestamp = bin.Value.LowestTimestamp;
+                    /*else if (bin.Value.LowestTimestamp > HighestTimestamp)
+                        HighestTimestamp = bin.Value.HighestTimestamp;*/
                 }
         }
 
@@ -76,6 +79,14 @@ namespace RXD.Base
                 dr.TimeOffset = TimeOffset - LowestTimestamp;
                 while (dr.ReadNext()) ;
             }
+
+            LowestTimestamp = (UInt32)TimeOffset;
+        }
+
+        public UInt32 GetHighestTimestampInBlockAt(Int64 fileposTimeOffset)
+        {
+            using (RXDataReader dr = new RXDataReader(this as BinRXD))
+                return dr.ReadSectorHighestTimestamp(fileposTimeOffset);
         }
 
         public byte DetectBusChannel(UInt16 uid)

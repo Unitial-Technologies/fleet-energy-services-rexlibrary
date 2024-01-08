@@ -43,15 +43,20 @@ namespace RXD.Base
         public static readonly string Filter = "ReX data (*.rxd)|*.rxd";
         public static readonly string EncryptedFilter = "ReX encrypted data (*.rxe)|*.rxe";
         public static readonly string BinFilter = "ReX configuration (*.rxc)|*.rxc";
+        public static readonly string SortedSuffix = "_sorted";
+        public static readonly bool AllowSorting = false;
+        public static bool DoSort = AllowSorting;
 
         public static bool UseMf4Compression = true;
         public static string EncryptionContainerName = "ReXgen";
         public static byte[] EncryptionKeysBlob = null;
 
         static byte headersizebytes = 4;
+        internal static UInt32 StructureOffset = 0;
         internal readonly DataOrigin dataSource;
         readonly internal string rxdUri = "";
         readonly internal string rxeUri = "";
+        internal string reloadSorted = string.Empty;
         readonly internal byte[] rxdBytes = null;
         public string Error = "";
 
@@ -149,7 +154,15 @@ namespace RXD.Base
         {
             try
             {
-                return new BinRXD(path);
+                var rxd = new BinRXD(path);
+                if (rxd != null)
+                    if (rxd.reloadSorted != string.Empty)
+                    {
+                        BinRXD.DoSort = false;
+                        return new BinRXD(rxd.reloadSorted);
+                    }
+
+                return rxd;
             }
             catch (Exception e)
             {
@@ -300,7 +313,7 @@ namespace RXD.Base
                 using (var rxStream = GetStream)
                 {
                     rxdFullSize = rxStream.Seek(0, SeekOrigin.End);
-                    rxStream.Seek(0, SeekOrigin.Begin);
+                    rxStream.Seek(StructureOffset, SeekOrigin.Begin);
 
                     UInt32 hdrSize = (UInt32)rxdFullSize;
                     if (Path.GetExtension(rxdUri).Equals(Path.GetExtension(Extension), StringComparison.OrdinalIgnoreCase))
@@ -318,6 +331,10 @@ namespace RXD.Base
                 }
 
                 DetectLowestTimestamp();
+                if (SortFile(out string sortfn))
+                    reloadSorted = sortfn;
+                BinRXD.DoSort = AllowSorting;
+
                 return true;
             }
             catch
@@ -342,11 +359,8 @@ namespace RXD.Base
 
                     foreach (var bin in this)
                     {
-                        //if (bin.Value.external.GetProperty("Active") != false)//PETKO Test
-                        // {
                         byte[] data = bin.Value.ToBytes();
                         ms.Write(data, 0, data.Length);
-                        // }
                     }
 
                     using (BinaryWriter bw = new BinaryWriter(rxdStream, Encoding.ASCII, true))
@@ -380,6 +394,118 @@ namespace RXD.Base
             }
             catch
             {
+                return false;
+            }
+        }
+
+        public bool SortFile(out string sortfn, Action<object> ProgressCallback = null)
+        {
+            sortfn = string.Empty;
+            if (!BinRXD.DoSort)
+                return false;
+
+            try
+            {
+                if (dataSource == DataOrigin.Memory)
+                    throw new Exception("Sortng stream data is not supported!");
+
+                if (reloadSorted == rxdUri) 
+                    return false;
+
+                if (rxdUri.EndsWith(SortedSuffix + Extension))
+                    return false;
+
+                string sortedfn = rxdUri.Replace(Extension, SortedSuffix + Extension);
+                if (File.Exists(sortedfn))
+                {
+                    sortfn = sortedfn;
+                    return true;
+                }
+
+                if (!ToRXD(sortedfn, false))
+                    throw new Exception("Writing structure failed!");
+
+                byte[] buffer = new byte[RXDataReader.SectorSize];
+                UInt16 buffsize = 0;
+                Dictionary<RecordType, Queue<RecBase>> data = new Dictionary<RecordType, Queue<RecBase>>();
+                UInt64 SectorsRead = 0;
+
+                bool FindLowestTime(out UInt32 time)
+                {
+                    time = UInt32.MaxValue;
+                    bool found = false;
+                    foreach (var channel in data.Values)
+                        if (channel.Count > 0)
+                        {
+                            time = Math.Min(time, channel.Peek().RawTimestamp);
+                            found = true;
+                        }
+                    return found;
+                }
+
+                void WriteBlock(FileStream fs)
+                {
+                    buffer[0] = (byte)(buffsize & 0xff);
+                    buffer[1] = (byte)((buffsize >> 8) & 0xff);
+                    fs.Write(buffer, 0, buffer.Length);
+                    Array.Clear(buffer, 0, buffer.Length);
+                    buffsize = 0;
+                    SectorsRead--;
+                }
+
+                UInt32 timestamp;
+                using (RXDataReader dr = new(this))
+                using (FileStream fs = new FileStream(sortedfn, FileMode.Open, FileAccess.ReadWrite))
+                {
+                    void AddToBlock(byte[] rb)
+                    {
+                        if (buffsize + rb.Length > RXDataReader.SectorSize - 2)
+                            WriteBlock(fs);
+                        Buffer.BlockCopy(rb, 0, buffer, 2 + buffsize, rb.Length);
+                        buffsize += (UInt16)rb.Length;
+                    }
+
+                    void AddMessages()
+                    {
+                        foreach (var q in data.Values)
+                            if (q.Count > 0)
+                                while (q.Peek().RawTimestamp == timestamp)
+                                {
+                                    AddToBlock(q.Dequeue().ToBytes());
+                                    if (q.Count() == 0)
+                                        break;
+                                }
+                    }
+
+                    fs.Seek(0, SeekOrigin.End);
+                    while (dr.ReadNext())
+                    {
+                        SectorsRead++;
+                        foreach (RecBase rec in dr.Messages)
+                            if (rec.LinkedBin.RecType != RecordType.PreBuffer)
+                            {
+                                if (!data.ContainsKey(rec.LinkedBin.RecType))
+                                    data[rec.LinkedBin.RecType] = new Queue<RecBase>();
+
+                                data[rec.LinkedBin.RecType].Enqueue(rec);
+                            }
+                        ProgressCallback?.Invoke((int)dr.GetProgress);
+                        while (SectorsRead > 100)
+                        {
+                            if (FindLowestTime(out timestamp))
+                                AddMessages();
+                        }
+                    }
+                    while (FindLowestTime(out timestamp))
+                        AddMessages();
+                }
+
+                sortfn = sortedfn;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                sortfn = string.Empty;
                 return false;
             }
         }
@@ -613,8 +739,12 @@ namespace RXD.Base
 
             double WriteData(DoubleData dd, UInt64 Timestamp, byte[] BinaryArray, ref UInt64 LastTimestamp, ref UInt64 TimeOffset)
             {
+                //Just a temporary fix! Ignores timestamps that are smaller than the last one if the last one is not close to Uint64Max
+                if (Timestamp < LastTimestamp && UInt64.MaxValue / LastTimestamp > 100000)
+                    return double.NaN;
+
                 if (Timestamp < LastTimestamp)
-                    TimeOffset += 0x100000000;
+                    TimeOffset += 0x100000000;  
                 LastTimestamp = Timestamp;
                 Timestamp += TimeOffset;
 
@@ -718,10 +848,10 @@ namespace RXD.Base
             double FileTimestamp = double.NaN;
             double LastTimestampCan = 0;
             double TimeOffsetCan = 0;
-            double LastTimestampLin = 0;
-            double TimeOffsetLin = 0;
             double LastTimestampCanError = 0;
             double TimeOffsetCanError = 0;
+            double LastTimestampLin = 0;
+            double TimeOffsetLin = 0;
             UInt32 InitialTimestamp = 0;
 
             void TraceAdd(TraceCollection tc, ref double LastTimestamp, ref double TimeOffset)
@@ -858,9 +988,11 @@ namespace RXD.Base
                     if (xsdPropType is null)
                         continue;
 
+                    int seqlen = seq.Value.Min(s => (s.Value as Array).Length);
+                    if (seqlen == 0)
+                        continue;
                     XElement xmlSeqListBlock = xml.NewElement(seq.Key + "_LIST");
                     xblock.Add(xmlSeqListBlock);
-                    int seqlen = seq.Value.Min(s => (s.Value as Array).Length);
                     for (int i = 0; i < seqlen; i++)
                     {
                         XElement xmlSeqEl = xml.NewElement(seq.Key);

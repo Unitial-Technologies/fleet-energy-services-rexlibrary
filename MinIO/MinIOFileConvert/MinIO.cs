@@ -31,7 +31,7 @@ namespace MinIOFileConvert
             SecretKey = secret;
             EndPoint = endPoint;
             var minio = new MinioClient().WithCredentials(AccessKey, SecretKey).WithEndpoint(EndPoint).Build();
-            rxdConverter = new CloudConverter(new MinIOLogProvider(), new MinIOStorageProvider(minio), null, "influx", "REX03_A1_B001_SN0001867");            
+            rxdConverter = new CloudConverter(new MinIOLogProvider(), new MinIOStorageProvider(minio), null, "influx", "");            
         }
 
         internal async Task<bool> StartListening()
@@ -89,7 +89,7 @@ namespace MinIOFileConvert
                                         return true;
                                     Bucket = directories[0];
                                     LoggerDir = directories[1];
-                                    FilePath = Path.GetDirectoryName(ObjectName);
+                                    FilePath = Path.GetDirectoryName(ObjectName);                                    
 
                                     var cfgJson = await rxdConverter.GetFile(Bucket, "FileConvert.json");
                                     Config.LoadSettings(cfgJson);
