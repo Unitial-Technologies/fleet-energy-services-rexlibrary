@@ -27,7 +27,7 @@ namespace RXD.Base
 
         internal static readonly UInt16 SectorSize = 0x200;
         static readonly UInt16 MaxBufferBlocks = 0x7F;
-        static readonly UInt16 MaxBufferSize = (UInt16)(MaxBufferBlocks * 512);
+        static readonly UInt16 MaxBufferSize = (UInt16)(MaxBufferBlocks * SectorSize);
         readonly BinRXD collection;
         readonly ReadLogic logic;
 
@@ -38,11 +38,12 @@ namespace RXD.Base
         private delegate void ParseBufferLogic(IntPtr source);
         ParseBufferLogic ParseBuffer = null;
 
+        public UInt64 SectorsParsed = 0;
         public RecordCollection Messages = null;
         public MultiFrameCollection MultiFrames = new MultiFrameCollection();
         internal Int64 TimeOffset;
 
-        protected UInt32 DataSectorStart = 0;
+        internal protected UInt32 DataSectorStart = 0;
         protected UInt64 SectorID = 0;
         protected List<(UInt32, UInt32)> SectorMap = null;
         protected int SectorMapID = -1;
@@ -334,9 +335,10 @@ namespace RXD.Base
                 UInt16 blocksize = (UInt16)Marshal.ReadInt16(rxBlock);
                 int blocks = ((2 + blocksize + 0x1ff) & ~(UInt16)0x1ff) / SectorSize;
                 if (blocks > 1)
-                    ReadSector(rxBlock, SectorSize, (blocks - 1) * SectorSize);
+                    ReadSector(rxBlock, (blocks - 1) * SectorSize, SectorSize);
 
                 Messages = new RecordCollection();
+                Messages.ID = ++SectorsParsed;
                 ParseBuffer?.Invoke(rxBlock);
                 if (logic == ReadLogic.OffsetTimestamps && TimeOffset != 0)
                 {

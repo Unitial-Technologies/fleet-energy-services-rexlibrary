@@ -89,7 +89,18 @@ namespace MinIOFileConvert
                                         return true;
                                     Bucket = directories[0];
                                     LoggerDir = directories[1];
-                                    FilePath = Path.GetDirectoryName(ObjectName);                                    
+                                    FilePath = Path.GetDirectoryName(ObjectName);
+                                    if (extension == ".json")
+                                    {
+                                        var file = await rxdConverter.GetFile(Bucket, LoggerDir + "/Snapshot1.json");
+                                        string json1 = "";
+                                        if (file != null)
+                                            using (StreamReader sr = new StreamReader(file))
+                                                json1 = sr.ReadToEnd();
+                                        JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(json1);
+                                        Console.WriteLine(json1);
+                                    }
+                                    
 
                                     var cfgJson = await rxdConverter.GetFile(Bucket, "FileConvert.json");
                                     Config.LoadSettings(cfgJson);

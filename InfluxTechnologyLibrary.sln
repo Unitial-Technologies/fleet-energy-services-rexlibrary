@@ -13,13 +13,13 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "MDF4xx", "MDF4xx\MDF4xx\MDF
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "MatlabFile", "Matlab\MatlabFile\MatlabFile.shproj", "{BC796A4E-2F4E-441F-BE3B-3BF8C11C5B6F}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "DbcParser", "DbcParser\DbcParser.shproj", "{CBD41CAC-6CD2-42DA-951E-6ADE1D8657D0}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinFormsApp1", "WinFormsApp1\WinFormsApp1.csproj", "{BC750A54-515A-4182-BB11-D19C5FB2F397}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Cloud", "Cloud\Cloud.shproj", "{11DD53D9-3BC3-470F-AD9F-089970CD943B}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MinIOFileConvert", "MinIO\MinIOFileConvert\MinIOFileConvert.csproj", "{9F7F3A81-D134-4EFE-B854-3B12F6BF55C3}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "DbcParser", "DbcParser\DbcParser.shproj", "{CBD41CAC-6CD2-42DA-951E-6ADE1D8657D0}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Cloud", "Cloud\Cloud.shproj", "{11DD53D9-3BC3-470F-AD9F-089970CD943B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -63,13 +63,11 @@ Global
 		MDF4xx\MDF4xx\MDF4xx.projitems*{a7c032d2-27cc-4525-a094-fd7d6418ba31}*SharedItemsImports = 5
 		RXD\BinRXD\BinRXD.projitems*{a7c032d2-27cc-4525-a094-fd7d6418ba31}*SharedItemsImports = 5
 		SharedTools\InfluxShared\InfluxShared.projitems*{a7c032d2-27cc-4525-a094-fd7d6418ba31}*SharedItemsImports = 5
-		DbcParser\DbcParser.projitems*{bc750a54-515a-4182-bb11-d19c5fb2f397}*SharedItemsImports = 5
 		Matlab\MatlabFile\MatlabFile.projitems*{bc750a54-515a-4182-bb11-d19c5fb2f397}*SharedItemsImports = 5
 		MDF4xx\MDF4xx\MDF4xx.projitems*{bc750a54-515a-4182-bb11-d19c5fb2f397}*SharedItemsImports = 5
 		RXD\BinRXD\BinRXD.projitems*{bc750a54-515a-4182-bb11-d19c5fb2f397}*SharedItemsImports = 5
 		SharedTools\InfluxShared\InfluxShared.projitems*{bc750a54-515a-4182-bb11-d19c5fb2f397}*SharedItemsImports = 5
 		Matlab\MatlabFile\MatlabFile.projitems*{bc796a4e-2f4e-441f-be3b-3bf8c11c5b6f}*SharedItemsImports = 13
-		Cloud\Cloud.projitems*{cbd41cac-6cd2-42da-951e-6ade1d8657d0}*SharedItemsImports = 13
 		DbcParser\DbcParser.projitems*{cbd41cac-6cd2-42da-951e-6ade1d8657d0}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal

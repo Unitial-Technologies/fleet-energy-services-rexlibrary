@@ -68,6 +68,11 @@ namespace Influx.Shared.Helpers
                 });
                 Add(new FileType()
                 {
+                    Filter = CSVTrace.Filter,
+                    Extension = CSVTrace.Extension
+                });
+                Add(new FileType()
+                {
                     Filter = MDF.Filter,
                     Extension = MDF.Extension
                 });
@@ -307,6 +312,42 @@ namespace Influx.Shared.Helpers
             }
         }
 
+        public static bool ToCSTrace(this BinRXD rxd, string outputPath, Action<object> ProgressCallback)
+        {
+            try
+            {
+                using (CSVTrace cst = new CSVTrace())
+                    if (cst.Start(outputPath, rxd.DatalogStartTime))
+                    {
+                        rxd.ProcessTraceRecords((tc) => cst.WriteLine(tc.asCST), ProgressCallback);
+                        return true;
+                    }
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public static bool ToCSTrace(this BinRXD rxd, Stream outputStream, Action<object> ProgressCallback)
+        {
+            try
+            {
+                using (CSVTrace cst = new CSVTrace())
+                    if (cst.Start(outputStream, rxd.DatalogStartTime))
+                    {
+                        rxd.ProcessTraceRecords((tc) => cst.WriteLine(tc.asCST), ProgressCallback);
+                        return true;
+                    }
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         public static bool ToMatlab(this DoubleDataCollection ddata, string MatlabFileName, Action<object> ProgressCallback = null) =>
             Matlab.CreateFromDoubleData(MatlabFileName, ddata, ProgressCallback);
 
@@ -349,6 +390,8 @@ namespace Influx.Shared.Helpers
                         TraceConvert = trace is null ? rxd.ToBLF : trace.ToBLF;
                     else if (ext.Equals(TRC.Extension, StringComparison.OrdinalIgnoreCase))
                         TraceConvert = trace is null ? rxd.ToTRC : trace.ToTRC;
+                    else if (ext.Equals(CSVTrace.Extension, StringComparison.OrdinalIgnoreCase))
+                        TraceConvert = trace is null ? rxd.ToCSTrace : trace.ToCST;
 
                     if (TraceConvert != null)
                         return TraceConvert(outputPath, ProgressCallback);

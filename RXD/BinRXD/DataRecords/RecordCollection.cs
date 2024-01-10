@@ -6,6 +6,7 @@ namespace RXD.DataRecords
     internal class RecordCollection : List<RecBase>, IDisposable
     {
         private bool disposedValue;
+        public UInt64 ID = 0;
 
         public RecordCollection()
         {

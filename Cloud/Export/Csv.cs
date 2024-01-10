@@ -22,9 +22,9 @@ namespace Cloud.Export
                     {
                         GeneralRules = new ProcessingRules(rules)
                         {
-                            InitialTimestamp = SyncTimestampLogic.Zero,
-                            SampleAfterEnd = true,
-                            SampleBeforeBeginning = true,
+                            InitialTimestamp = SyncTimestampLogic.FirstSample,
+                            SampleAfterEnd = false,
+                            SampleBeforeBeginning = false,
                             SamplingMethod = SamplingValueSource.LastValue,
                             SamplingRate = Config.ConfigJson.CSV.resampling.rate
                         }

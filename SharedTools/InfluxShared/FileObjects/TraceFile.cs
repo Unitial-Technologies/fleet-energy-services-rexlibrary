@@ -41,9 +41,38 @@ namespace InfluxShared.FileObjects
         }
     }
 
+    public class CSVTrace : TraceFile
+    {
+        public const string Extension = ".cst";
+        public const string Filter = "Comma separated trace (*.cst)|*.cst";
+
+        public override void WriteHeader(DateTime LogTime)
+        {
+            traceWriter.WriteLine("Time,Bus,Ident,Direction,DLC,Data");
+        }
+
+        public override void WriteLine(string traceLine)
+        {
+            if (traceLine == "")
+                return;
+
+            var vals = traceLine.Split(',');
+            var tparts = vals[0].Split('.');
+            UInt64 secs = UInt64.Parse(tparts[0]);
+            var currtime = StartLogTime.AddSeconds(secs);
+            vals[0] = currtime.ToString("yyyy/MM/dd HH:mm:ss");
+            if (tparts.Length > 1)
+                vals[0] += "." + tparts[1];
+            traceLine = string.Join(",", vals);
+
+            base.WriteLine(traceLine);
+        }
+    }
+
     public class TraceFile : IDisposable
     {
         internal TextWriter traceWriter = null;
+        internal DateTime StartLogTime;
         private bool disposedValue;
 
         public TraceFile()
@@ -89,6 +118,7 @@ namespace InfluxShared.FileObjects
             try
             {
                 traceWriter = new StreamWriter(FileName);
+                StartLogTime = LogTime;
                 WriteHeader(LogTime);
                 return true;
             }
@@ -103,6 +133,7 @@ namespace InfluxShared.FileObjects
             try
             {
                 traceWriter = new StreamWriter(outStream, new UTF8Encoding(false), 1024, true);
+                StartLogTime = LogTime;
                 WriteHeader(LogTime);
                 return true;
             }

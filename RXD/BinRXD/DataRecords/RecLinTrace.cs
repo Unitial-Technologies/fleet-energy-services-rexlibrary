@@ -45,7 +45,7 @@ namespace RXD.DataRecords
 
         internal new DataRecord data { get => (DataRecord)base.data; set => base.data = value; }
 
-        internal new UInt32 RawTimestamp { get => data.Timestamp; set => data.Timestamp = value; }
+        internal override UInt32 RawTimestamp { get => data.Timestamp; set => data.Timestamp = value; }
 
         public RecLinTrace()
         {

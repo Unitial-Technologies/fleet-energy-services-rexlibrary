@@ -40,6 +40,7 @@ namespace RXD.Blocks
             KeepLogFilesOnDevice,
             RootCertificateSize,
             RootCertificate,
+            UploadAllLogsBeforeSleep,
         }
 
         #region Do not touch these
@@ -77,6 +78,11 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.KeepLogFilesOnDevice, typeof(bool));
                 data.AddProperty(BinProp.RootCertificateSize, typeof(UInt16));
                 data.AddProperty(BinProp.RootCertificate, typeof(string), BinProp.RootCertificateSize);
+            });
+            Versions[2] = new Action(() =>
+            {
+                Versions[1].DynamicInvoke();
+                data.AddProperty(BinProp.UploadAllLogsBeforeSleep, typeof(bool));
             });
         }
     }

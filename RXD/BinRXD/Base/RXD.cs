@@ -736,6 +736,7 @@ namespace RXD.Base
             UInt64 LastTimestampLin = 0;
             UInt64 TimeOffsetCan = 0;
             UInt64 TimeOffsetLin = 0;
+            bool isLastBlock = false;
 
             double WriteData(DoubleData dd, UInt64 Timestamp, byte[] BinaryArray, ref UInt64 LastTimestamp, ref UInt64 TimeOffset)
             {
@@ -765,6 +766,8 @@ namespace RXD.Base
 
                     while (dr.ReadNext())
                     {
+                        isLastBlock = (dr.Messages.ID + dr.DataSectorStart) * RXDataReader.SectorSize == (UInt64)rxdFullSize;
+
                         foreach (RecBase rec in dr.Messages)
                             switch (rec.LinkedBin.RecType)
                             {

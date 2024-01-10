@@ -305,5 +305,29 @@ namespace RXD.Objects
                 }
             }
         }
+
+        public string asCST
+        {
+            get
+            {
+                if (NotExportable)
+                    return "";
+
+                switch (TraceType)
+                {
+                    case RecordType.CanTrace:
+                    case RecordType.CanError:
+                        return string.Join(",",
+                            Timestamp,
+                            BusChannel,
+                            CanID,
+                            flagDIR ? "Tx" : "Rx",
+                            DLC,
+                            Data
+                        );
+                    default: return "";
+                }
+            }
+        }
     }
 }

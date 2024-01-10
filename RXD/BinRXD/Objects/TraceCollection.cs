@@ -143,5 +143,71 @@ namespace RXD.Objects
                 return false;
             }
         }
+
+        public string asCST
+        {
+            get
+            {
+                string cst = "";
+                foreach (var rec in this)
+                    cst += rec.asCST;
+                return cst;
+            }
+        }
+
+        public bool ToCST(string FileName, Action<object> ProgressCallback)
+        {
+            try
+            {
+                using (CSVTrace cst = new CSVTrace())
+                {
+                    if (cst.Start(FileName, StartLogTime))
+                    {
+                        ProgressCallback?.Invoke(0);
+                        ProgressCallback?.Invoke("Writing Comma separated trace file...");
+                        for (int i = 0; i < Count; i++)
+                        {
+                            cst.WriteLine(this[i].asCST);
+                            ProgressCallback?.Invoke(i * 100 / Count);
+                        }
+                        ProgressCallback?.Invoke(100);
+                        return true;
+                    }
+                }
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public bool ToCST(Stream traceStream, Action<object> ProgressCallback)
+        {
+            try
+            {
+                using (CSVTrace cst = new CSVTrace())
+                {
+                    if (cst.Start(traceStream, StartLogTime))
+                    {
+                        ProgressCallback?.Invoke(0);
+                        ProgressCallback?.Invoke("Writing Comma separated trace stream...");
+                        for (int i = 0; i < Count; i++)
+                        {
+                            cst.WriteLine(this[i].asCST);
+                            ProgressCallback?.Invoke(i * 100 / Count);
+                        }
+                        ProgressCallback?.Invoke(100);
+                        return true;
+                    }
+                }
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
     }
 }
