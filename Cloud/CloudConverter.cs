@@ -41,20 +41,23 @@ namespace Cloud
             }
             else if (Path.GetExtension(filename).ToLower() == ".json")
             {
-                if (conversion.HasFlag(ConversionType.Snapshot) && TimeStream != null)
+                if (filename.ToLower().Contains("snapshot"))
                 {
-                    var jsonStream = await GetFile(Bucket, filename.Replace(Bucket + '/', ""));
-                    if (jsonStream != null)
+                    if (conversion.HasFlag(ConversionType.Snapshot) && TimeStream != null)
                     {
-                        using (StreamReader reader = new(jsonStream))
+                        var jsonStream = await GetFile(Bucket, filename.Replace(Bucket + '/', ""));
+                        if (jsonStream != null)
                         {
-                            string json = reader.ReadToEnd();
-                            int startIndex = loggerDir.IndexOf("_SN") + 3;
-                            string sn = loggerDir.Substring(startIndex, 7);
-                            await TimeStream.WriteSnapshot(sn, json);
+                            using (StreamReader reader = new(jsonStream))
+                            {
+                                string json = reader.ReadToEnd();
+                                int startIndex = loggerDir.IndexOf("_SN") + 3;
+                                string sn = loggerDir.Substring(startIndex, 7);
+                                await TimeStream.WriteSnapshot(sn, json);
+                            }
                         }
                     }
-                }
+                }                
             }
             else
                 try

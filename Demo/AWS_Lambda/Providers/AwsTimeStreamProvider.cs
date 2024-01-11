@@ -134,9 +134,9 @@ namespace AWSLambdaFileConvert.Providers
                 }
                 List<Dimension> dimensions = new List<Dimension>
                 {
-                    new Dimension { Name = "device_id", Value = device_id }
+                    new Dimension { Name = "device_id", Value = device_id, DimensionValueType = DimensionValueType.VARCHAR }
                 };
-                long timeStamp = snapshot["RTC_UNIX"] * 1000;
+                long timeStamp = snapshot["RTC_UNIX"];// * 1000;
                 Log?.Log($"Snapshot timestamp is: {(ulong)snapshot["RTC_UNIX"]}");
                 Log?.Log($"Created Dimension, writing to {Config.Timestream.table_name}");
                 foreach (var signal in snapshot)
@@ -149,10 +149,12 @@ namespace AWSLambdaFileConvert.Providers
                             MeasureName = signal.Key,
                             MeasureValue = signal.Value.ToString(),
                             MeasureValueType = MeasureValueType.DOUBLE,
-                            Time = timeStamp.ToString()
+                            Time = timeStamp.ToString(),
+                            TimeUnit = TimeUnit.SECONDS,
+                            Version = 1
                         };
                         writeRecordsRequest.Records.Add(record); ;
-                        //Context?.Logger.LogInformation($"Record: {JsonConvert.SerializeObject(record)}"); 
+                        Log?.Log($"Record: {JsonConvert.SerializeObject(record)}"); 
                     }
                 }
 
