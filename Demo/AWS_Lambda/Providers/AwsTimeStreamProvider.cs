@@ -48,14 +48,16 @@ namespace AWSLambdaFileConvert.Providers
                             {
                                 Dimensions = new List<Dimension>
                                 {
-                                    new Dimension { Name = "device_id", Value = ddc.DisplayName },
-                                    new Dimension { Name = "filename", Value = filename},
-                                    new Dimension { Name = "bus", Value = ddc[i - 1].BusChannel},
+                                    new Dimension { Name = "device_id", Value = ddc.DisplayName, DimensionValueType = DimensionValueType.VARCHAR},
+                                    new Dimension { Name = "filename", Value = filename, DimensionValueType = DimensionValueType.VARCHAR},
+                                    new Dimension { Name = "bus", Value = ddc[i - 1].BusChannel, DimensionValueType = DimensionValueType.VARCHAR},
                                 },
                                 MeasureName = ddc[i - 1].ChannelName,
                                 MeasureValue = Values[i].ToString(),
                                 MeasureValueType = MeasureValueType.DOUBLE,
-                                Time = timeStamp.ToString()
+                                Time = timeStamp.ToString(),
+                                TimeUnit = TimeUnit.MILLISECONDS,
+                                Version = 1
                             });
                             //Log?.Log($"Bus is: {ddc[i-1].BusChannel}");
                             //Log?.Log($"Dimension: {string.Join(";", writeRecordsRequest.Records.Last().Dimensions.Select(d => $"{d.Name}={d.Value}"))}");
@@ -66,6 +68,10 @@ namespace AWSLambdaFileConvert.Providers
                                 //Log?.Log($"Writing {writeRecordsRequest.Records.Count} records");
                                 //Log?.Log($"Writing {writeRecordsRequest.} records");
                                 await LocalWriteRecordsAsync(writeClient, writeRecordsRequest);
+                                foreach (var item in writeRecordsRequest.Records)
+                                {
+                                    Log?.Log($"Record: {JsonConvert.SerializeObject(item)}");
+                                }
                                 writeRecordsRequest.Records.Clear();
                             }
                         }
@@ -177,10 +183,10 @@ namespace AWSLambdaFileConvert.Providers
 
         async Task<long> GetUTCCorrection(string bucket)
         {
-            var jsonstream = await LambdaGlobals.S3.GetStream(bucket, Path.Combine(LambdaGlobals.FilePath, "Status.json"));
+            var jsonstream = await LambdaGlobals.S3.GetStream(bucket, Path.Combine(LambdaGlobals.LoggerDir, "Status.json"));
             if (jsonstream is null)
                 return 0;
-            DateTime fileDateTime = await GetFileCreationDateTime(bucket, Path.Combine(LambdaGlobals.FilePath, "Status.json"));
+            DateTime fileDateTime = await GetFileCreationDateTime(bucket, Path.Combine(LambdaGlobals.LoggerDir, "Status.json"));
             if (fileDateTime > DateTime.MinValue)
             {
                 using (StreamReader reader = new(jsonstream))

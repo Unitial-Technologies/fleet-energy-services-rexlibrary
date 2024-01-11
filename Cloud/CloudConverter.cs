@@ -59,7 +59,7 @@ namespace Cloud
                     }
                 }                
             }
-            else
+            else if (Path.GetExtension(filename).ToLower() == ".rxd")
                 try
                 {
                     List<DBC?> dbcList = await LoadDBCList(Bucket);
