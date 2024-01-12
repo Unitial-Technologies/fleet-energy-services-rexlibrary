@@ -53,7 +53,7 @@ namespace Cloud
                                 string json = reader.ReadToEnd();
                                 int startIndex = loggerDir.IndexOf("_SN") + 3;
                                 string sn = loggerDir.Substring(startIndex, 7);
-                                await TimeStream.WriteSnapshot(sn, json);
+                                await TimeStream.WriteSnapshot(sn, json, filename.Replace(Bucket + '/', ""));
                             }
                         }
                     }

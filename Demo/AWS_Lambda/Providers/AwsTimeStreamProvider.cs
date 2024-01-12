@@ -120,8 +120,9 @@ namespace AWSLambdaFileConvert.Providers
             return true;
         }
 
-        public async Task<bool> WriteSnapshot(string device_id, string json)
+        public async Task<bool> WriteSnapshot(string device_id, string json, string filename)
         {
+            long timeCorrection = await GetUTCCorrection(LambdaGlobals.Bucket);
             var writeClient = new AmazonTimestreamWriteClient();
             var writeRecordsRequest = new WriteRecordsRequest
             {
@@ -142,9 +143,10 @@ namespace AWSLambdaFileConvert.Providers
                 {
                     new Dimension { Name = "device_id", Value = device_id, DimensionValueType = DimensionValueType.VARCHAR }
                 };
-                long timeStamp = snapshot["RTC_UNIX"];// * 1000;
-                Log?.Log($"Snapshot timestamp is: {(ulong)snapshot["RTC_UNIX"]}");
-                Log?.Log($"Created Dimension, writing to {Config.Timestream.table_name}");
+                DateTime fileDateTime = await GetFileCreationDateTime(LambdaGlobals.Bucket, filename);
+                long timeStamp = ((DateTimeOffset)fileDateTime).ToUnixTimeSeconds();//snapshot["RTC_UNIX"];// * 1000;
+                Log?.Log($"Snapshot timestamp: {(ulong)snapshot["RTC_UNIX"]}   Corrected Timestamp: {timeStamp}");
+                Log?.Log($"Created Dimension, writing to {Config.Snapshot.table_name}");
                 foreach (var signal in snapshot)
                 {
                     if (signal.Key != "RTC_UNIX")
