@@ -42,8 +42,6 @@ namespace AWSLambdaFileConvert.Providers
                         {
                             //long timeStamp = (long)Math.Truncate(((DateTime.Now.AddHours(-6).ToOADate() - 25569) * 86400 + Values[0]) * 1000);   //
                             long timeStamp = (long)Math.Truncate((((ddc.RealTime.ToOADate() - 25569) * 86400 + Values[0]) - timeCorrection) * 1000);
-                            //Context?.Logger.LogInformation($"Logger Timestamp is {(ddc.RealTime.ToOADate() - 25569) * 86400 + Values[0]}");
-                            //Context?.Logger.LogInformation($"Corrected timestamp is: {timeStamp}");
                             writeRecordsRequest.Records.Add(new Record
                             {
                                 Dimensions = new List<Dimension>
@@ -59,19 +57,13 @@ namespace AWSLambdaFileConvert.Providers
                                 TimeUnit = TimeUnit.MILLISECONDS,
                                 Version = 1
                             });
-                            //Log?.Log($"Bus is: {ddc[i-1].BusChannel}");
-                            //Log?.Log($"Dimension: {string.Join(";", writeRecordsRequest.Records.Last().Dimensions.Select(d => $"{d.Name}={d.Value}"))}");
-                            //if (ddc[i - 1].ChannelName == "Engine_temperature")
-                            //    Log?.Log($"Engine Temperature is: {Values[i]}");
                             if (writeRecordsRequest.Records.Count >= 90)
                             {
-                                //Log?.Log($"Writing {writeRecordsRequest.Records.Count} records");
-                                //Log?.Log($"Writing {writeRecordsRequest.} records");
                                 await LocalWriteRecordsAsync(writeClient, writeRecordsRequest);
-                                foreach (var item in writeRecordsRequest.Records)
+                               /*foreach (var item in writeRecordsRequest.Records)
                                 {
                                     Log?.Log($"Record: {JsonConvert.SerializeObject(item)}");
-                                }
+                                }*/
                                 writeRecordsRequest.Records.Clear();
                             }
                         }
@@ -79,9 +71,7 @@ namespace AWSLambdaFileConvert.Providers
                 }
                 if (writeRecordsRequest.Records.Count > 0)
                 {
-                    // Context?.Logger.LogInformation($"Writing {writeRecordsRequest.Records.Count} records");
                     await LocalWriteRecordsAsync(writeClient, writeRecordsRequest);
-                    //  Context?.Logger.LogInformation($"Records {writeRecordsRequest.Records.Count} written");
                     writeRecordsRequest.Records.Clear();
                 }
 
@@ -90,6 +80,10 @@ namespace AWSLambdaFileConvert.Providers
             catch (Exception e)
             {
                 Log?.Log(e.Message);
+                foreach (var item in writeRecordsRequest.Records)
+                {
+                    Log?.Log($"Error Record Debug: {JsonConvert.SerializeObject(item)}");
+                }
                 return false;
             }
         }
@@ -195,12 +189,13 @@ namespace AWSLambdaFileConvert.Providers
                 {
                     string json = reader.ReadToEnd();
                     dynamic status = JsonConvert.DeserializeObject(json);
-                    Log?.Log($"UTC Time is: {((DateTimeOffset)fileDateTime).ToUnixTimeSeconds()} ::: {fileDateTime.ToString()}");
+                    Log?.Log($"File Time is: {((DateTimeOffset)fileDateTime).ToUnixTimeSeconds()} ::: {fileDateTime.ToString()}");
                     Log?.Log($"Logger Time is: {status.RTC_UNIX} ::: {DateUtility.FromUnixTimestamp((ulong)status.RTC_UNIX)}");
                     if (status != null)
                     {
                         //if ((ulong)((DateTimeOffset)DateTime.UtcNow).ToUnixTimeSeconds() < (ulong)status.RTC_UNIX)
-                        return (long)status.RTC_UNIX - (long)((DateTimeOffset)DateTime.UtcNow).ToUnixTimeSeconds();
+                        Log?.Log($"Correction is: {(long)status.RTC_UNIX - (long)((DateTimeOffset)fileDateTime).ToUnixTimeSeconds()}");
+                        return (long)status.RTC_UNIX - (long)((DateTimeOffset)fileDateTime).ToUnixTimeSeconds();
                     }
                 }
             }
