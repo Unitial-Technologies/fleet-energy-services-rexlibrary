@@ -13,3 +13,5 @@ MDF4xx – Used for export to MDF Files.
 RXD/RXDDemo – Example that converts configuration xml file to rxc file used for the ReXgen device. It uses a ReXConfig.xsd file to validate the xml. It can also open rxc files.
 
 Demo/AWS\_Lambda – AWS Lambda example that takes an xml file after upload to S3 and converts it to rxc. It also converts rxd files to csv and can be changed to export to CSV InfluxDB format, Matlab, BLF, etc.
+
+MinIO/MinIOFileConvert - MinIO example that converts configuration xml file to rxc file and converts rxd(ReXgen logger data file) to csv, mdf, blf.
