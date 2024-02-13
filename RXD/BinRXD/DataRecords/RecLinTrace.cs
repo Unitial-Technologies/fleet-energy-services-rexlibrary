@@ -139,27 +139,24 @@ namespace RXD.DataRecords
         {
             var frames = base.ToTraceRow(TimestampPrecision);
 
-            TraceRow trace = new TraceRow()
+            TraceLin trace = new TraceLin()
             {
-                TraceType = LinkedBin.RecType,
-                _Timestamp = (double)data.Timestamp * TimestampPrecision * 0.000001,
-                _BusChannel = BusChannel,
+                //TraceType = LinkedBin.RecType,
+                RawTimestamp = data.Timestamp,
+                FloatTimestamp = (double)data.Timestamp * TimestampPrecision * 0.000001,
+                BusChannel = BusChannel,
                 NotExportable = NotExportable,
-                _CanID = data.LinID,
-                flagIDE = false,
-                flagSRR = false,
-                flagEDL = false,
-                flagBRS = false,
+                LinID = data.LinID,
                 flagDIR = data.Flags.HasFlag(LinMessageFlags.DIR),
                 flagLPE = data.Flags.HasFlag(LinMessageFlags.LPE),
                 flagLCSE = data.Flags.HasFlag(LinMessageFlags.LCSE),
                 flagLTE = data.Flags.HasFlag(LinMessageFlags.LTE),
-                _DLC = header.DLC,
-                _Data = new byte[header.DLC]
+                DLC = header.DLC,
+                Data = new byte[header.DLC]
             };
 
             // Copy variable data
-            Buffer.BlockCopy(VariableData, 0, trace._Data, 0, header.DLC);
+            Buffer.BlockCopy(VariableData, 0, trace.Data, 0, header.DLC);
 
             frames.Add(trace);
 

@@ -1,5 +1,4 @@
-﻿using InfluxShared.Generic;
-using InfluxShared.Helpers;
+﻿using InfluxShared.Helpers;
 using RXD.Blocks;
 using System;
 using System.IO;

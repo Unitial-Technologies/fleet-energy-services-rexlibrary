@@ -31,7 +31,7 @@ namespace RXD.Blocks
         }
         #endregion
 
-        internal override ChannelDescriptor GetDataDescriptor => new ChannelDescriptor()
+        public override ChannelDescriptor GetDataDescriptor => new ChannelDescriptor()
         {
             StartBit = this[BinProp.StartBit],
             BitCount = this[BinProp.BitCount],

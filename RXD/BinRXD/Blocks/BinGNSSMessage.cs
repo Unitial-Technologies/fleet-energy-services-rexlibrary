@@ -129,9 +129,9 @@ namespace RXD.Blocks
             { TypeGNSS.GNSS_TIMESTAMP, typeof(UInt32) }
     };
 
-        internal override string GetName => this[BinProp.Type].ToString();
+        public override string GetName => this[BinProp.Type].ToString();
         //internal override string GetUnits => "";
-        internal override ChannelDescriptor GetDataDescriptor => new()
+        public override ChannelDescriptor GetDataDescriptor => new()
         {
             StartBit = 0,
             BitCount = (ushort)(8 * Marshal.SizeOf(GnssType[this[BinGNSSMessage.BinProp.Type]] as Type)),

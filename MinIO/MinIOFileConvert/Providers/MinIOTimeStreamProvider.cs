@@ -15,7 +15,7 @@ namespace MinIOFileConvert.Providers
             throw new NotImplementedException();
         }
 
-        public Task<bool> WriteSnapshot(string device_id, string json)
+        public Task<bool> WriteSnapshot(string device_id, string json, string filename)
         {
             throw new NotImplementedException();
         }

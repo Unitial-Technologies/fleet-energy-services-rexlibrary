@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace RXD.Blocks
 {
@@ -21,7 +19,7 @@ namespace RXD.Blocks
 
     #endregion
 
-    internal class BinCanMessage : BinBase
+    public class BinCanMessage : BinBase
     {
         internal enum BinProp
         {

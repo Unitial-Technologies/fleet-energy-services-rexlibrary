@@ -2,13 +2,14 @@
 using MatlabFile.Base;
 using MDF4xx.IO;
 using RXD.Base;
+using RXD.DataRecords;
 using RXD.Objects;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using RXD.Blocks;
 
 namespace Influx.Shared.Helpers
 {
@@ -68,8 +69,8 @@ namespace Influx.Shared.Helpers
                 });
                 Add(new FileType()
                 {
-                    Filter = CSVTrace.Filter,
-                    Extension = CSVTrace.Extension
+                    Filter = CSTrace.Filter,
+                    Extension = CSTrace.Extension
                 });
                 Add(new FileType()
                 {
@@ -99,46 +100,63 @@ namespace Influx.Shared.Helpers
 
         private static void blfProcessing(BLF blf, TraceRow row)
         {
-            switch (row.TraceType)
+            if (row is not ITraceConvertAdapter)
+                return;
+
+            if (row is TraceCan can)
             {
-                case RecordType.Unknown:
-                    break;
-                case RecordType.CanTrace:
-                    if (row.flagEDL)
-                        blf.WriteCanFDMessage(
-                            row.flagIDE ? (row._CanID | 0x80000000) : row._CanID,
-                            (UInt64)(row._Timestamp * 1000000),
-                            (byte)(row._BusChannel + 1),
-                            row.flagDIR, row.flagBRS,
-                            (byte)row._DLC, row._Data
+                if (can.flagEDL)
+                    blf.WriteCanFDMessage(
+                        can.flagIDE ? (can.CanID | 0x80000000) : can.CanID,
+                        (UInt64)(can.FloatTimestamp * 1000000),
+                        (byte)(can.BusChannel + 1),
+                        can.flagDIR, can.flagBRS,
+                        (byte)can.DLC, can.Data
+                    );
+                else
+                    blf.WriteCanMessage(
+                        can.flagIDE ? (can.CanID | 0x80000000) : can.CanID,
+                        (UInt64)(can.FloatTimestamp * 1000000),
+                        (byte)(can.BusChannel + 1),
+                        can.flagDIR,
+                        (byte)can.DLC, can.Data
+                    );
+            }
+            else if (row is TraceCanError canerr)
+            {
+                blf.WriteCanError((UInt64)(canerr.FloatTimestamp * 1000000), (byte)(canerr.BusChannel + 1), canerr.ErrorCode);
+            }
+            else if (row is TraceLin lin)
+            {
+
+                if (!lin.isError)
+                    blf.WriteLinMessage(
+                        lin.LinID, 
+                        (UInt64)(lin.FloatTimestamp * 1000000), 
+                        (byte)(lin.BusChannel + 1), 
+                        lin.flagDIR, 
+                        lin.DLC,
+                        lin.Data
+                    );
+                else
+                {
+                    if (lin.flagLCSE)
+                        blf.WriteLinCrcError(
+                            lin.LinID, 
+                            (UInt64)(lin.FloatTimestamp * 1000000), 
+                            (byte)(lin.BusChannel + 1), 
+                            lin.flagDIR, 
+                            lin.DLC, 
+                            lin.Data
                         );
-                    else
-                        blf.WriteCanMessage(
-                            row.flagIDE ? (row._CanID | 0x80000000) : row._CanID,
-                            (UInt64)(row._Timestamp * 1000000),
-                            (byte)(row._BusChannel + 1),
-                            row.flagDIR,
-                            (byte)row._DLC, row._Data
+                    else if (lin.flagLTE)
+                        blf.WriteLinSendError(
+                            lin.LinID, 
+                            (UInt64)(lin.FloatTimestamp * 1000000), 
+                            (byte)(lin.BusChannel + 1), 
+                            lin.DLC
                         );
-                    break;
-                case RecordType.CanError:
-                    blf.WriteCanError((UInt64)(row._Timestamp * 1000000), (byte)(row._BusChannel + 1), row.ErrorCode);
-                    break;
-                case RecordType.LinTrace:
-                    if (!row.LinError)
-                        blf.WriteLinMessage((byte)row._CanID, (UInt64)(row._Timestamp * 1000000), (byte)(row._BusChannel + 1), row.flagDIR, (byte)row._DLC, row._Data);
-                    else
-                    {
-                        if (row.flagLCSE)
-                            blf.WriteLinCrcError((byte)row._CanID, (UInt64)(row._Timestamp * 1000000), (byte)(row._BusChannel + 1), row.flagDIR, (byte)row._DLC, row._Data);
-                        else if (row.flagLTE)
-                            blf.WriteLinSendError((byte)row._CanID, (UInt64)(row._Timestamp * 1000000), (byte)(row._BusChannel + 1), (byte)row._DLC);
-                    }
-                    break;
-                case RecordType.MessageData:
-                    break;
-                default:
-                    break;
+                }
             }
         }
 
@@ -316,7 +334,7 @@ namespace Influx.Shared.Helpers
         {
             try
             {
-                using (CSVTrace cst = new CSVTrace())
+                using (CSTrace cst = new CSTrace())
                     if (cst.Start(outputPath, rxd.DatalogStartTime))
                     {
                         rxd.ProcessTraceRecords((tc) => cst.WriteLine(tc.asCST), ProgressCallback);
@@ -334,7 +352,7 @@ namespace Influx.Shared.Helpers
         {
             try
             {
-                using (CSVTrace cst = new CSVTrace())
+                using (CSTrace cst = new CSTrace())
                     if (cst.Start(outputStream, rxd.DatalogStartTime))
                     {
                         rxd.ProcessTraceRecords((tc) => cst.WriteLine(tc.asCST), ProgressCallback);
@@ -390,7 +408,7 @@ namespace Influx.Shared.Helpers
                         TraceConvert = trace is null ? rxd.ToBLF : trace.ToBLF;
                     else if (ext.Equals(TRC.Extension, StringComparison.OrdinalIgnoreCase))
                         TraceConvert = trace is null ? rxd.ToTRC : trace.ToTRC;
-                    else if (ext.Equals(CSVTrace.Extension, StringComparison.OrdinalIgnoreCase))
+                    else if (ext.Equals(CSTrace.Extension, StringComparison.OrdinalIgnoreCase))
                         TraceConvert = trace is null ? rxd.ToCSTrace : trace.ToCST;
 
                     if (TraceConvert != null)

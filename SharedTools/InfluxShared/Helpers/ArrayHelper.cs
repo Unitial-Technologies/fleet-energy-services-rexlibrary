@@ -50,8 +50,8 @@ namespace InfluxShared.Helpers
 
         public static bool[] ExtractBoolArray(this byte[] source, int index, int length)
         {
-            bool[] bits = new bool[length * 8];
-            for (int i = 0; i < Math.Min(bits.Length, length); i++)
+            bool[] bits = new bool[length];
+            for (int i = 0; i < length; i++)
             {
                 byte b = source[index + (i >> 3)];
                 byte bitmask = (byte)(1 << (i & 7));

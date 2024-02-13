@@ -74,7 +74,15 @@
     <Compile Include="$(MSBuildThisFileDirectory)DataRecords\RecordCollection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DataRecords\RecRaw.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\DoubleDataHelper.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Objects\ITraceObj.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Objects\IItemGridDetails.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Objects\IRecordGridItem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Objects\IRecordTimeAdapter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Objects\ITraceConvertAdapter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Objects\TraceCan.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Objects\TraceCanError.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Objects\TraceData.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Objects\TraceLin.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Objects\TracePreBuffer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SharedObjects\CanIdentifier.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Objects\TraceCollection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Objects\TraceRow.cs" />

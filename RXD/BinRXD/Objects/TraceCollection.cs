@@ -2,16 +2,57 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace RXD.Objects
 {
     public class TraceCollection : List<TraceRow>
     {
+        public static bool ShowFullStaticItems = true;
+        public static int LimitStaticItemsCount = 10;
         public DateTime StartLogTime = DateTime.Now;
+        internal List<IItemGridDetails> StaticValuesCollection = new();
 
         public TraceCollection()
         {
 
+        }
+
+        internal void InitStaticValues()
+        {
+            StaticValuesCollection = this.OfType<IItemGridDetails>().GroupBy(i => i.strItemName).Select(x => x.Last()).ToList();
+            if (!ShowFullStaticItems )
+                StaticValuesCollection = StaticValuesCollection.Take(LimitStaticItemsCount).ToList();
+        }
+
+        internal void UpdateStaticValues(List<IItemGridDetails> newData)
+        {
+            int FindItem(string key, out IItemGridDetails item)
+            {
+                for (int i = 0; i < StaticValuesCollection.Count; i++)
+                {
+                    item = StaticValuesCollection[i];
+                    if (item.strItemName == key)
+                        return i;
+                }
+
+                item = null;
+                return -1;
+            }
+
+            foreach (var data in newData)
+            {
+                var idx = FindItem(data.strItemName, out IItemGridDetails item);
+                if (item == null)
+                {
+                    if (!ShowFullStaticItems)
+                        if (StaticValuesCollection.Count >= LimitStaticItemsCount)
+                            return;
+                    StaticValuesCollection.Add(data);
+                }
+                else
+                    StaticValuesCollection[idx] = data;
+            }
         }
 
         public string asASCII
@@ -19,7 +60,7 @@ namespace RXD.Objects
             get
             {
                 string ascii = "";
-                foreach (var rec in this)
+                foreach (var rec in this.OfType<ITraceConvertAdapter>())
                     ascii += rec.asASCII;
                 return ascii;
             }
@@ -37,7 +78,8 @@ namespace RXD.Objects
                         ProgressCallback?.Invoke("Writing ASCII file...");
                         for (int i = 0; i < Count; i++)
                         {
-                            asc.WriteLine(this[i].asASCII);
+                            if (this[i] is ITraceConvertAdapter)
+                                asc.WriteLine((this[i] as ITraceConvertAdapter).asASCII);
                             ProgressCallback?.Invoke(i * 100 / Count);
                         }
                         ProgressCallback?.Invoke(100);
@@ -64,7 +106,8 @@ namespace RXD.Objects
                         ProgressCallback?.Invoke("Writing ASCII stream...");
                         for (int i = 0; i < Count; i++)
                         {
-                            asc.WriteLine(this[i].asASCII);
+                            if (this[i] is ITraceConvertAdapter)
+                                asc.WriteLine((this[i] as ITraceConvertAdapter).asASCII);
                             ProgressCallback?.Invoke(i * 100 / Count);
                         }
                         ProgressCallback?.Invoke(100);
@@ -84,7 +127,7 @@ namespace RXD.Objects
             get
             {
                 string trc = "";
-                foreach (var rec in this)
+                foreach (var rec in this.OfType<ITraceConvertAdapter>())
                     trc += rec.asTRC;
                 return trc;
             }
@@ -102,7 +145,8 @@ namespace RXD.Objects
                         ProgressCallback?.Invoke("Writing TRC file...");
                         for (int i = 0; i < Count; i++)
                         {
-                            trc.WriteLine(this[i].asTRC);
+                            if (this[i] is ITraceConvertAdapter)
+                                trc.WriteLine((this[i] as ITraceConvertAdapter).asTRC);
                             ProgressCallback?.Invoke(i * 100 / Count);
                         }
                         ProgressCallback?.Invoke(100);
@@ -129,7 +173,8 @@ namespace RXD.Objects
                         ProgressCallback?.Invoke("Writing TRC stream...");
                         for (int i = 0; i < Count; i++)
                         {
-                            trc.WriteLine(this[i].asTRC);
+                            if (this[i] is ITraceConvertAdapter)
+                                trc.WriteLine((this[i] as ITraceConvertAdapter).asTRC);
                             ProgressCallback?.Invoke(i * 100 / Count);
                         }
                         ProgressCallback?.Invoke(100);
@@ -149,7 +194,7 @@ namespace RXD.Objects
             get
             {
                 string cst = "";
-                foreach (var rec in this)
+                foreach (var rec in this.OfType<ITraceConvertAdapter>())
                     cst += rec.asCST;
                 return cst;
             }
@@ -159,7 +204,7 @@ namespace RXD.Objects
         {
             try
             {
-                using (CSVTrace cst = new CSVTrace())
+                using (CSTrace cst = new CSTrace())
                 {
                     if (cst.Start(FileName, StartLogTime))
                     {
@@ -167,7 +212,8 @@ namespace RXD.Objects
                         ProgressCallback?.Invoke("Writing Comma separated trace file...");
                         for (int i = 0; i < Count; i++)
                         {
-                            cst.WriteLine(this[i].asCST);
+                            if (this[i] is ITraceConvertAdapter)
+                                cst.WriteLine((this[i] as ITraceConvertAdapter).asCST);
                             ProgressCallback?.Invoke(i * 100 / Count);
                         }
                         ProgressCallback?.Invoke(100);
@@ -186,7 +232,7 @@ namespace RXD.Objects
         {
             try
             {
-                using (CSVTrace cst = new CSVTrace())
+                using (CSTrace cst = new CSTrace())
                 {
                     if (cst.Start(traceStream, StartLogTime))
                     {
@@ -194,7 +240,8 @@ namespace RXD.Objects
                         ProgressCallback?.Invoke("Writing Comma separated trace stream...");
                         for (int i = 0; i < Count; i++)
                         {
-                            cst.WriteLine(this[i].asCST);
+                            if (this[i] is ITraceConvertAdapter)
+                                cst.WriteLine((this[i] as ITraceConvertAdapter).asCST);
                             ProgressCallback?.Invoke(i * 100 / Count);
                         }
                         ProgressCallback?.Invoke(100);

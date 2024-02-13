@@ -179,7 +179,9 @@ namespace InfluxShared.FileObjects
             for (int i = 0; i < Count; i++)
             {
                 if (this[i].TempEof)
+                {
                     ValList[i + 1] = double.NaN;
+                }
                 else
                 {
                     finished = false;

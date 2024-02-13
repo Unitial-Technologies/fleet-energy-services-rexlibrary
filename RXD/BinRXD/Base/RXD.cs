@@ -740,10 +740,6 @@ namespace RXD.Base
 
             double WriteData(DoubleData dd, UInt64 Timestamp, byte[] BinaryArray, ref UInt64 LastTimestamp, ref UInt64 TimeOffset)
             {
-                //Just a temporary fix! Ignores timestamps that are smaller than the last one if the last one is not close to Uint64Max
-                if (Timestamp < LastTimestamp && UInt64.MaxValue / LastTimestamp > 100000)
-                    return double.NaN;
-
                 if (Timestamp < LastTimestamp)
                     TimeOffset += 0x100000000;  
                 LastTimestamp = Timestamp;
@@ -865,11 +861,11 @@ namespace RXD.Base
                         FileTimestamp = (InitialTimestamp == 0 ? LowestTimestamp : InitialTimestamp) * TimestampCoeff;
                     //FileTimestamp = (InitialTimestamp == 0 ? LowestTimestamp : Math.Min(LowestTimestamp, InitialTimestamp)) * TimestampCoeff;
 
-                    if (tc[i]._Timestamp < LastTimestamp)
+                    if ((tc[i] as IRecordTimeAdapter).FloatTimestamp < LastTimestamp)
                         TimeOffset += (double)0x100000000 * TimePrecison * 0.000001;
-                    LastTimestamp = tc[i]._Timestamp;
-                    tc[i]._Timestamp -= FileTimestamp;
-                    tc[i]._Timestamp += TimeOffset;
+                    LastTimestamp = (tc[i] as IRecordTimeAdapter).FloatTimestamp;
+                    (tc[i] as IRecordTimeAdapter).FloatTimestamp -= FileTimestamp;
+                    (tc[i] as IRecordTimeAdapter).FloatTimestamp += TimeOffset;
                 }
 
                 ProcessCallback(tc);
@@ -911,7 +907,7 @@ namespace RXD.Base
             ProgressCallback?.Invoke(100);
         }
 
-        public TraceCollection ToTraceList(Action<object> ProgressCallback = null)
+        internal TraceCollection ToTraceList(Action<object> ProgressCallback = null)
         {
             TraceCollection TraceList = new TraceCollection();
             TraceList.StartLogTime = DatalogStartTime;

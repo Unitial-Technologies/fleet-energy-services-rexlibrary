@@ -1,5 +1,4 @@
 ﻿using MDF4xx.Frames;
-using RXD.Blocks;
 using RXD.Objects;
 using System;
 using System.Collections.Generic;
@@ -87,11 +86,12 @@ namespace RXD.DataRecords
             var frames = base.ToTraceRow(TimestampPrecision);
 
             if (data.Error1 != 0)
-                frames.Add(new TraceRow()
+                frames.Add(new TraceCanError()
                 {
-                    TraceType = RecordType.CanError,
-                    _Timestamp = (double)data.Timestamp * TimestampPrecision * 0.000001,
-                    _BusChannel = BusChannel,
+                    //TraceType = RecordType.CanError,
+                    RawTimestamp = data.Timestamp,
+                    FloatTimestamp = (double)data.Timestamp * TimestampPrecision * 0.000001,
+                    BusChannel = BusChannel,
                     NotExportable = NotExportable,
                     flagIDE = false,
                     flagSRR = false,
@@ -103,11 +103,12 @@ namespace RXD.DataRecords
                 });
 
             if (data.Error2 != 0)
-                frames.Add(new TraceRow()
+                frames.Add(new TraceCanError()
                 {
-                    TraceType = RecordType.CanError,
-                    _Timestamp = (double)data.Timestamp * TimestampPrecision * 0.000001,
-                    _BusChannel = BusChannel,
+                    //TraceType = RecordType.CanError,
+                    RawTimestamp = data.Timestamp,
+                    FloatTimestamp = (double)data.Timestamp * TimestampPrecision * 0.000001,
+                    BusChannel = BusChannel,
                     NotExportable = NotExportable,
                     flagIDE = false,
                     flagSRR = false,

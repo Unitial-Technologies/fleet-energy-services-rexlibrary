@@ -46,9 +46,9 @@ namespace RXD.Blocks
         }
         #endregion
 
-        internal override string GetName => "TC " + this[BinTC.BinProp.PhysicalNumber].ToString();
-        internal override string GetUnits => "Volt";
-        internal override ChannelDescriptor GetDataDescriptor => new ChannelDescriptor()
+        public override string GetName => "TC " + this[BinTC.BinProp.PhysicalNumber].ToString();
+        public override string GetUnits => "Volt";
+        public override ChannelDescriptor GetDataDescriptor => new ChannelDescriptor()
         { StartBit = 0, BitCount = 32, isIntel = true, HexType = typeof(Single), conversionType = ConversionType.None, Name = GetName, Units = GetUnits };
 
         internal override void SetupVersions()

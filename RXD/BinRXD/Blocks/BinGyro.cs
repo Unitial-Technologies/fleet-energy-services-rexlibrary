@@ -31,9 +31,9 @@ namespace RXD.Blocks
         }
         #endregion
 
-        internal override string GetName => $"Gyroscope {this[BinProp.Axis]}";
-        internal override string GetUnits => "dps";
-        internal override ChannelDescriptor GetDataDescriptor => new ChannelDescriptor()
+        public override string GetName => $"Gyroscope {this[BinProp.Axis]}";
+        public override string GetUnits => "dps";
+        public override ChannelDescriptor GetDataDescriptor => new ChannelDescriptor()
         { StartBit = 0, BitCount = 32, isIntel = true, HexType = typeof(Single), conversionType = ConversionType.None, Name = GetName, Units = GetUnits };
 
         internal override void SetupVersions()

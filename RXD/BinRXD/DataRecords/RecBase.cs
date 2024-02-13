@@ -56,15 +56,9 @@ namespace RXD.DataRecords
             return buffer;
         }
 
-        public virtual List<BaseDataFrame> ToMdfFrame()
-        {
-            return new List<BaseDataFrame>();
-        }
+        public virtual List<BaseDataFrame> ToMdfFrame() => new List<BaseDataFrame>();
 
-        public virtual MessageFrame ConvertToMdfMessageFrame(UInt16 GroupID, byte DLC)
-        {
-            return new MessageFrame();
-        }
+        public virtual MessageFrame ConvertToMdfMessageFrame(UInt16 GroupID, byte DLC) => new MessageFrame();
 
         public virtual TraceCollection ToTraceRow(UInt32 TimestampPrecision)
         {

@@ -41,7 +41,7 @@ namespace InfluxShared.FileObjects
         }
     }
 
-    public class CSVTrace : TraceFile
+    public class CSTrace : TraceFile
     {
         public const string Extension = ".cst";
         public const string Filter = "Comma separated trace (*.cst)|*.cst";

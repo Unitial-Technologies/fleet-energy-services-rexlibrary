@@ -5,6 +5,9 @@ using InfluxShared.FileObjects;
 using InfluxShared.Generic;
 using Newtonsoft.Json;
 using Cloud;
+using System.Reactive;
+using System.Drawing;
+using InfluxDB.Client.Api.Domain;
 
 namespace AWSLambdaFileConvert.Providers
 {
@@ -15,88 +18,112 @@ namespace AWSLambdaFileConvert.Providers
         {
             Log = log;
         }
-        public async Task<bool> ToTimeStream(DoubleDataCollection ddc, string filename)
-        {
-            int idx = filename.LastIndexOf('/');
-            Log?.Log($"Table is: {Config.Timestream.table_name}");
 
+        async Task<bool> ToTimeStream(TimeStreamItem item)
+        {
             long timeCorrection = await GetUTCCorrection(LambdaGlobals.Bucket);
             var writeClient = new AmazonTimestreamWriteClient();
             var writeRecordsRequest = new WriteRecordsRequest
             {
-                DatabaseName = Config.Timestream.db_name,
-                TableName = Config.Timestream.table_name,
+                DatabaseName = Cloud.Config.Timestream.db_name,
+                TableName = Cloud.Config.Timestream.table_name,
                 Records = new()
             };
 
             try
             {
-                ddc.InitReading();
-
-
-                double[] Values = ddc.GetValues();
-                while (Values != null)
+                foreach (var point in item.Points)
                 {
-                    for (int i = 1; i < Values.Length; i++)
-                        if (!double.IsNaN(Values[i]))
-                        {
-                            //long timeStamp = (long)Math.Truncate(((DateTime.Now.AddHours(-6).ToOADate() - 25569) * 86400 + Values[0]) * 1000);   //
-                            long timeStamp = (long)Math.Truncate((((ddc.RealTime.ToOADate() - 25569) * 86400 + Values[0]) - timeCorrection) * 1000);
-                            writeRecordsRequest.Records.Add(new Record
+                    writeRecordsRequest.Records.Add(new Record
+                    {
+                        Dimensions = new List<Dimension>
                             {
-                                Dimensions = new List<Dimension>
-                                {
-                                    new Dimension { Name = "device_id", Value = ddc.DisplayName, DimensionValueType = DimensionValueType.VARCHAR},
-                                    new Dimension { Name = "filename", Value = filename, DimensionValueType = DimensionValueType.VARCHAR},
-                                    new Dimension { Name = "bus", Value = ddc[i - 1].BusChannel, DimensionValueType = DimensionValueType.VARCHAR},
-                                },
-                                MeasureName = ddc[i - 1].ChannelName,
-                                MeasureValue = Values[i].ToString(),
-                                MeasureValueType = MeasureValueType.DOUBLE,
-                                Time = timeStamp.ToString(),
-                                TimeUnit = TimeUnit.MILLISECONDS,
-                                Version = 1
-                            });
-                            if (writeRecordsRequest.Records.Count >= 90)
-                            {
-                                await LocalWriteRecordsAsync(writeClient, writeRecordsRequest);
-                               /*foreach (var item in writeRecordsRequest.Records)
-                                {
-                                    Log?.Log($"Record: {JsonConvert.SerializeObject(item)}");
-                                }*/
-                                writeRecordsRequest.Records.Clear();
-                            }
-                        }
-                    Values = ddc.GetValues();
+                                new Dimension { Name = "device_id", Value = item.DeviceId, DimensionValueType = DimensionValueType.VARCHAR},
+                                new Dimension { Name = "filename", Value = item.Filename, DimensionValueType = DimensionValueType.VARCHAR},
+                                new Dimension { Name = "bus", Value = item.Bus, DimensionValueType = DimensionValueType.VARCHAR},
+                            },
+                        MeasureName = item.Name,
+                        MeasureValue = point.Value.ToString(),
+                        MeasureValueType = MeasureValueType.DOUBLE,
+                        Time = point.Timestamp.ToString(),
+                        TimeUnit = TimeUnit.MILLISECONDS,
+                        Version = 1
+                    });
+                    if (writeRecordsRequest.Records.Count >= 90)
+                    {
+                        await LocalWriteRecordsAsync(writeClient, writeRecordsRequest);
+                        writeRecordsRequest.Records.Clear();
+                    }
                 }
                 if (writeRecordsRequest.Records.Count > 0)
                 {
                     await LocalWriteRecordsAsync(writeClient, writeRecordsRequest);
                     writeRecordsRequest.Records.Clear();
                 }
-
                 return true;
             }
             catch (Exception e)
             {
                 Log?.Log(e.Message);
-                foreach (var item in writeRecordsRequest.Records)
+                Log?.Log($"Error Record Debug: {JsonConvert.SerializeObject(item)}");
+                return false;
+            } 
+        }
+        public async Task<bool> ToTimeStream(DoubleDataCollection ddc, string filename)
+        {
+            int idx = filename.LastIndexOf('/');
+            Log?.Log("Downsampling started");
+            Log?.Log($"Memory before downsampling: {GC.GetTotalMemory(false) / (1024 * 1024)} MB");
+            long timeCorrection = await GetUTCCorrection(LambdaGlobals.Bucket);
+
+            try
+            {
+                ddc.InitReading();
+                double time = 0;
+                double value = 0;
+                foreach (DoubleData data in ddc)
                 {
-                    Log?.Log($"Error Record Debug: {JsonConvert.SerializeObject(item)}");
-                }
+                    TimeStreamItem item = new TimeStreamItem();
+                    item.DeviceId = ddc.DisplayName;
+                    item.Filename = filename;
+                    item.Bus = data.BusChannel;
+                    item.Name = data.ChannelName;
+                    bool res = true;
+                    while (res)
+                    {
+                        data.TimeStream.Read(ref time);
+                        res = data.DataStream.Read(ref value);
+                        long timeStamp = (long)Math.Truncate((((ddc.RealTime.ToOADate() - 25569) * 86400 + time) - timeCorrection) * 1000);
+                        PointD point = new PointD() { Timestamp = timeStamp, Value = value };
+                        item.Points.Add(point);
+                    }
+                    if (Cloud.Config.Timestream.downsampling)
+                    {
+                        List<PointD> points = Downsampling.DouglasPeucker(item.Points, Cloud.Config.Timestream.downsampling_tolerance);
+                        //Log?.Log($"Points reduced from {item.Points.Count} to {points.Count}");
+                        //Log?.Log($"Memory consumed so far: {GC.GetTotalMemory(false) / (1024 * 1024)} MB");
+                        item.Points = points;
+                    }                    
+                    Log?.Log($"Writing {item.Name} to Timestream");
+                    await ToTimeStream(item);
+                }              
+                return true;
+            }
+            catch (Exception e)
+            {
+                Log?.Log(e.Message);               
                 return false;
             }
         }
 
         private async Task<bool> LocalWriteRecordsAsync(AmazonTimestreamWriteClient writeClient, WriteRecordsRequest request)
         {
-            // Context?.Logger.LogInformation("Writing records");
 
             try
             {
-                Log?.Log($"Request is:{request}");
+                //Log?.Log($"Request is:{request}");
                 WriteRecordsResponse response = await writeClient.WriteRecordsAsync(request);
-                Log?.Log($"Write records status code: {response.HttpStatusCode.ToString()}");
+                //Log?.Log($"Write records status code: {response.HttpStatusCode.ToString()}");
             }
             catch (RejectedRecordsException e)
             {
@@ -120,8 +147,8 @@ namespace AWSLambdaFileConvert.Providers
             var writeClient = new AmazonTimestreamWriteClient();
             var writeRecordsRequest = new WriteRecordsRequest
             {
-                DatabaseName = Config.Snapshot.db_name,
-                TableName = Config.Snapshot.table_name,
+                DatabaseName = Cloud.Config.Snapshot.db_name,
+                TableName = Cloud.Config.Snapshot.table_name,
                 Records = new()
             };
 
@@ -140,7 +167,7 @@ namespace AWSLambdaFileConvert.Providers
                 DateTime fileDateTime = await GetFileCreationDateTime(LambdaGlobals.Bucket, filename);
                 long timeStamp = ((DateTimeOffset)fileDateTime).ToUnixTimeSeconds();//snapshot["RTC_UNIX"];// * 1000;
                 Log?.Log($"Snapshot timestamp: {(ulong)snapshot["RTC_UNIX"]}   Corrected Timestamp: {timeStamp}");
-                Log?.Log($"Created Dimension, writing to {Config.Snapshot.table_name}");
+                Log?.Log($"Created Dimension, writing to {Cloud.Config.Snapshot.table_name}");
                 foreach (var signal in snapshot)
                 {
                     if (signal.Key != "RTC_UNIX")

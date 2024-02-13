@@ -11,11 +11,13 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)CloudConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Config.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Downsampling.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Export\Csv.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Export\InfluxDB.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Export\XmlConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ILogProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IStorageProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ITimeStreamProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)TimeStreamItem.cs" />
   </ItemGroup>
 </Project>

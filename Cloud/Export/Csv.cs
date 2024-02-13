@@ -23,8 +23,8 @@ namespace Cloud.Export
                         GeneralRules = new ProcessingRules(rules)
                         {
                             InitialTimestamp = SyncTimestampLogic.FirstSample,
-                            SampleAfterEnd = false,
-                            SampleBeforeBeginning = false,
+                            SampleAfterEnd = true,
+                            SampleBeforeBeginning = true,
                             SamplingMethod = SamplingValueSource.LastValue,
                             SamplingRate = Config.ConfigJson.CSV.resampling.rate
                         }
@@ -61,11 +61,12 @@ namespace Cloud.Export
                 ddc.InitReading();
                 var ci = new CultureInfo("en-US", false);
                 MemoryStream csvStream = new MemoryStream();
+                DateTime creationTime = ddc.RealTime;
                 using (StreamWriter stream = new StreamWriter(csvStream))
                 {                    
 
                     stream.Write(
-                        "Creation Time : " + ddc.RealTime.ToString("dd/MM/yy HH:mm") + Environment.NewLine +
+                        "Creation Time : " + creationTime.ToString("dd/MM/yy HH:mm") + Environment.NewLine +
                         "Time," + string.Join(",", ddc.Select(n => n.ChannelName)) + Environment.NewLine +
                         new string(',', ddc.Count) + Environment.NewLine +
                         new string(',', ddc.Count) + Environment.NewLine +
@@ -73,15 +74,18 @@ namespace Cloud.Export
                     );
 
                     double[] Values = ddc.GetValues();
+                    string line = "";
                     while (Values != null)
                     {
-                        stream.WriteLine(
-                            DateTime.FromOADate(ddc.RealTime.ToOADate() + Values[0] / 86400).ToString("dd/MM/yyyy HH:mm:ss.fff") + "," +
+                        //double temp = ddc.RealTime.ToOADate() + Values[0] / 86400;
+                        //log?.Log($"double={temp}     datetime={DateTime.FromOADate(temp).ToString("dd/MM/yyyy HH:mm:ss.fff")}");
+                        stream.WriteLine(DateTime.FromOADate(creationTime.ToOADate() + Values[0] / 86400).ToString("dd/MM/yyyy HH:mm:ss.fff") + "," +
                             string.Join(",", Values.Select(x => x.ToString(ci)).ToArray(), 1, Values.Length - 1).Replace("NaN", ""));
 
                         Values = ddc.GetValues();
                     }
                     log?.Log($"Uploading CSV");
+                    stream.Flush();
                     if (csvStream.Length > 0)
                     {
                         csvStream.Seek(0, SeekOrigin.Begin);
@@ -112,6 +116,7 @@ namespace Cloud.Export
                 var ci = new CultureInfo("en-US", false);
 
                 ddc.InitReading();
+                DateTime creationTime = ddc.RealTime;
                 log?.Log($"ddc count {ddc.Count}");
                 int partId = 1;
                 MemoryStream csvStream = new MemoryStream();
@@ -129,9 +134,8 @@ namespace Cloud.Export
                         csvStream.Position = 0;
                         csvStream.SetLength(0);
                     }
-
                     stream.Write(
-                        "Creation Time : " + ddc.RealTime.ToString("dd/MM/yy HH:mm") + Environment.NewLine +
+                        "Creation Time : " + creationTime.ToString("dd/MM/yy HH:mm") + Environment.NewLine +
                         "Time," + string.Join(",", ddc.Select(n => n.ChannelName)) + Environment.NewLine +
                         new string(',', ddc.Count) + Environment.NewLine +
                         new string(',', ddc.Count) + Environment.NewLine +
@@ -141,16 +145,22 @@ namespace Cloud.Export
                     double[] Values = ddc.GetValues();
                     while (Values != null)
                     {
+                        //double temp = ddc.RealTime.ToOADate() + Values[0] / 86400;
+                        //log?.Log($"double={temp}     datetime={DateTime.FromOADate(temp).ToString("dd/MM/yyyy HH:mm:ss.fff")}");
                         stream.WriteLine(
-                            DateTime.FromOADate(ddc.RealTime.ToOADate() + Values[0] / 86400).ToString("dd/MM/yyyy HH:mm:ss.fff") + "," +
+                            DateTime.FromOADate(creationTime.ToOADate() + Values[0] / 86400).ToString("dd/MM/yyyy HH:mm:ss.fff") + "," +
                             string.Join(",", Values.Select(x => x.ToString(ci)).ToArray(), 1, Values.Length - 1).Replace("NaN", ""));
 
                         if (csvStream.Length >= 5 * 1024 * 1024)
+                        {
+                            stream.Flush();
                             await S3Upload();
+                        }
 
                         Values = ddc.GetValues();
                     }
                     log?.Log($"Final upload initiation. Length is:{csvStream.Length}");
+                    stream.Flush();
                     if (csvStream.Length > 0)
                         await S3Upload();
 

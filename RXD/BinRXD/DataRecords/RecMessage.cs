@@ -1,4 +1,6 @@
-﻿using MDF4xx.Frames;
+﻿using InfluxShared.Objects;
+using MDF4xx.Frames;
+using RXD.Objects;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -40,33 +42,34 @@ namespace RXD.DataRecords
             return frames;
         }
 
-        /*public override TraceCollection ToTraceRow(UInt32 TimestampPrecision)
+        public override TraceCollection ToTraceRow(UInt32 TimestampPrecision)
         {
             var frames = base.ToTraceRow(TimestampPrecision);
 
-            TraceRow trace = new TraceRow()
+            TraceData trace = new TraceData()
             {
-                TraceType = LinkedBin.RecType,
-                SourceName = LinkedBin.GetName,
-                _Timestamp = (double)data.Timestamp * TimestampPrecision * 0.000001,
-                _BusChannel = BusChannel,
+                //TraceType = LinkedBin.RecType,
+                SourceChannel = LinkedBin.GetName,
+                RawTimestamp = data.Timestamp,
+                FloatTimestamp = (double)data.Timestamp * TimestampPrecision * 0.000001,
+                //BusChannel = BusChannel,
                 NotExportable = NotExportable,
-                _DLC = header.DLC,
-                _Data = new byte[header.DLC]
+                //DLC = header.DLC,
+                //Data = new byte[header.DLC]
             };
 
             // Copy variable data
-            Buffer.BlockCopy(VariableData, 0, trace._Data, 0, header.DLC);
+            //Buffer.BlockCopy(VariableData, 0, trace.Data, 0, header.DLC);
 
             // Extract value
             var bindata = LinkedBin.GetDataDescriptor.CreateBinaryData();
             if (bindata.ExtractHex(VariableData, out BinaryData.HexStruct hex))
-                trace._Value = bindata.CalcValue(ref hex);
+                trace.Value = bindata.CalcValue(ref hex);
 
             frames.Add(trace);
 
             return frames;
-        }*/
+        }
 
     }
 }

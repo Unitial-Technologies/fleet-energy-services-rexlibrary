@@ -1,5 +1,4 @@
-﻿using RXD.Blocks;
-using RXD.Objects;
+﻿using RXD.Objects;
 using System;
 using System.Runtime.InteropServices;
 
@@ -69,17 +68,18 @@ namespace RXD.DataRecords
 
             if (data.Timestamp > 0)
             {
-                TraceRow trace = new TraceRow()
+                TracePreBuffer trace = new TracePreBuffer()
                 {
-                    TraceType = RecordType.PreBuffer,
-                    _Timestamp = (double)data.Timestamp * TimestampPrecision * 0.000001,
+                    //TraceType = RecordType.PreBuffer,
+                    RawTimestamp = data.Timestamp,
+                    FloatTimestamp = (double)data.Timestamp * TimestampPrecision * 0.000001,
                     NotExportable = NotExportable,
-                    _DLC = header.DLC,
-                    _Data = new byte[header.DLC]
+                    //DLC = header.DLC,
+                    //_Data = new byte[header.DLC]
                 };
 
                 // Copy variable data
-                Buffer.BlockCopy(VariableData, 0, trace._Data, 0, header.DLC);
+                //Buffer.BlockCopy(VariableData, 0, trace._Data, 0, header.DLC);
 
                 frames.Add(trace);
             }

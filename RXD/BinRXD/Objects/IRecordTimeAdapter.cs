@@ -2,13 +2,10 @@
 
 namespace RXD.Objects
 {
-    public class TraceRow : IRecordTimeAdapter
+    internal interface IRecordTimeAdapter
     {
-        public bool NotExportable;
-
         public UInt32 RawTimestamp { get; set; }
 
         public double FloatTimestamp { get; set; }
-
     }
 }

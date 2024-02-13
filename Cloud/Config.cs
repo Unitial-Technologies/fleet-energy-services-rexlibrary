@@ -28,6 +28,8 @@ namespace Cloud
             public bool enabled { get; set; }
             public string db_name { get; set; }
             public string table_name { get; set; }
+            public bool downsampling { get; set; } = false;
+            public double downsampling_tolerance { get; set; } = 0.1;
         }
         internal class SnapshotSettings
         {
