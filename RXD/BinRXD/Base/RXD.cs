@@ -707,17 +707,17 @@ namespace RXD.Base
 
             bool FindMessageFrameID(RecBase rec, out int Index)
             {
-                if (rec is RecCanTrace)
+                if (rec is RecCanTrace recCan)
                 {
                     for (Index = 0; Index < settings.SignalsDatabase.dbcCollection.Count; Index++)
-                        if (DbcEqualsRecord(settings.SignalsDatabase.dbcCollection[Index], rec as RecCanTrace))
+                        if (DbcEqualsRecord(settings.SignalsDatabase.dbcCollection[Index], recCan))
                             return true;
                 }
-                else if (rec is RecLinTrace)
+                else if (rec is RecLinTrace recLin)
                 {
                     if (((rec as RecLinTrace).data.Flags & LinMessageFlags.Error) == 0)
                         for (Index = 0; Index < settings.SignalsDatabase.ldfCollection.Count; Index++)
-                            if (LdfEqualsRecord(settings.SignalsDatabase.ldfCollection[Index], rec as RecLinTrace))
+                            if (LdfEqualsRecord(settings.SignalsDatabase.ldfCollection[Index], recLin))
                                 return true;
                 }
 
@@ -822,7 +822,7 @@ namespace RXD.Base
                         settings.ProgressCallback?.Invoke((int)dr.GetProgress);
                     }
                     if (settings.ProcessingRules is not null)
-                        ddata.FinishWrite((Math.Max(LastTimestampCan, LastTimestampLin) - FileTimestamp) * TimestampCoeff);
+                        ddata.FinishWrite((Math.Max(LastTimestampCan + TimeOffsetCan, LastTimestampLin + TimeOffsetLin) - FileTimestamp) * TimestampCoeff);
                 }
 
                 ddata.SortByIdentifier();
