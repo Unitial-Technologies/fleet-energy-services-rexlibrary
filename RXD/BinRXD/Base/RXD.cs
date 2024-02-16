@@ -1130,7 +1130,19 @@ namespace RXD.Base
                         {
                             XElement propEl = XmlHandler.Child(arrElements.ElementAt(i), prop.Name);
                             if (propEl is not null)
-                                (arrProp as Array).SetValue(converter.ConvertFrom(propEl.Value), i);
+                            {
+                                if (converter is SingleConverter && CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator == ",")
+                                {
+                                    if (Single.TryParse(propEl.Value, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out Single floatValue))
+                                        (arrProp as Array).SetValue(floatValue, i);
+                                    else
+                                        (arrProp as Array).SetValue(0, i);
+                                }
+                                else
+                                {
+                                    (arrProp as Array).SetValue(converter.ConvertFrom(propEl.Value), i);
+                                }
+                            }
                         }
                         prop.Value = arrProp;
                     }

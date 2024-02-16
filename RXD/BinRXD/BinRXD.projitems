@@ -25,7 +25,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinLEDStatus.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinLinInterface.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinLinMessage.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)blocks\BinLinSignal.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinLinSignal.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinTC.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DataRecords\RecLinTrace.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DataRecords\RecPreBuffer.cs" />

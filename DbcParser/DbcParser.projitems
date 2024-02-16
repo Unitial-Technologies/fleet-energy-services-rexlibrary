@@ -20,7 +20,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Model\Node.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Packer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Parser.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)parsers\AttributeLineParser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Parsers\AttributeLineParser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Parsers\CommentLineParser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Parsers\EnvVariableLineParser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Parsers\IgnoreLineParser.cs" />
