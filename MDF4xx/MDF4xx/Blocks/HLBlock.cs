@@ -13,6 +13,35 @@ namespace MDF4xx.Blocks
         linkcount
     };
 
+    [Flags]
+    internal enum HLFlags : UInt16
+    {
+        /// <summary>
+        /// No flag is set
+        /// </summary>
+        None = 0,
+        /// <summary>
+        /// Bit 0: Equal length flag
+        /// <br\>For the referenced DLBLOCK (and thus for each DLBLOCK in the linked list), the value of the "equal length" flag (bit 0 in dl_flags) must be equal to this flag.
+        /// </summary>
+        EqualLength = 1 << 0,
+        /// <summary>
+        /// Bit 1: Time values flag
+        /// For the referenced DLBLOCK (and thus for each DLBLOCK in the linked list), the value of the "time values" flag (bit 1 in dl_flags) must be equal to this flag.
+        /// </summary>
+        TimeValues = 1 << 1,
+        /// <summary>
+        /// Bit 2: Angle values flag
+        /// For the referenced DLBLOCK (and thus for each DLBLOCK in the linked list), the value of the "angle values" flag (bit 2 in dl_flags) must be equal to this flag.
+        /// </summary>
+        AngleValues = 1 << 2,
+        /// <summary>
+        /// Bit 3: Distance values flag
+        /// For the referenced DLBLOCK (and thus for each DLBLOCK in the linked list), the value of the "distance values" flag (bit 3 in dl_flags) must be equal to this flag.
+        /// </summary>
+        DistanceValues = 1 << 3,
+    }
+
     /// <summary>
     /// Header List Block
     /// </summary>
@@ -32,14 +61,14 @@ namespace MDF4xx.Blocks
             /// <br/>Bit 3: Distance values flag - For the referenced DLBLOCK(and thus for each DLBLOCK in the linked list), the value of the "distance values" flag(bit 3 in dl_flags) 
             /// must be equal to this flag.
             /// </summary>
-            public UInt16 hl_flags;
+            public HLFlags hl_flags;
 
             /// <summary>
             /// Zip algorithm used by DZBLOCKs referenced in the list, i.e. in an DLBLOCK of the link list starting at hl_dl_first.
             /// Note: all DZBLOCKs in the list must use the same zip algorithm.
             /// For possible values, please refer to dz_zip_type member of DZBLOCK.
             /// </summary>
-            public byte hl_zip_type;
+            public byte hl_zip_type = 1;
 
             /// <summary>
             /// Reserved

@@ -72,8 +72,12 @@ namespace MDF4xx.Blocks
                 get => (FileLinks.Length > index) ? FileLinks[index] : 0;
                 set
                 {
-                    if (FileLinks.Length > index)
-                        FileLinks[index] = value;
+                    /*if (FileLinks.Length > index)
+                        FileLinks[index] = value;*/
+                    if (LinkObjects.Length <= index)
+                        ParentObj.LinkCount = (UInt64)index + 1;
+                    LinkObjects[index] = null;
+                    FileLinks[index] = value;
                 }
             }
 

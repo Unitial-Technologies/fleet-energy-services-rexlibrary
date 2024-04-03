@@ -40,7 +40,7 @@ namespace MinIOFileConvert
             try
             {
                 Int32 port = 13000;
-                IPAddress localAddr = IPAddress.Parse("127.0.0.1");
+                IPAddress localAddr = IPAddress.Parse("0.0.0.0");
 
                 server = new TcpListener(localAddr, port);
                 server.Start();

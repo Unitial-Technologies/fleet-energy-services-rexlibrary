@@ -29,9 +29,9 @@
     <PackageReference Include="System.Security.Cryptography.Xml" Version="6.0.1" />
   </ItemGroup>
   <Import Project="..\..\RXD\BinRXD\BinRXD.projitems" Label="Shared" />
-  <Import Project="..\..\SharedTools\InfluxShared\InfluxShared.projitems" Label="Shared" />
   <Import Project="..\..\MDF4xx\MDF4xx\MDF4xx.projitems" Label="Shared" />
   <Import Project="..\..\Matlab\MatlabFile\MatlabFile.projitems" Label="Shared" />
   <Import Project="..\..\DbcParser\DbcParser.projitems" Label="Shared" />
   <Import Project="..\..\Cloud\Cloud.projitems" Label="Shared" />
+  <Import Project="..\..\SharedTools\InfluxShared\InfluxShared.projitems" Label="Shared" />
 </Project>

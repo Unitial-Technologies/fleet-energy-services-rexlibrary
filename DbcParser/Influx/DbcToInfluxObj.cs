@@ -1,12 +1,55 @@
-﻿
-using DbcParserLib;
-using InfluxShared.FileObjects;
+﻿using InfluxShared.FileObjects;
 using System.Collections.Generic;
 
 namespace DbcParserLib.Influx
 {
     public static class DbcToInfluxObj
     {
+        public static DBC FromList(List<DbcMessage> messages)
+        {
+            DBC influxDBC = new DBC();
+            foreach (var msg in messages)
+            {
+                if (msg.CANID == 0xC0000000)
+                    continue;
+                DbcMessage msgI = new DbcMessage();
+                msgI.CANID = msg.CANID;
+                msgI.DLC = msg.DLC;
+                msgI.Comment = msg.Comment;
+                msgI.Name = msg.Name;
+                msgI.MsgType = msg.MsgType;
+                msgI.Transmitter = msg.Transmitter;
+
+                influxDBC.Messages.Add(msgI);
+                foreach (var sig in msg.Items)
+                {
+                    DbcItem sigI = new DbcItem();
+                    sigI.Name = sig.Name;
+                    sigI.Comment = sig.Comment;
+                    sigI.ByteOrder = sig.ByteOrder == 0 ? DBCByteOrder.Motorola : DBCByteOrder.Intel;
+                    sigI.StartBit = sig.StartBit;
+                    sigI.BitCount = sig.BitCount;
+                    sigI.Units = sig.Units;
+                    sigI.MinValue = sig.MinValue;
+                    sigI.MaxValue = sig.MaxValue;
+                    sigI.Conversion.Type = ConversionType.Formula;
+                    sigI.Conversion.Formula.CoeffB = sig.Factor;
+                    sigI.Conversion.Formula.CoeffC = sig.Offset;
+                    sigI.Conversion.Formula.CoeffF = 1;
+                    sigI.Type = sig.Type;
+                    sigI.ValueType = sig.ValueType;
+                    sigI.ItemType = 0;
+                    sigI.Ident = sig.Ident;
+                    sigI.Parent = msgI;
+                    sigI.Mode = sig.Mode;// Multiplexing
+
+                    msgI.Items.Add(sigI);
+                }
+
+            }
+            return influxDBC;
+        }
+
         public static DBC FromDBC(Dbc dbc)
         {
             DBC influxDBC = new DBC();
@@ -34,11 +77,29 @@ namespace DbcParserLib.Influx
                     sigI.Units = sig.Unit;
                     sigI.MinValue = sig.Minimum;
                     sigI.MaxValue = sig.Maximum;
-                    sigI.Conversion.Type = InfluxShared.FileObjects.ConversionType.Formula;
+                    sigI.Conversion.Type = ConversionType.Formula;
                     sigI.Conversion.Formula.CoeffB = sig.Factor;
                     sigI.Conversion.Formula.CoeffC = sig.Offset;
                     sigI.Conversion.Formula.CoeffF = 1;
                     sigI.Type = DBCSignalType.Standard;
+                    if (sig.Multiplexing is not null && sig.Multiplexing.Length > 0)
+                    {
+                        var mpstr = sig.Multiplexing.ToLower();
+                        if (mpstr[0] == 'm')
+                        {
+                            if (mpstr.Length > 1)
+                            {
+                                mpstr = mpstr.Substring(1);
+                                if (int.TryParse(mpstr, out int mode))
+                                {
+                                    sigI.Mode = (uint)mode;
+                                    sigI.Type = DBCSignalType.ModeDependent;
+                                }
+                            }
+                            else
+                                sigI.Type = DBCSignalType.Mode;
+                        }
+                    }
                     sigI.ValueType = sig.IsSigned == 1 ? DBCValueType.Signed : DBCValueType.Unsigned;
                     sigI.ItemType = 0;
                     sigI.Ident = msg.ID;

@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Ionic.Zlib;
+using MDF4xx.Frames;
+using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using LinkEnum = MDF4xx.Blocks.DZLinks;
 
@@ -12,7 +15,7 @@ namespace MDF4xx.Blocks
     /// <summary>
     /// Data Zipped Block
     /// </summary>
-    internal class DZBlock : BaseBlock
+    internal class DZBlock : BaseBlock, IDataBlock
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
         internal class BlockData
@@ -68,8 +71,49 @@ namespace MDF4xx.Blocks
             set => header.length = (UInt64)(value + DataOffset);
         }
 
+        public UInt64 OrigDatalength => data.dz_org_data_length;
+        public MemoryStream binary;
+        public ZlibStream zlBinary;
+        public MemoryStream GetStream => binary;
+
+        public void CreateWriteBuffers()
+        {
+            binary = new MemoryStream();
+            zlBinary = new ZlibStream(binary, CompressionMode.Compress, CompressionLevel.Level4);
+            zlBinary.FlushMode = FlushType.Partial;
+        }
+
+        public void EndWriting()
+        {
+            zlBinary.Flush();
+            DataLength = binary.Length;
+            data.dz_data_length = (UInt64)binary.Length;
+        }
+
+        public void FreeWriteBuffers()
+        {
+            if (zlBinary is not null)
+            {
+                zlBinary.Dispose();
+                zlBinary = null;
+            }
+            if (binary is not null)
+            {
+                binary.Dispose();
+                binary = null;
+            }
+        }
+
+        public void WriteFrame(BaseDataFrame frame)
+        {
+            var fdata = frame.ToBytes();
+            zlBinary.Write(fdata, 0, fdata.Length);
+            data.dz_org_data_length += (UInt64)fdata.Length;
+        }
+
         public DZBlock(HeaderSection hs = null) : base(hs)
         {
+            var b = binary;
             LinkCount = (hs is null) ? (int)LinkEnum.linkcount : hs.link_count;
 
             data = new BlockData();

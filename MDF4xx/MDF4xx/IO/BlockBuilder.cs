@@ -5,6 +5,7 @@ using MDF4xx.Frames;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace MDF4xx.IO
 {
@@ -63,9 +64,27 @@ namespace MDF4xx.IO
             dg.data.dg_rec_id_size = GroupIDSize;
             dg.SetWriteFileLink(ref lastlink);
             collection.Add(dg);
+            dg.links.SetObject(DGLinks.dg_dg_next, collection.hd.links.GetObject(HDLinks.hd_dg_first));
             collection.hd.links.SetObject(HDLinks.hd_dg_first, dg);
 
+            if (MDF.UseCompression)
+                BuildHL(dg);
+
+            BuildDL(dg);
+
             return dg;
+        }
+
+        internal HLBlock BuildHL(DGBlock dg)
+        {
+            HLBlock hl = new HLBlock();
+            hl.data.hl_flags = HLFlags.None;
+            hl.data.hl_zip_type = 0;
+            hl.SetWriteFileLink(ref lastlink);
+            collection.Add(hl);
+            dg.links.SetObject(DGLinks.dg_data, hl);
+
+            return hl;
         }
 
         internal CGBlock BuildCG(DGBlock dg, string GroupName, UInt64 RecordID)
@@ -223,12 +242,17 @@ namespace MDF4xx.IO
             return cn;
         }
 
-        internal void BuildCanDataFrameGroup(DGBlock dg)
+        internal void BuildCanDataFrameGroup()
         {
             //cg.data.cg_size.cg_data_bytes = 4/*timestamp*/ + 8/*fixed hdr*/ + 64/*can data*/;
             string framename = "CAN_DataFrame";
-
-            CGBlock cg = BuildCG(dg, framename, Convert.ToUInt32(FrameType.CAN_DataFrame), BuildSI(SIType.BUS, SIBusType.CAN, "CAN"));
+            
+            CGBlock cg = BuildCG(
+                BuildDG((byte)Marshal.SizeOf(Enum.GetUnderlyingType(typeof(FrameType)))), 
+                framename, 
+                Convert.ToUInt32(FrameType.CAN_DataFrame), 
+                BuildSI(SIType.BUS, SIBusType.CAN, "CAN")
+            ); 
             cg.FlagBusEvent = true;
             cg.FlagPlainBusEvent = true;
             CNBlock cnTime = BuildTimeChannel(cg);
@@ -249,12 +273,17 @@ namespace MDF4xx.IO
             cg.data.cg_size.cg_data_bytes += cnFrame.LastByteOffset - cnFrame.data.cn_byte_offset;
         }
 
-        internal void BuildCanErrorFrameGroup(DGBlock dg)
+        internal void BuildCanErrorFrameGroup()
         {
             //cg.data.cg_size.cg_data_bytes = 4/*timestamp*/ + 3/*fixed hdr*/;
             string framename = "CAN_ErrorFrame";
 
-            CGBlock cg = BuildCG(dg, framename, Convert.ToUInt32(FrameType.CAN_ErrorFrame), BuildSI(SIType.BUS, SIBusType.CAN, "CAN"));
+            CGBlock cg = BuildCG(
+                BuildDG((byte)Marshal.SizeOf(Enum.GetUnderlyingType(typeof(FrameType)))), 
+                framename, 
+                Convert.ToUInt32(FrameType.CAN_ErrorFrame), 
+                BuildSI(SIType.BUS, SIBusType.CAN, "CAN")
+            );
             cg.FlagBusEvent = true;
             cg.FlagPlainBusEvent = true;
             CNBlock cnTime = BuildTimeChannel(cg);
@@ -271,12 +300,17 @@ namespace MDF4xx.IO
             cg.data.cg_size.cg_data_bytes += cnFrame.LastByteOffset - cnFrame.data.cn_byte_offset;
         }
 
-        internal void BuildLinDataFrameGroup(DGBlock dg)
+        internal void BuildLinDataFrameGroup()
         {
             //cg.data.cg_size.cg_data_bytes = 4/*timestamp*/ + 8/*fixed hdr*/ + 64/*can data*/;
             string framename = "LIN_Frame";
 
-            CGBlock cg = BuildCG(dg, framename, Convert.ToUInt32(FrameType.LIN_DataFrame), BuildSI(SIType.BUS, SIBusType.LIN, "LIN"));
+            CGBlock cg = BuildCG(
+                BuildDG((byte)Marshal.SizeOf(Enum.GetUnderlyingType(typeof(FrameType)))), 
+                framename, 
+                Convert.ToUInt32(FrameType.LIN_DataFrame), 
+                BuildSI(SIType.BUS, SIBusType.LIN, "LIN")
+            );
 
             cg.FlagBusEvent = true;
             cg.FlagPlainBusEvent = true;
@@ -297,12 +331,17 @@ namespace MDF4xx.IO
             cg.data.cg_size.cg_data_bytes += cnFrame.LastByteOffset - cnFrame.data.cn_byte_offset;
         }
 
-        internal void BuildLinChecksumErrorFrameGroup(DGBlock dg)
+        internal void BuildLinChecksumErrorFrameGroup()
         {
             //cg.data.cg_size.cg_data_bytes = 4/*timestamp*/ + 8/*fixed hdr*/ + 64/*can data*/;
             string framename = "LIN_ChecksumError";
 
-            CGBlock cg = BuildCG(dg, framename, Convert.ToUInt32(FrameType.LIN_ChecksumErrorFrame), BuildSI(SIType.BUS, SIBusType.LIN, "LIN"/*, framename*/));
+            CGBlock cg = BuildCG(
+                BuildDG((byte)Marshal.SizeOf(Enum.GetUnderlyingType(typeof(FrameType)))),
+                framename,
+                Convert.ToUInt32(FrameType.LIN_ChecksumErrorFrame),
+                BuildSI(SIType.BUS, SIBusType.LIN, "LIN"/*, framename*/)
+            );
 
             cg.FlagBusEvent = true;
             cg.FlagPlainBusEvent = true;
@@ -325,12 +364,17 @@ namespace MDF4xx.IO
             cg.data.cg_size.cg_data_bytes += cnFrame.LastByteOffset - cnFrame.data.cn_byte_offset;
         }
 
-        internal void BuildLinTransmissionErrorFrameGroup(DGBlock dg)
+        internal void BuildLinTransmissionErrorFrameGroup()
         {
             //cg.data.cg_size.cg_data_bytes = 4/*timestamp*/ + 8/*fixed hdr*/ + 64/*can data*/;
             string framename = "LIN_TransmissionError";
 
-            CGBlock cg = BuildCG(dg, framename, Convert.ToUInt32(FrameType.LIN_TransmissionErrorFrame), BuildSI(SIType.BUS, SIBusType.LIN, "LIN"));
+            CGBlock cg = BuildCG(
+                BuildDG((byte)Marshal.SizeOf(Enum.GetUnderlyingType(typeof(FrameType)))), 
+                framename, 
+                Convert.ToUInt32(FrameType.LIN_TransmissionErrorFrame), 
+                BuildSI(SIType.BUS, SIBusType.LIN, "LIN")
+            );
 
             cg.FlagBusEvent = true;
             cg.FlagPlainBusEvent = true;
@@ -441,34 +485,70 @@ namespace MDF4xx.IO
             }
         }
 
-        internal void BuildFrameSignalGroups(DGBlock dg, ExportCollections exSignals)
+        internal void BuildFrameSignalGroups(ExportCollections exSignals)
         {
             UInt32 groupid = 0;
+
+            void AllocateGroupID()
+            {
+                while (collection.Any(g => g.Value is CGBlock && (g.Value as CGBlock).data.cg_record_id == groupid))
+                    groupid++;
+            }
+
+            void AddDbcChannelGroup(string name, IEnumerable<DbcItem> channels, UInt16 dlc)
+            {
+                CGBlock cg = BuildCG(
+                    BuildDG((byte)Marshal.SizeOf(Enum.GetUnderlyingType(typeof(FrameType)))), 
+                    name, 
+                    groupid
+                );
+
+                //cg.FlagBusEvent = true;
+                CNBlock cnTime = BuildTimeChannel(cg);
+                CNBlock cn;
+                foreach (var sig in channels)
+                {
+                    cg.AppendCN(cn = BuildCN(
+                        sig.Name,
+                        ConvertType(sig),
+                        cnTime.LastByteOffset + (UInt32)(sig.StartBit / 8),
+                        (byte)((sig.ByteOrder == DBCByteOrder.Intel) ? sig.StartBit % 8 : (65 - sig.BitCount + sig.StartBit) % 8),
+                        sig.BitCount,
+                        0
+                    ));
+                    if (sig.Conversion != null)
+                        BuildConvertion(cn, sig.Conversion);
+                }
+                cg.data.cg_size.cg_data_bytes += dlc;
+            }
+
             if (exSignals.dbcCollection is not null)
                 foreach (var msg in exSignals.dbcCollection)
                 {
-                    while (collection.Any(g => g.Value is CGBlock && (g.Value as CGBlock).data.cg_record_id == groupid))
-                        groupid++;
+                    AllocateGroupID();
                     msg.uniqueid = groupid;
+                    AddDbcChannelGroup(
+                        "CAN" + msg.BusChannel.ToString() + "." + msg.Message.Name,
+                        msg.Signals.Where(x => x.Type == DBCSignalType.Standard || x.Type == DBCSignalType.Mode),
+                        msg.Message.DLC
+                    );
 
-                    CGBlock cg = BuildCG(dg, "CAN" + msg.BusChannel.ToString() + "." + msg.Message.Name, groupid);
-                    //cg.FlagBusEvent = true;
-                    CNBlock cnTime = BuildTimeChannel(cg);
-                    CNBlock cn;
-                    foreach (var sig in msg.Signals)
+                    if (msg.multiplexor is not null && msg.multiplexorMap is not null)
                     {
-                        cg.AppendCN(cn = BuildCN(
-                            sig.Name,
-                            ConvertType(sig),
-                            cnTime.LastByteOffset + (UInt32)(sig.StartBit / 8),
-                            (byte)((sig.ByteOrder == DBCByteOrder.Intel) ? sig.StartBit % 8 : (65 - sig.BitCount + sig.StartBit) % 8),
-                            sig.BitCount,
-                            0
-                        ));
-                        if (sig.Conversion != null)
-                            BuildConvertion(cn, sig.Conversion);
+                        msg.multiplexorGroups = new();
+                        UInt16 id = 0;
+                        foreach (var mg in msg.multiplexorMap)
+                        {
+                            id++;
+                            AllocateGroupID();
+                            msg.multiplexorGroups.Add(groupid);
+                            AddDbcChannelGroup(
+                                "CAN" + msg.BusChannel.ToString() + "." + msg.Message.Name + ".mode" + mg.Key.ToString(),
+                                msg.Signals.Where(x => mg.Value.Contains((ushort)msg.Signals.IndexOf(x))),
+                                msg.Message.DLC
+                            );
+                        }
                     }
-                    cg.data.cg_size.cg_data_bytes += msg.Message.DLC;
                 }
 
             if (exSignals.ldfCollection is not null)
@@ -478,7 +558,11 @@ namespace MDF4xx.IO
                         groupid++;
                     msg.uniqueid = groupid;
 
-                    CGBlock cg = BuildCG(dg, "LIN" + msg.BusChannel.ToString() + "." + msg.Message.Name, groupid);
+                    CGBlock cg = BuildCG(
+                        BuildDG((byte)Marshal.SizeOf(Enum.GetUnderlyingType(typeof(FrameType)))),
+                        "LIN" + msg.BusChannel.ToString() + "." + msg.Message.Name, 
+                        groupid
+                    );
                     //cg.FlagBusEvent = true;
                     CNBlock cnTime = BuildTimeChannel(cg);
                     CNBlock cn;
@@ -511,13 +595,18 @@ namespace MDF4xx.IO
                 return CNDataType.ByteArray;
         }
 
-        internal void BuildSignals(DGBlock dg, Dictionary<UInt16, ChannelDescriptor> Signals)
+        internal void BuildSignals(Dictionary<UInt16, ChannelDescriptor> Signals)
         {
             CNBlock cn;
             foreach (var sig in Signals)
                 if (sig.Value is not null)
                 {
-                    CGBlock cg = BuildCG(dg, sig.Value.Name, sig.Key);
+                    CGBlock cg = BuildCG(
+                        BuildDG((byte)Marshal.SizeOf(Enum.GetUnderlyingType(typeof(FrameType)))), 
+                        sig.Value.Name, 
+                        sig.Key
+                    );
+
                     CNBlock cnTime = BuildTimeChannel(cg);
                     cg.AppendCN(cn = BuildCN(
                         sig.Value.Name,
@@ -545,25 +634,48 @@ namespace MDF4xx.IO
                 }
         }
 
-        internal void BuildDT(DGBlock dg, Int64 DataBytes)
+        internal DLBlock BuildDL(DGBlock dg)
+        {
+            DLBlock dl = new DLBlock();
+            dl.data.dl_flags = DLFlags.None;
+            dl.data.dl_count = 0;
+            dl.dl_equal_length = MDF.DefaultDataBlockLength;
+            collection.unlinked.Add(dl);
+
+            var block = dg.links.GetObject(DGLinks.dg_data);
+            if (block is null)
+                dg.links.SetObject(DGLinks.dg_data, dl);
+            else if (block is HLBlock hl)
+            {
+                //dl.links.SetObject(DLLinks.dl_dl_next, hl.links.GetObject(HLLinks.hl_dl_first));
+                hl.links.SetObject(HLLinks.hl_dl_first, dl);
+            }
+            /*else if (block is DLBlock dlf)
+            {
+                dl.links.SetObject(DLLinks.dl_dl_next, dlf);
+                dg.links.SetObject(DGLinks.dg_data, dl);
+            }*/
+
+            return dl;
+        }
+
+        internal DTBlock BuildDT(DLBlock dl, Int64 DataBytes)
         {
             DTBlock dt = new DTBlock();
             dt.DataLength = DataBytes;
-            dt.SetWriteFileLink(ref lastlink);
-            collection.Add(dt);
-            dg.links.SetObject(DGLinks.dg_data, dt);
+
+            return dt;
         }
 
-        internal void BuildDZ(DGBlock dg, Int64 DataBytes)
+        internal DZBlock BuildDZ(DLBlock dl, Int64 DataBytes)
         {
             DZBlock dz = new DZBlock();
             dz.DataLength = DataBytes;
             dz.data.dz_org_block = BlockType.DT.ToString().ToCharArray();
             dz.data.dz_zip_type = 0; // Deflate
             dz.data.dz_zip_parameter = 0;
-            dz.SetWriteFileLink(ref lastlink);
-            collection.Add(dz);
-            dg.links.SetObject(DGLinks.dg_data, dz);
+
+            return dz;
         }
     }
 }

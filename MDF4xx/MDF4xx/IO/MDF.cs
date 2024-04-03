@@ -1,6 +1,4 @@
-﻿using InfluxShared.Generic;
-using InfluxShared.Helpers;
-using MDF4xx.Blocks;
+﻿using MDF4xx.Blocks;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,6 +10,8 @@ namespace MDF4xx.IO
     {
         public static readonly string Extension = ".mf4";
         public static readonly string Filter = "ASAM MDF4 file (*.mf4)|*.mf4";
+        public static bool UseCompression = true;
+        public static UInt64 DefaultDataBlockLength = 1024 * 1024;
 
         string mdfFileName;
         public string FileName => mdfFileName;
@@ -51,7 +51,7 @@ namespace MDF4xx.IO
             return mdf;
         }
 
-        public bool WriteHeader(Stream stream)
+        public bool Write(Stream stream)
         {
             try
             {
@@ -71,95 +71,6 @@ namespace MDF4xx.IO
                 return false;
             }
         }
-
-        public bool Finalize(string path)
-        {
-            if (Empty || Finalized)
-                return false;
-
-            if (id.data.id_custom_unfin_flags != 0)
-                return false;
-
-            DGBlock dg = hd.dg_first;
-            using (FileStream sr = new FileStream(FileName, FileMode.Open, FileAccess.Read, FileShare.Read))
-            {
-                switch (dg.dg_data.Type)
-                {
-                    case BlockType.DT:
-                        DTBlock dt = (DTBlock)dg.dg_data;
-                        if (id.FlagDTLastLength)
-                        {
-                            dt.DataLength = FileSize - dt.flink - dt.DataOffset; // Update data block size
-                        }
-
-                        if (id.FlagCACGCycleCounters | id.FlagVlsdSize)
-                        {
-                            Dictionary<UInt64, CGBlock> cgdict = dg.GetGroupDict(id.FlagCACGCycleCounters);
-
-                            sr.Seek(dt.flink + dt.DataOffset, SeekOrigin.Begin);
-
-                            using PinObj rid = new PinObj(new byte[8]);
-                            using PinObj vlsdSize = new PinObj(new byte[4]);
-                            while (sr.FastRead(rid, dg.data.dg_rec_id_size) > 0)
-                            {
-                                if (cgdict.TryGetValue(rid, out CGBlock cg))
-                                {
-                                    if (id.FlagCACGCycleCounters)
-                                        cg.data.cg_cycle_count++; // Update each CG cycle count
-                                    if (cg.FlagVLSD)
-                                    {
-                                        sr.FastRead(vlsdSize, 4);
-                                        sr.Seek((uint)vlsdSize, SeekOrigin.Current);
-                                        if (id.FlagVlsdSize)
-                                            cg.data.cg_size.vlsd_size += vlsdSize;
-                                    }
-                                    else
-                                    {
-                                        sr.Seek(cg.data.cg_size.cg_data_bytes, SeekOrigin.Current);
-                                    }
-                                }
-                            }
-                        }
-                        break;
-                    case BlockType.DV:
-                        break;
-                    case BlockType.DZ:
-                        break;
-                    case BlockType.DL:
-                        break;
-                    case BlockType.LD:
-                        break;
-                    case BlockType.HL:
-                        break;
-                    default:
-                        break;
-                }
-
-                id.Finalized = true;
-
-                BlockCollection mdfobj = this;
-                if (!Sorted)
-                {
-                    BlockCollection mdfcopy = SortedCopy();
-
-                    DTBlock dt = (DTBlock)dg.dg_data;
-                    mdfobj = mdfcopy;
-                }
-
-                using FileStream sw = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
-                byte[] wbuffer = mdfobj.id.ToBytes();
-                sw.Write(wbuffer, 0, wbuffer.Length);
-                foreach (KeyValuePair<Int64, BaseBlock> vp in mdfobj)
-                {
-                    sw.Seek((int)vp.Key, SeekOrigin.Begin);
-                    wbuffer = vp.Value.ToBytes();
-                    sw.Write(wbuffer, 0, wbuffer.Length);
-                }
-            }
-
-            return true;
-        }
-
 
     }
 }

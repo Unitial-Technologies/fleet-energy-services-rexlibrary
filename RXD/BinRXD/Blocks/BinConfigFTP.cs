@@ -44,6 +44,7 @@ namespace RXD.Blocks
             AutomaticFirmwareUpdate,
             EncryptPass,
             UploadResume,
+            UploadAllLogsBeforeSleep,
             NameSize,
             Name
         }
@@ -94,6 +95,11 @@ namespace RXD.Blocks
                 Versions[3].DynamicInvoke();
                 data.AddProperty(BinProp.NameSize, typeof(byte));
                 data.AddProperty(BinProp.Name, typeof(string), BinProp.NameSize);
+            });
+            Versions[5] = new Action(() =>
+            {
+                Versions[4].DynamicInvoke();
+                data.AddProperty(BinProp.UploadAllLogsBeforeSleep, typeof(bool));
             });
         }
     }

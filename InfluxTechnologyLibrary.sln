@@ -63,6 +63,7 @@ Global
 		MDF4xx\MDF4xx\MDF4xx.projitems*{a7c032d2-27cc-4525-a094-fd7d6418ba31}*SharedItemsImports = 5
 		RXD\BinRXD\BinRXD.projitems*{a7c032d2-27cc-4525-a094-fd7d6418ba31}*SharedItemsImports = 5
 		SharedTools\InfluxShared\InfluxShared.projitems*{a7c032d2-27cc-4525-a094-fd7d6418ba31}*SharedItemsImports = 5
+		DbcParser\DbcParser.projitems*{bc750a54-515a-4182-bb11-d19c5fb2f397}*SharedItemsImports = 5
 		Matlab\MatlabFile\MatlabFile.projitems*{bc750a54-515a-4182-bb11-d19c5fb2f397}*SharedItemsImports = 5
 		MDF4xx\MDF4xx\MDF4xx.projitems*{bc750a54-515a-4182-bb11-d19c5fb2f397}*SharedItemsImports = 5
 		RXD\BinRXD\BinRXD.projitems*{bc750a54-515a-4182-bb11-d19c5fb2f397}*SharedItemsImports = 5

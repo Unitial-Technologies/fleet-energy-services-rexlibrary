@@ -60,7 +60,7 @@ namespace AWSLambdaFileConvert
                     BucketName = bucketName,
                     Key = fileName
                 };
-                Context?.Logger.LogInformation("Requesting stream: " + fileName);
+                Context?.Logger.LogInformation($"Requesting stream: {fileName} from bucket: {bucketName}");
                 objResponse = await S3Client.GetObjectAsync(request);
                 return objResponse.ResponseStream;
             }

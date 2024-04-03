@@ -1,7 +1,7 @@
 ﻿using InfluxShared.FileObjects;
 using InfluxShared.Generic;
 using InfluxShared.Helpers;
-using Ionic.Zlib;
+using InfluxShared.Objects;
 using MDF4xx.Blocks;
 using MDF4xx.Frames;
 using MDF4xx.IO;
@@ -47,7 +47,6 @@ namespace RXD.Base
         public static readonly bool AllowSorting = false;
         public static bool DoSort = AllowSorting;
 
-        public static bool UseMf4Compression = true;
         public static string EncryptionContainerName = "ReXgen";
         public static byte[] EncryptionKeysBlob = null;
 
@@ -70,6 +69,7 @@ namespace RXD.Base
 
         internal UInt64 DataOffset = 0;
 
+        public RXDLoggerCollection AttachedLoggers = null;
         private bool disposedValue;
 
         private BinRXD(string uri = "", Stream dataStream = null, Stream xsdStream = null)
@@ -359,6 +359,21 @@ namespace RXD.Base
 
                     foreach (var bin in this)
                     {
+                        if (bin.Value is BinCanMessage)
+                        {
+                            var msg = bin.Value as BinCanMessage;
+                            byte[] hex = msg[BinCanMessage.BinProp.DefaultHex]; 
+                            if (msg[BinCanMessage.BinProp.DLC] != hex.Length)
+                            {
+                                msg[BinCanMessage.BinProp.DefaultHex] = new byte[msg[BinCanMessage.BinProp.DLC]];
+                                for (int i = 0; i < msg[BinCanMessage.BinProp.DLC]; i++)
+                                {
+                                    if (i < Math.Min(hex.Length, msg[BinCanMessage.BinProp.DLC]))
+                                        msg[BinCanMessage.BinProp.DefaultHex][i] = hex[i];
+                                }
+                            }
+                        }// Fix if the default bytes are not equal to the dlc. Causes Rexgen to return error
+
                         byte[] data = bin.Value.ToBytes();
                         ms.Write(data, 0, data.Length);
                     }
@@ -527,33 +542,33 @@ namespace RXD.Base
 
         bool ToMf4Stream(Stream mdfStream, ExportCollections frameSignals = null, Action<object> ProgressCallback = null)
         {
-            bool FindMessageFrameID(RecBase rec, out UInt16 GroupID, out byte DLC)
+            object FindMessageFrameID(RecBase rec, out UInt16 GroupID, out byte DLC)
             {
                 if (rec is RecCanTrace)
                 {
-                    foreach (var fsig in frameSignals.dbcCollection)
-                        if (DbcEqualsRecord(fsig, rec as RecCanTrace))
+                    foreach (var fmsg in frameSignals.dbcCollection)
+                        if (DbcEqualsRecord(fmsg, rec as RecCanTrace))
                         {
-                            DLC = fsig.Message.DLC;
-                            GroupID = (UInt16)fsig.uniqueid;
-                            return true;
+                            DLC = fmsg.Message.DLC;
+                            GroupID = (UInt16)fmsg.uniqueid;
+                            return fmsg;
                         }
                 }
                 else if (rec is RecLinTrace)
                 {
                     if (((rec as RecLinTrace).data.Flags & LinMessageFlags.Error) == 0)
-                        foreach (var fsig in frameSignals.ldfCollection)
-                            if (LdfEqualsRecord(fsig, rec as RecLinTrace))
+                        foreach (var fmsg in frameSignals.ldfCollection)
+                            if (LdfEqualsRecord(fmsg, rec as RecLinTrace))
                             {
-                                DLC = fsig.Message.DLC;
-                                GroupID = (UInt16)fsig.uniqueid;
-                                return true;
+                                DLC = fmsg.Message.DLC;
+                                GroupID = (UInt16)fmsg.uniqueid;
+                                return fmsg;
                             }
                 }
 
                 GroupID = 0;
                 DLC = 0;
-                return false;
+                return null;
             }
 
             UInt64 LastTimestampCan = 0;
@@ -571,128 +586,167 @@ namespace RXD.Base
                      this.Where(r => r.Value.RecType == RecordType.MessageData).
                      Select(dg => new { ID = (UInt16)dg.Key, Data = dg.Value.GetDataDescriptor }).
                      ToDictionary(dg => dg.ID, dg => dg.Data);
+                
                 MDF mdf = new MDF();
-                mdf.BuildLoggerStruct(DatalogStartTime, 8/*Config[BinConfig.BinProp.TimeStampSize]*/, Config[BinConfig.BinProp.TimeStampPrecision], UseMf4Compression, Signals, frameSignals);
-                mdf.WriteHeader(mdfStream);
-
-                Dictionary<FrameType, CGBlock> mdfGroups =
-                    mdf.Where(r => r.Value is CGBlock).
-                    Select(g => new { (g.Value as CGBlock).data.cg_record_id, g.Value }).
-                    ToDictionary(g => (FrameType)g.cg_record_id, g => g.Value as CGBlock);
-
-                mdfStream.Seek(0, SeekOrigin.End);
-                var DataBlock = UseMf4Compression ?
-                    mdf.FirstOrDefault(x => x.Value is DZBlock).Value :
-                    mdf.FirstOrDefault(x => x.Value is DTBlock).Value;
-                byte[] zipData = null;
-
-                using (MemoryStream memZippedStream = new MemoryStream())
+                using (BlockBuilder builder = new BlockBuilder(mdf, 8/*Config[BinConfig.BinProp.TimeStampSize]*/, Config[BinConfig.BinProp.TimeStampPrecision]))
                 {
-                    using (ZlibStream zlStream = new ZlibStream(memZippedStream, CompressionMode.Compress, CompressionLevel.Level4))
-                    {
-                        using (RXDataReader dr = new(this))
-                        {
-                            UInt32 InitialTimestamp = dr.GetFilePreBufferInitialTimestamp;
-                            bool FirstTimestampRead = false;
-                            UInt32 FileTimestamp = 0;
+                    mdf.BuildLoggerStruct(builder, DatalogStartTime, Signals, frameSignals);
+                    mdf.Write(mdfStream);
 
-                            void WriteMdfFrame(BaseDataFrame frame, RecordType frameType)
+                    var mdfGroups =
+                        mdf.Values.OfType<DGBlock>().
+                        ToDictionary(
+                            g => (FrameType)(g.links.GetObject(DGLinks.dg_cg_first) as CGBlock).data.cg_record_id,
+                            g => new
                             {
-                                if (frame == null)
-                                    return;
+                                cgblock = (CGBlock)g.links.GetObject(DGLinks.dg_cg_first),
+                                dgblock = g,
+                                dlblock = g.GetDLBlock(),
+                            }
+                        );
 
-                                if (mdfGroups.TryGetValue(frame.data.Type, out CGBlock cg))
-                                    cg.data.cg_cycle_count++;
+                    foreach (var group in mdfGroups)
+                        group.Value.dlblock.CreateNewData(builder).CreateWriteBuffers();
 
-                                if (!FirstTimestampRead)
-                                {
-                                    FirstTimestampRead = true;
-                                    FileTimestamp = (uint)(InitialTimestamp == 0 ? LowestTimestamp : Math.Min(InitialTimestamp, frame.data.Timestamp));
-                                }
+                    Type readerType = AttachedLoggers is null ? typeof(RXDataReader) : typeof(RXDataSyncReader);
+                    using (var dr = (RXDataReader)Activator.CreateInstance(readerType, this))
+                    {
+                        UInt32 InitialTimestamp = dr.GetFilePreBufferInitialTimestamp;
+                        bool FirstTimestampRead = false;
+                        UInt32 FileTimestamp = 0;
 
-                                void CheckTimeOverlap(ref UInt64 LastTimestamp, ref UInt64 TimeOffset)
-                                {
-                                    if (frame.data.Timestamp < LastTimestamp)
-                                        TimeOffset += 0x100000000;
-                                    LastTimestamp = frame.data.Timestamp;
-                                    frame.data.Timestamp += TimeOffset - FileTimestamp;
-                                }
+                        void FinishCurrentDLdatablock(DLBlock dl)
+                        {
+                            dl.CurrentDataBlock.EndWriting();
+                            BaseBlock db = (BaseBlock)dl.CurrentDataBlock;
+                            if (dl.CurrentDataBlock.OrigDatalength > 0)
+                            {
+                                db.extraObj = dl.CurrentDataBlock.GetStream.ToArray();
+                                db.SetWriteFileLink(ref builder.lastlink);
+                                dl.AppendCurrentDataBlock();
 
-                                switch (frameType)
-                                {
-                                    case RecordType.CanTrace:
-                                        CheckTimeOverlap(ref LastTimestampCan, ref TimeOffsetCan);
-                                        break;
-                                    case RecordType.CanError:
-                                        CheckTimeOverlap(ref LastTimestampCanError, ref TimeOffsetCanError);
-                                        break;
-                                    case RecordType.LinTrace:
-                                        CheckTimeOverlap(ref LastTimestampLin, ref TimeOffsetLin);
-                                        break;
-                                    default:
-                                        CheckTimeOverlap(ref LastTimestampCan, ref TimeOffsetCan);
-                                        break;
-                                }
-
-                                if (UseMf4Compression)
-                                {
-                                    byte[] data = frame.ToBytes();
-                                    zlStream.Write(data, 0, data.Length);
-
-                                    (DataBlock as DZBlock).data.dz_org_data_length += (UInt64)data.Length;
-                                }
-                                else
-                                {
-                                    byte[] data = frame.ToBytes();
-                                    mdfStream.Write(data, 0, data.Length);
-                                }
+                                var tempArr = db.ToBytes();
+                                mdfStream.Seek(db.flink, SeekOrigin.Begin);
+                                mdfStream.Write(tempArr, 0, tempArr.Length);
                             }
 
-                            while (dr.ReadNext())
-                            {
-                                foreach (RecBase rec in dr.Messages)
-                                {
-                                    foreach (var mdfframe in rec.ToMdfFrame())
-                                        WriteMdfFrame(mdfframe, rec.LinkedBin.RecType);
+                            dl.CurrentDataBlock.FreeWriteBuffers();
+                        }
 
-                                    if (frameSignals != null)
-                                        if (FindMessageFrameID(rec, out UInt16 groupid, out byte DLC))
-                                            WriteMdfFrame(rec.ConvertToMdfMessageFrame(groupid, DLC), rec.LinkedBin.RecType);
+                        void WriteMdfFrame(BaseDataFrame frame, RecordType frameType)
+                        {
+                            if (frame == null)
+                                return;
+
+                            if (mdfGroups.ContainsKey(frame.data.Type))
+                                mdfGroups[frame.data.Type].cgblock.data.cg_cycle_count++;
+
+                            if (!FirstTimestampRead)
+                            {
+                                FirstTimestampRead = true;
+                                FileTimestamp = (uint)(InitialTimestamp == 0 ? LowestTimestamp : Math.Min(InitialTimestamp, frame.data.Timestamp));
+                            }
+
+                            void CheckTimeOverlap(ref UInt64 LastTimestamp, ref UInt64 TimeOffset)
+                            {
+                                if (frame.data.Timestamp < LastTimestamp)
+                                    TimeOffset += 0x100000000;
+                                LastTimestamp = frame.data.Timestamp;
+                                frame.data.Timestamp += TimeOffset - FileTimestamp;
+                            }
+
+                            switch (frameType)
+                            {
+                                case RecordType.CanTrace:
+                                    CheckTimeOverlap(ref LastTimestampCan, ref TimeOffsetCan);
+                                    break;
+                                case RecordType.CanError:
+                                    CheckTimeOverlap(ref LastTimestampCanError, ref TimeOffsetCanError);
+                                    break;
+                                case RecordType.LinTrace:
+                                    CheckTimeOverlap(ref LastTimestampLin, ref TimeOffsetLin);
+                                    break;
+                                default:
+                                    CheckTimeOverlap(ref LastTimestampCan, ref TimeOffsetCan);
+                                    break;
+                            }
+
+                            if (mdfGroups.ContainsKey(frame.data.Type))
+                            {
+                                DLBlock dl = mdfGroups[frame.data.Type].dlblock;
+                                dl.CurrentDataBlock.WriteFrame(frame);
+                                if (dl.CurrentDataBlock.OrigDatalength > MDF.DefaultDataBlockLength)
+                                {
+                                    FinishCurrentDLdatablock(dl);
+                                    dl.CreateNewData(builder).CreateWriteBuffers();
                                 }
-                                ProgressCallback?.Invoke((int)dr.GetProgress);
                             }
                         }
+
+                        object fmsg;
+                        int midx;
+                        while (dr.ReadNext())
+                        {
+                            foreach (RecBase rec in dr.Messages)
+                            {
+                                foreach (var mdfframe in rec.ToMdfFrame())
+                                    WriteMdfFrame(mdfframe, rec.LinkedBin.RecType);
+
+                                if (frameSignals != null)
+                                    if ((fmsg = FindMessageFrameID(rec, out UInt16 groupid, out byte DLC)) != null)
+                                    {
+                                        WriteMdfFrame(rec.ConvertToMdfMessageFrame(groupid, DLC), rec.LinkedBin.RecType);
+                                        if (fmsg is ExportDbcMessage msg)
+                                            if (msg.multiplexor is not null)
+                                                if (msg.multiplexorData.ExtractHex(rec.VariableData, out BinaryData.HexStruct hex))
+                                                    if ((midx = msg.multiplexorMap.Keys.ToList().IndexOf((UInt16)msg.multiplexorData.CalcValue(ref hex))) != -1)
+                                                        WriteMdfFrame(rec.ConvertToMdfMessageFrame((ushort)msg.multiplexorGroups[midx], DLC), rec.LinkedBin.RecType);
+                                    }
+                            }
+                            ProgressCallback?.Invoke((int)dr.GetProgress);
+                        }
+
+                        foreach (var group in mdfGroups)
+                            FinishCurrentDLdatablock(group.Value.dlblock);
                     }
-                    if (UseMf4Compression)
-                        zipData = memZippedStream.ToArray();
+
+                    using (BinaryWriter bw = new BinaryWriter(mdfStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true), true))
+                        foreach (var group in mdfGroups)
+                        {
+                            var dl = group.Value.dlblock;
+                            var dg = group.Value.dgblock;
+                            var cg = group.Value.cgblock;
+
+                            if (dl.data.dl_count == 0)
+                            {
+                                dl.UpdateParent(dg);
+                                dg.links.SetObject(DGLinks.dg_data, null);
+                            }
+                            else
+                            {
+                                dl.SetWriteFileLink(ref builder.lastlink);
+                                dl.UpdateParent(dg);
+
+                                bw.Seek((int)dl.flink, SeekOrigin.Begin);
+                                bw.Write(dl.ToBytes());
+
+                                if (dg.dg_data is HLBlock hl)
+                                {
+                                    bw.Seek((int)hl.flink, SeekOrigin.Begin);
+                                    bw.Write(hl.ToBytes());
+                                }
+                            }
+
+                            bw.Seek((int)dg.flink, SeekOrigin.Begin);
+                            bw.Write(dg.ToBytes());
+
+                            bw.Seek((int)cg.flink, SeekOrigin.Begin);
+                            bw.Write(cg.ToBytes());
+                        }
                 }
-                if (UseMf4Compression)
-                {
-                    mdfStream.Write(zipData, 0, zipData.Length);
-                    mdfStream.Flush();
-                }
-                Int64 eof = mdfStream.Position;
-
-                using (BinaryWriter bw = new BinaryWriter(mdfStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true), true))
-                {
-                    DataBlock.header.length = (UInt64)(mdfStream.Position - DataBlock.flink);
-                    if (DataBlock is DZBlock)
-                        (DataBlock as DZBlock).data.dz_data_length = (UInt64)zipData.Length;
-                    bw.Seek((int)DataBlock.flink, SeekOrigin.Begin);
-                    bw.Write(DataBlock.ToBytes(true));
-
-                    foreach (var cg in mdfGroups)
-                    {
-                        bw.Seek((int)cg.Value.flink, SeekOrigin.Begin);
-                        bw.Write(cg.Value.ToBytes());
-                    }
-                }
-
-
                 ProgressCallback?.Invoke(100);
                 //Console.WriteLine("file written successfully");
                 return true;
-
             }
             catch (Exception e)
             {
@@ -741,7 +795,7 @@ namespace RXD.Base
             double WriteData(DoubleData dd, UInt64 Timestamp, byte[] BinaryArray, ref UInt64 LastTimestamp, ref UInt64 TimeOffset)
             {
                 if (Timestamp < LastTimestamp)
-                    TimeOffset += 0x100000000;  
+                    TimeOffset += 0x100000000;
                 LastTimestamp = Timestamp;
                 Timestamp += TimeOffset;
 
@@ -873,7 +927,8 @@ namespace RXD.Base
 
             ProgressCallback?.Invoke(0);
             ProgressCallback?.Invoke("Processing trace data...");
-            using (RXDataReader dr = new RXDataReader(this))
+            Type readerType = AttachedLoggers is null ? typeof(RXDataReader) : typeof(RXDataSyncReader);
+            using (var dr = (RXDataReader)Activator.CreateInstance(readerType, this))
             {
                 InitialTimestamp = dr.GetFilePreBufferInitialTimestamp;
                 while (dr.ReadNext())

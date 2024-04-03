@@ -3,6 +3,7 @@ using DbcParserLib;
 using DbcParserLib.Influx;
 using Influx.Shared.Helpers;
 using InfluxShared.FileObjects;
+using Minio.DataModel;
 using RXD.Base;
 
 namespace Cloud
@@ -14,6 +15,7 @@ namespace Cloud
         ITimeStreamProvider TimeStream;
         string Bucket;
         string LoggerDir;
+        public FileLoaderFunc LoadFileMethod;
 
         public CloudConverter(ILogProvider logProvider, IStorageProvider storageProvider, ITimeStreamProvider timestream, string bucket, string loggerDir)
         {
@@ -68,6 +70,11 @@ namespace Cloud
                     Log?.Log($"Memory used: {GC.GetTotalMemory(false) / (1024 * 1024)} MB");
                     ExportDbcCollection signalsCollection = DbcToInfluxObj.LoadExportSignalsFromDBC(dbcList);
                     Log?.Log($"Memory after DBC used: {GC.GetTotalMemory(false) / (1024 * 1024)} MB");
+                    if (Config.SynchConfig.enabled)
+                    {
+                        await SynchExportToMdf(filename);
+                    }
+                    else
                     using (BinRXD rxd = BinRXD.Load("http://" + filename, rxdStream))
                     {
                         Log?.Log($"Memory used after load RXD: {GC.GetTotalMemory(false) / (1024 * 1024)} MB");
@@ -131,6 +138,7 @@ namespace Cloud
                                     else
                                         Log?.Log($"Mdf write to S3 failed");
                                 }
+
                             }
                             //BLF Export
                             if (conversion.HasFlag(Cloud.ConversionType.Blf))
@@ -156,6 +164,13 @@ namespace Cloud
                                 Log?.Log($"Memory used before CSV: {GC.GetTotalMemory(false) / (1024 * 1024)} MB");
                                 await CsvMultipartHelper.ToCsv(Storage, Bucket, Path.ChangeExtension(filename, ".csv"), rxd, signalsCollection, Log);
                             }
+
+                            //Sync Export
+                            if (conversion.HasFlag(Cloud.ConversionType.Csv))
+                            {
+                                Log?.Log($"Memory used before CSV: {GC.GetTotalMemory(false) / (1024 * 1024)} MB");
+                                await CsvMultipartHelper.ToCsv(Storage, Bucket, Path.ChangeExtension(filename, ".csv"), rxd, signalsCollection, Log);
+                            }
                         }
                     }
                 }
@@ -165,6 +180,96 @@ namespace Cloud
                     return false;
                 }
             return true;
+        }
+
+        private async Task SynchExportToMdf(string filename)
+        {
+            Log?.Log($"main_logger {Config.SynchConfig.main_logger}");
+            if (Config.SynchConfig.main_logger != "" && Config.SynchConfig.addon_loger1 != "")
+            {
+                List<string> main_files;
+                List<string> addon_files = new();
+
+                if (filename != "")
+                {
+                    main_files = new List<string> { filename };
+                    addon_files = await Storage.GetRxdFiles(Bucket, $"{Config.SynchConfig.addon_loger1}/{main_files[0].Split('/')[1]}");                    
+                }
+                else
+                {
+                    main_files = await Storage.GetRxdFiles(Bucket, Config.SynchConfig.main_logger);
+                    List<uint> foldersInt = main_files.Select(file => uint.Parse(file.Split('/')[1])).Distinct().ToList();
+                    foldersInt.Sort();
+                    foreach (var item in foldersInt)
+                    {
+                        Log?.Log($"sorted {item}");
+                    }
+                    int idx = 0;
+                    foreach (var item in foldersInt)
+                    {
+                        if (item.ToString() == Config.SynchConfig.lastfolder)
+                        {
+                            idx = foldersInt.IndexOf(item) + 1;
+                            break;
+                        }
+                    }
+                    if (idx < main_files.Count)
+                    {
+                        main_files = await Storage.GetRxdFiles(Bucket, $"{Config.SynchConfig.main_logger}/{foldersInt[idx]}");
+                        addon_files = await Storage.GetRxdFiles(Bucket, $"{Config.SynchConfig.addon_loger1}/{foldersInt[idx]}");
+                    }
+                }
+                
+                foreach (var item in main_files)
+                {
+                    Log?.Log($"main_files {item}");
+                }
+                foreach (var item in addon_files)
+                {
+                    Log?.Log($"addon {item}");
+                }
+                if (main_files.Count > 0 && addon_files.Count > 0)
+                {
+                    LoadFileMethod = GetNextAddonFile;
+                    
+                    foreach (var masterFile in main_files)
+                    {
+                        Log?.Log($"Loading RXD master");
+                        var masterStream = await Storage.GetFile(Bucket, masterFile);
+                        BinRXD master = BinRXD.Load("http://" + masterFile, masterStream);
+                        if (master is not null)
+                        {
+                            Log?.Log($"Master rxd loaded");
+                            RXDLoggerCollection attached = new RXDLoggerCollection()
+                                            {
+                                                new RXDLogger("0002471", addon_files, LoadFileMethod),
+                                            };
+                            master.AttachedLoggers = attached;
+                            MemoryStream mdfStream = (MemoryStream)master.ToMF4();
+                            if (mdfStream is null)
+                                Log?.Log($"Mdf Conversion failed");
+                            else
+                            {
+                                Log?.Log($"Mdf Stream Size: {mdfStream?.Length}");
+                                if (await Storage.UploadFile(Bucket, Path.ChangeExtension(masterFile, ".mf4"), mdfStream))
+                                    Log?.Log($"Mdf written successfuly");
+                                else
+                                    Log?.Log($"Mdf write to S3 failed");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private BinRXD GetNextAddonFile(string fileName)
+        {
+            Log?.Log("Loading Addon file: " + fileName);
+
+            var addonStream = Task.Run(()=> Storage.GetFile("rexgensync", fileName)).Result;
+            BinRXD master = BinRXD.Load("http://" + fileName, addonStream);
+            Log?.Log($"Addon file: { fileName} loaded. Memory used: { GC.GetTotalMemory(false) / (1024 * 1024)} MB");
+            return master;
         }
 
         private async Task<List<DBC?>> LoadDBCList(string bucket)

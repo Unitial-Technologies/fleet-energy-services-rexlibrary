@@ -14,7 +14,8 @@ class Program
 {
     static async Task Main(string[] args)
     {
-        MinIO minio = new MinIO("F1Dq0gb4TSkCougRjizi", "QMUYCozGndTICECmAPE7VdqdC26Z86wYdAmNKVUo", "localhost:9000");
+        //MinIO minio = new MinIO("F1Dq0gb4TSkCougRjizi", "QMUYCozGndTICECmAPE7VdqdC26Z86wYdAmNKVUo", "localhost:9000");
+        MinIO minio = new MinIO("q0GK0Qks8EEwr81RZiGV", "uR3MTmQHsCaltr2nOt5lHfUHuDrn5S4S0C2hfhRM", "192.168.91.130:9000");
         await minio.StartListening();
         string bucketName = "influx";
         string objectName = "FileConvert.json"; // e.g., "folder/file.txt"

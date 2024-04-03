@@ -13,6 +13,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)FileObjects\A2LItem.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FileObjects\A2lOdt.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FileObjects\A2LSettings.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FileObjects\ARXML.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FileObjects\BasicItemInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FileObjects\ChannelDescriptor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FileObjects\BLF.cs" />
@@ -23,10 +24,12 @@
     <Compile Include="$(MSBuildThisFileDirectory)FileObjects\ItemConversion.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FileObjects\LDF.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FileObjects\ObjectLibrary.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FileObjects\ODX.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FileObjects\ProcessingRules.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FileObjects\ProcessingRulesCollection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FileObjects\ReferenceCollection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FileObjects\TraceFile.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FileObjects\XML.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Generic\Bytes.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Generic\DateUtility.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Generic\PinObj.cs" />

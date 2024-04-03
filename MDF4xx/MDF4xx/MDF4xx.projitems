@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Blocks\ATBlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\IDataBlock.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Blocks\ToDo\CABlock.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Blocks\CCBlock.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Blocks\CGBlock.cs" />
@@ -17,7 +18,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Blocks\CNBlock.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Blocks\DGBlock.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Blocks\DIBlock.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Blocks\ToDo\DLBlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Blocks\DLBlock.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Blocks\DTBlock.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Blocks\ToDo\DVBlock.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Blocks\DZBlock.cs" />
@@ -52,7 +53,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)IO\XmlTemplate.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="$(MSBuildThisFileDirectory)Blocks\" />
     <Folder Include="$(MSBuildThisFileDirectory)Blocks\" />
   </ItemGroup>
 </Project>

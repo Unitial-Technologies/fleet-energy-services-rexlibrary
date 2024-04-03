@@ -23,7 +23,7 @@ namespace InfluxShared.FileObjects
         public ushort StartBit { get; set; }
         public ushort BitCount { get; set; }
         public DBCSignalType Type { get; set; }
-        public byte Mode { get; set; }   //If the signal is Mode Dependent
+        public UInt32 Mode { get; set; }   //If the signal is Mode Dependent
         public DBCByteOrder ByteOrder { get; set; }
         public DBCValueType ValueType { get; set; }
         public bool Log { get; set; }
@@ -151,9 +151,13 @@ namespace InfluxShared.FileObjects
         public byte BusChannel { get; set; }
         public DbcMessage Message { get; set; }
         public List<DbcItem> Signals { get; set; }
+
         public DbcItem multiplexor = null;
+        public BinaryData multiplexorData = null;
         // Multiplexor map is dictionary with pair - mode value and list of signal indexes
         public Dictionary<UInt16, List<UInt16>> multiplexorMap = null;
+        // Mode dependant group ids
+        public List<UInt64> multiplexorGroups = null;
 
         public static bool operator ==(ExportDbcMessage item1, ExportDbcMessage item2) => item1.BusChannel == item2.BusChannel && item1.Message == item2.Message;
         public static bool operator !=(ExportDbcMessage item1, ExportDbcMessage item2) => !(item1 == item2);
@@ -169,12 +173,22 @@ namespace InfluxShared.FileObjects
         {
             Signals.Add(Signal);
             multiplexor = GetMode();
+            if (multiplexor is not null)
+                multiplexorData = multiplexor.GetDescriptor.CreateBinaryData();
         }
 
         public DbcItem GetMode()
         {
             if (Signals[0].Type == DBCSignalType.Mode)
+            {
+                multiplexorMap =
+                    Signals.Where(sg => sg.Type == DBCSignalType.ModeDependent).
+                    GroupBy(md => md.Mode,
+                    (k, c) => new { ModeValue = (UInt16)k, Indexes = c.Select(cs => (UInt16)Signals.IndexOf(cs)).ToList() }).
+                    ToDictionary(d => d.ModeValue, d => d.Indexes);
+
                 return Signals[0];
+            }
             else
             {
                 DbcItem mode = Signals.FirstOrDefault(s => s.Type == DBCSignalType.Mode);
@@ -185,7 +199,7 @@ namespace InfluxShared.FileObjects
 
                     multiplexorMap =
                         Signals.Where(sg => sg.Type == DBCSignalType.ModeDependent).
-                        GroupBy(md => (UInt16)md.Mode,
+                        GroupBy(md => md.Mode,
                         (k, c) => new { ModeValue = (UInt16)k, Indexes = c.Select(cs => (UInt16)Signals.IndexOf(cs)).ToList() }).
                         ToDictionary(d => d.ModeValue, d => d.Indexes);
                 }

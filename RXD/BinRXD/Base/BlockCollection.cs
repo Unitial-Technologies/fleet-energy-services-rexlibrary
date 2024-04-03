@@ -4,6 +4,7 @@ using RXD.DataRecords;
 using SharedObjects;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace RXD.Base
 {
@@ -103,6 +104,8 @@ namespace RXD.Base
             }
         }
 
+        public byte GetLastBusID => this.Values.OfType<BinCanInterface>().Max(x => x[BinCanInterface.BinProp.PhysicalNumber]);
+
         internal bool DbcEqualsRecord(ExportDbcMessage busMsg, RecCanTrace record)
         {
             if (busMsg.BusChannel == record.BusChannel)
@@ -195,8 +198,6 @@ namespace RXD.Base
                 return 0;
             else
                 return CanMessageListLevel(this[bin[BinCanMessage.BinProp.NextOutputMessageID]]) + 1;
-        }
-
-
+        }        
     }
 }

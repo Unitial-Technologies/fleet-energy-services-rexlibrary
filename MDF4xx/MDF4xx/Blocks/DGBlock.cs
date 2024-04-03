@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using LinkEnum = MDF4xx.Blocks.DGLinks;
 
 namespace MDF4xx.Blocks
@@ -70,36 +68,6 @@ namespace MDF4xx.Blocks
             data = new BlockData();
         }
 
-        public List<CGBlock> GetGroupList()
-        {
-            List<CGBlock> cglist = new List<CGBlock>();
-            CGBlock cg = cg_first;
-            while (cg != null)
-            {
-                cglist.Add(cg);
-                cg = cg.cg_next;
-            }
-
-            return cglist;
-        }
-
-        public Dictionary<UInt64, CGBlock> GetGroupDict(bool resetcycles = false, bool resetvlsdsize = false)
-        {
-            Dictionary<UInt64, CGBlock> cglist = new Dictionary<UInt64, CGBlock>();
-            CGBlock cg = cg_first;
-            while (cg != null)
-            {
-                if (resetcycles)
-                    cg.data.cg_cycle_count = 0;
-                if (resetvlsdsize)
-                    cg.data.cg_size.vlsd_size = 0;
-                cglist.Add(cg.data.cg_record_id, cg);
-                cg = cg.cg_next;
-            }
-
-            return cglist;
-        }
-
         public void AppendCG(CGBlock newcg)
         {
             if (cg_first is null)
@@ -114,6 +82,19 @@ namespace MDF4xx.Blocks
 
                 cg.links.SetObject(CGLinks.cg_cg_next, newcg);
             }
+        }
+
+        public DLBlock GetDLBlock()
+        {
+            var block = dg_data;
+            if (block is null)
+                return null;
+            else if (block is HLBlock hl)
+                return hl.dl_first;
+            else if (block is DLBlock dl)
+                return dl;
+
+            return null;
         }
 
     };

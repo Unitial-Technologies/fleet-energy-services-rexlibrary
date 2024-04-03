@@ -1,4 +1,6 @@
-﻿using System;
+﻿using MDF4xx.Frames;
+using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using LinkEnum = MDF4xx.Blocks.DTLinks;
 
@@ -12,7 +14,7 @@ namespace MDF4xx.Blocks
     /// <summary>
     /// Data Block
     /// </summary>
-    internal class DTBlock : BaseBlock
+    internal class DTBlock : BaseBlock, IDataBlock
     {
         [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Ansi)]
         internal class BlockData
@@ -33,6 +35,33 @@ namespace MDF4xx.Blocks
         {
             get => (Int64)(header.length - (UInt64)DataOffset);
             set => header.length = (UInt64)(value + DataOffset);
+        }
+
+        public UInt64 OrigDatalength => (UInt64)binary.Length;
+        public MemoryStream binary;
+        public MemoryStream GetStream => binary;
+
+        public void CreateWriteBuffers() => binary = new MemoryStream();
+
+        public void EndWriting()
+        {
+            binary.Flush();
+            DataLength = binary.Length;
+        }
+
+        public void FreeWriteBuffers()
+        {
+            if (binary is not null)
+            {
+                binary.Dispose();
+                binary = null;
+            }
+        }
+
+        public void WriteFrame(BaseDataFrame frame)
+        {
+            var fdata = frame.ToBytes();
+            binary.Write(fdata, 0, fdata.Length);
         }
 
         public DTBlock(HeaderSection hs = null) : base(hs)

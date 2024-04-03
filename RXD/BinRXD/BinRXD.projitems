@@ -10,6 +10,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Base\PreBufferCollection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Base\RXDataSyncReader.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Base\RXDLogger.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Base\RXDLoggerCollection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Base\RXEncryption.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinAccelerometer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Blocks\BinConfigFTP.cs" />

@@ -18,6 +18,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)ILogProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IStorageProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ITimeStreamProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SyncSettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TimeStreamItem.cs" />
   </ItemGroup>
 </Project>

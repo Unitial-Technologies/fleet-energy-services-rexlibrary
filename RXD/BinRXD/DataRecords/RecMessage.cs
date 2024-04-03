@@ -48,18 +48,11 @@ namespace RXD.DataRecords
 
             TraceData trace = new TraceData()
             {
-                //TraceType = LinkedBin.RecType,
                 SourceChannel = LinkedBin.GetName,
                 RawTimestamp = data.Timestamp,
                 FloatTimestamp = (double)data.Timestamp * TimestampPrecision * 0.000001,
-                //BusChannel = BusChannel,
                 NotExportable = NotExportable,
-                //DLC = header.DLC,
-                //Data = new byte[header.DLC]
             };
-
-            // Copy variable data
-            //Buffer.BlockCopy(VariableData, 0, trace.Data, 0, header.DLC);
 
             // Extract value
             var bindata = LinkedBin.GetDataDescriptor.CreateBinaryData();

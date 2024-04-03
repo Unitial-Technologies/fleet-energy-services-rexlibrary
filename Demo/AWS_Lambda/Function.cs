@@ -1,6 +1,7 @@
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
 using Amazon.S3;
+using Amazon.S3.Model;
 using AWSLambdaFileConvert;
 using AWSLambdaFileConvert.ExportFormats;
 using AWSLambdaFileConvert.Providers;
@@ -106,10 +107,11 @@ public class Function
             return Cloud.ConversionType.None;
     }
 
-    async Task<bool> GetConversionJson(string bucket)
+    async Task<bool> GetConversionJson(string bucket, ILambdaContext context = null)
     {
         var jsonStream = await LambdaGlobals.S3.GetStream(bucket, "FileConvert.json");  
         bool res = Config.LoadSettings(jsonStream);
+        
         if (Config.InfluxDB.bucket == "default")
             Config.InfluxDB.bucket = bucket;
         return res;
@@ -136,7 +138,6 @@ public class Function
 
                 APIGatewayProxyRequest apiRequest = JsonConvert.DeserializeObject<APIGatewayProxyRequest>(request);
 
-
                 var query = apiRequest.QueryStringParameters;
                 if (query == null)
                     return new APIGatewayProxyResponse
@@ -155,7 +156,7 @@ public class Function
                 LambdaGlobals.Bucket = query["bucket"];
                 filename = query["filename"];
                 convert |= StringToConversionType(query["conversion"]);
-                await GetConversionJson(LambdaGlobals.Bucket);
+                await GetConversionJson(LambdaGlobals.Bucket, context);
             }
             else if (obj.ContainsKey("Records"))  //When triggered by S3 upload event
             {
@@ -163,7 +164,7 @@ public class Function
                 dynamic s3Event = JsonConvert.DeserializeObject(request);
                 LambdaGlobals.Bucket = s3Event.Records[0].s3.bucket.name;
                 filename = s3Event.Records[0].s3.@object.key;
-                await GetConversionJson(LambdaGlobals.Bucket);
+                await GetConversionJson(LambdaGlobals.Bucket, context);
                 convert = Config.GetConversions();
                 /*if (Config.ConfigJson.ContainsKey("InfluxDB") && Config.ConfigJson.InfluxDB.ContainsKey("enabled") && (Config.ConfigJson.InfluxDB.enabled == true))
                     convert |= Cloud.ConversionType.InfluxDB;

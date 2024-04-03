@@ -9,7 +9,7 @@ using System.Net.Sockets;
 
 namespace AWSLambdaFileConvert.Providers
 {
-    internal class AwsS3StorageProvider : IStorageProvider
+    public class AwsS3StorageProvider : IStorageProvider
     {
         readonly IAmazonS3 _S3Client;
         string _LastError = "";
@@ -137,6 +137,12 @@ namespace AWSLambdaFileConvert.Providers
             };
             await _S3Client.AbortMultipartUploadAsync(abortMPURequest);
             return true;
+        }
+
+        public async Task<List<string>> GetRxdFiles(string bucket, string path, bool includeSubfolders = true)
+        {            
+            List<string> files = (List<string>) await _S3Client.GetAllObjectKeysAsync(bucket, path, null);            
+            return files.Where(x=>x.EndsWith(".rxd")).ToList();
         }
     }
 }

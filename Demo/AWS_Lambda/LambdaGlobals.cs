@@ -6,8 +6,8 @@ namespace AWSLambdaFileConvert
     public static class LambdaGlobals
     {        
         internal static S3Storage S3 { get; set; }
-        internal static IAmazonS3 S3Client { get;set; }
-        internal static ILambdaContext Context { get; set; }
+        public static IAmazonS3 S3Client { get;set; }
+        public static ILambdaContext Context { get; set; }
         internal static string Bucket { get; set; }
         internal static string FilePath { get; set; } = "";
         internal static string FileName { get; set; } = "";

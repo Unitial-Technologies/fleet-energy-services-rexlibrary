@@ -68,6 +68,11 @@ namespace MinIOFileConvert.Providers
             }
         }
 
+        public Task<List<string>> GetRxdFiles(string bucket, string path, bool includeSubfolders = true)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<string> InitiateMultipartUpload(string bucket, string file)
         {
             /*await _Minio.PutObjectAsync(

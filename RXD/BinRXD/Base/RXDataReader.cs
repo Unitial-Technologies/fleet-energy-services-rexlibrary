@@ -28,7 +28,7 @@ namespace RXD.Base
         internal static readonly UInt16 SectorSize = 0x200;
         static readonly UInt16 MaxBufferBlocks = 0x7F;
         static readonly UInt16 MaxBufferSize = (UInt16)(MaxBufferBlocks * SectorSize);
-        readonly BinRXD collection;
+        internal readonly BinRXD collection;
         readonly ReadLogic logic;
 
         private readonly Stream rxStream;
@@ -39,7 +39,8 @@ namespace RXD.Base
         ParseBufferLogic ParseBuffer = null;
 
         public UInt64 SectorsParsed = 0;
-        public RecordCollection Messages = null;
+        internal RecordCollection MessageCollection = null;
+        public virtual RecordCollection Messages { get => MessageCollection; set => MessageCollection = value; }
         public MultiFrameCollection MultiFrames = new MultiFrameCollection();
         internal Int64 TimeOffset;
 
@@ -50,6 +51,8 @@ namespace RXD.Base
 
         private delegate int ReadSectorLogic(byte[] array, int offset, int count);
         private ReadSectorLogic ReadSector = null;
+
+        public RXDataReader(BinRXD bcollection) : this(bcollection, ReadLogic.ReadData) { }
 
         public RXDataReader(BinRXD bcollection, ReadLogic logic = ReadLogic.ReadData)
         {
@@ -238,7 +241,7 @@ namespace RXD.Base
                 if (input is null)
                     break;
 
-                Messages.Add(input);
+                MessageCollection.Add(input);
             }
 
             CheckForMultiFrame();
@@ -281,7 +284,7 @@ namespace RXD.Base
 
         public void ReadLiveBuffer(PinObj buffer, int BlockCount)
         {
-            Messages = new RecordCollection();
+            MessageCollection = new RecordCollection();
             for (int i = 0; i < BlockCount; i++)
                 ParseBufferData((IntPtr)buffer + i * 512);
         }
@@ -305,7 +308,7 @@ namespace RXD.Base
                 if (input is null)
                     break;
 
-                Messages.Add(input);
+                MessageCollection.Add(input);
             }
         }
 
@@ -322,9 +325,9 @@ namespace RXD.Base
             return rxStream.Read(array, offset, count);
         }
 
-        public bool ReadNext()
+        public virtual bool ReadNext()
         {
-            Messages = null;
+            MessageCollection = null;
             try
             {
                 // Data block
@@ -337,8 +340,8 @@ namespace RXD.Base
                 if (blocks > 1)
                     ReadSector(rxBlock, (blocks - 1) * SectorSize, SectorSize);
 
-                Messages = new RecordCollection();
-                Messages.ID = ++SectorsParsed;
+                MessageCollection = new RecordCollection();
+                MessageCollection.ID = ++SectorsParsed;
                 ParseBuffer?.Invoke(rxBlock);
                 if (logic == ReadLogic.OffsetTimestamps && TimeOffset != 0)
                 {
@@ -392,9 +395,9 @@ namespace RXD.Base
 
         void CheckForMultiFrame()
         {
-            for (int i = 0; i < Messages.Count; i++)
+            for (int i = 0; i < MessageCollection.Count; i++)
             {
-                RecBase record = Messages[i];
+                RecBase record = MessageCollection[i];
                 if (record.LinkedBin != null)
                     if (record.LinkedBin.BinType == BlockType.CANMessage && record.LinkedBin.RecType == RecordType.CanTrace)
                     {
@@ -422,7 +425,7 @@ namespace RXD.Base
 
                                     if (data.isCompleted)
                                     {
-                                        Messages.Insert(i + 1, data.PackJ1939Message());
+                                        MessageCollection.Insert(i + 1, data.PackJ1939Message());
                                         data.Clear();
                                     }
                                 }
@@ -474,10 +477,10 @@ namespace RXD.Base
                     while (ReadNext())
                     {
                         // Probably an error
-                        if (Messages.Count == 0)
+                        if (MessageCollection.Count == 0)
                             continue;
 
-                        RecPreBuffer pb = Messages[0] as RecPreBuffer;
+                        RecPreBuffer pb = MessageCollection[0] as RecPreBuffer;
                         if (SectorOffset == 0)
                             SectorOffset = (UInt32)(pb.data.PreStartSector - (rxStream.Position / SectorSize));
 

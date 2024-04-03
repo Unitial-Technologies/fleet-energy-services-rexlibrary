@@ -23,6 +23,7 @@ namespace Cloud
         internal static TimestreamSettings Timestream { get; set; }
         internal static SnapshotSettings Snapshot { get; set; }
         internal static InfluxDBSettings InfluxDB { get; set; }
+        internal static SyncSettings SynchConfig { get; set; }
         internal class TimestreamSettings
         {
             public bool enabled { get; set; }
@@ -76,6 +77,18 @@ namespace Cloud
                 if (InfluxDB.token is null)
                 {
                     InfluxDB.token = "";
+                }
+                try
+                {
+                    SynchConfig = new SyncSettings();
+                    SynchConfig.enabled = ConfigJson.Synch.enabled;
+                    SynchConfig.main_logger = ConfigJson.Synch.main_logger;
+                    SynchConfig.addon_loger1 = ConfigJson.Synch.addon_loger1;
+                    SynchConfig.lastfolder = ConfigJson.Synch.lastfolder;
+                }
+                catch (Exception)
+                {
+
                 }
 
                 return true;
