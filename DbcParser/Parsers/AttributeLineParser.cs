@@ -1,4 +1,3 @@
-using DbcParser.Parsers;
 using System;
 
 namespace DbcParserLib.Parsers
@@ -40,8 +39,7 @@ namespace DbcParserLib.Parsers
 
                 if (cleanLine.StartsWith("BA_DEF_DEF_ "))
                 {
-
-                    AttributeDefaultParser.AttrTypes.Add(records[1].Replace("\"", ""), records[2].Replace("\"", ""));
+                    builder.AttrDefaultParser.AttrTypes.Add(records[1].Replace("\"", ""), records[2].Replace("\"", ""));
                     AddAttributeDefault(records, builder);
                     return true;
                 }
@@ -67,9 +65,9 @@ namespace DbcParserLib.Parsers
 
             }
 
-
             return false;
         }
+
         private static void AddAttribute(ApplyTo applyTo, string[] records, IDbcBuilder builder)
         {
             try

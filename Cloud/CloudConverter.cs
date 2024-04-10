@@ -3,6 +3,7 @@ using DbcParserLib;
 using DbcParserLib.Influx;
 using Influx.Shared.Helpers;
 using InfluxShared.FileObjects;
+using MDF4xx.IO;
 using Minio.DataModel;
 using RXD.Base;
 
@@ -36,7 +37,7 @@ namespace Cloud
                 Log?.Log("No valid Conversion requested!");
                 return false;
             }
-            
+
             if (conversion.HasFlag(ConversionType.Rxc))
             {
                 return await XmlToRxcAsync(Bucket, filename);
@@ -59,7 +60,7 @@ namespace Cloud
                             }
                         }
                     }
-                }                
+                }
             }
             else if (Path.GetExtension(filename).ToLower() == ".rxd")
                 try
@@ -75,104 +76,107 @@ namespace Cloud
                         await SynchExportToMdf(filename);
                     }
                     else
-                    using (BinRXD rxd = BinRXD.Load("http://" + filename, rxdStream))
-                    {
-                        Log?.Log($"Memory used after load RXD: {GC.GetTotalMemory(false) / (1024 * 1024)} MB");
-                        if (rxd is null)
+                        using (BinRXD rxd = BinRXD.Load("http://" + filename, rxdStream))
                         {
-                            Log?.Log("Error loading RXD file");
-                            return false;
-                        }
-                        else
-                        {                            
-                            var export = new BinRXD.ExportSettings()
+                            Log?.Log($"Memory used after load RXD: {GC.GetTotalMemory(false) / (1024 * 1024)} MB");
+                            if (rxd is null)
                             {
-                                StorageCache = StorageCacheType.Memory,
-                                SignalsDatabase = new() { dbcCollection = signalsCollection }
-                            };
-                            Log?.Log($"Memory used after export settings created: {GC.GetTotalMemory(false) / (1024 * 1024)} MB");
-                            /*foreach (var collection in export.SignalsDatabase.dbcCollection)
-                            {
-                                Log?.Log($"ExportSettingsBUS:{collection.BusChannel} signals:{collection.Signals.Count}");
-                                foreach (var item in collection.Signals)
-                                {
-                                    Log?.Log($"ExportSettingsBUS:{collection.BusChannel} signal:{item.Name}");
-                                }
-                            }*/
-                            DoubleDataCollection ddc = rxd.ToDoubleData(export);
-                            Log?.Log($"Memory used after ddc: {GC.GetTotalMemory(false) / (1024 * 1024)} MB");
-
-                            //Write to InfluxDB
-                            if (conversion.HasFlag(Cloud.ConversionType.InfluxDB))
-                            {
-                                Log?.Log("InfluxDB");
-
-                                await ddc.ToInfluxDB(Log);
+                                Log?.Log("Error loading RXD file");
+                                return false;
                             }
-
-                            //Write to timestream table
-                            if (conversion.HasFlag(Cloud.ConversionType.TimeStream))
+                            else
                             {
-                                int idx = filename.LastIndexOf('/');
-                                //Context?.Logger.LogInformation($"Correction in seconds is: {timeCorrection}");
-                                if (TimeStream != null)
+                                var export = new BinRXD.ExportSettings()
                                 {
-                                    var res = await TimeStream.ToTimeStream(ddc, filename.Substring(idx + 1, filename.Length - idx - 5));
-                                    Log?.Log($"Writing to Timestream {res}");
+                                    StorageCache = StorageCacheType.Memory,
+                                    SignalsDatabase = new() { dbcCollection = signalsCollection }
+                                };
+                                Log?.Log($"Memory used after export settings created: {GC.GetTotalMemory(false) / (1024 * 1024)} MB");
+                                /*foreach (var collection in export.SignalsDatabase.dbcCollection)
+                                {
+                                    Log?.Log($"ExportSettingsBUS:{collection.BusChannel} signals:{collection.Signals.Count}");
+                                    foreach (var item in collection.Signals)
+                                    {
+                                        Log?.Log($"ExportSettingsBUS:{collection.BusChannel} signal:{item.Name}");
+                                    }
+                                }*/
+                                DoubleDataCollection ddc = rxd.ToDoubleData(export);
+                                Log?.Log($"Memory used after ddc: {GC.GetTotalMemory(false) / (1024 * 1024)} MB");
+
+                                //Write to InfluxDB
+                                if (conversion.HasFlag(Cloud.ConversionType.InfluxDB))
+                                {
+                                    Log?.Log("InfluxDB");
+
+                                    await ddc.ToInfluxDB(Log);
                                 }
-                                
-                            }
 
-                            //Mdf Export
-                            if (conversion.HasFlag(Cloud.ConversionType.Mdf))
-                            {
-                                Log?.Log($"Starting Mdf conversion {rxd.Count}");
-                                MemoryStream mdfStream = (MemoryStream)rxd.ToMF4(export.SignalsDatabase);
-                                if (mdfStream is null)
-                                    Log?.Log($"Mdf Conversion failed");
-                                else
+                                //Write to timestream table
+                                if (conversion.HasFlag(Cloud.ConversionType.TimeStream))
                                 {
-                                    Log?.Log($"Mdf Stream Size: {mdfStream?.Length}");
-                                    if (await Storage.UploadFile(Bucket, Path.ChangeExtension(filename, ".mf4"), mdfStream))
-                                        Log?.Log($"Mdf written successfuly");
+                                    int idx = filename.LastIndexOf('/');
+                                    //Context?.Logger.LogInformation($"Correction in seconds is: {timeCorrection}");
+                                    if (TimeStream != null)
+                                    {
+                                        var res = await TimeStream.ToTimeStream(ddc, filename.Substring(idx + 1, filename.Length - idx - 5));
+                                        Log?.Log($"Writing to Timestream {res}");
+                                    }
+
+                                }
+
+                                //Mdf Export
+                                if (conversion.HasFlag(Cloud.ConversionType.Mdf))
+                                {
+                                    Log?.Log($"Starting Mdf conversion {rxd.Count}");
+                                    MDF.UseCompression = true;
+                                    if (Config.ConfigJson.ContainsKey("MDF") && Config.ConfigJson.MDF.ContainsKey("usecompression"))
+                                        MDF.UseCompression = Config.ConfigJson.usecompression;
+                                    MemoryStream mdfStream = (MemoryStream)rxd.ToMF4(export.SignalsDatabase);
+                                    if (mdfStream is null)
+                                        Log?.Log($"Mdf Conversion failed");
                                     else
-                                        Log?.Log($"Mdf write to S3 failed");
-                                }
+                                    {
+                                        Log?.Log($"Mdf Stream Size: {mdfStream?.Length}");
+                                        if (await Storage.UploadFile(Bucket, Path.ChangeExtension(filename, ".mf4"), mdfStream))
+                                            Log?.Log($"Mdf written successfuly");
+                                        else
+                                            Log?.Log($"Mdf write to S3 failed");
+                                    }
 
-                            }
-                            //BLF Export
-                            if (conversion.HasFlag(Cloud.ConversionType.Blf))
-                            {
-                                Log?.Log($"Starting Blf conversion {rxd.Count}");
-                                MemoryStream blfStream = new();
-                                rxd.ToBLF(blfStream, null);
-                                if (blfStream is null)
-                                    Log?.Log($"Blf Conversion failed");
-                                else
+                                }
+                                //BLF Export
+                                if (conversion.HasFlag(Cloud.ConversionType.Blf))
                                 {
-                                    Log?.Log($"Blf Stream Size: {blfStream?.Length}");
-                                    if (await Storage.UploadFile(Bucket, Path.ChangeExtension(filename, ".blf"), blfStream))
-                                        Log?.Log($"Blf written successfuly");
+                                    Log?.Log($"Starting Blf conversion {rxd.Count}");
+                                    MemoryStream blfStream = new();
+                                    rxd.ToBLF(blfStream, null);
+                                    if (blfStream is null)
+                                        Log?.Log($"Blf Conversion failed");
                                     else
-                                        Log?.Log($"Blf write to S3 failed");
+                                    {
+                                        Log?.Log($"Blf Stream Size: {blfStream?.Length}");
+                                        if (await Storage.UploadFile(Bucket, Path.ChangeExtension(filename, ".blf"), blfStream))
+                                            Log?.Log($"Blf written successfuly");
+                                        else
+                                            Log?.Log($"Blf write to S3 failed");
+                                    }
                                 }
-                            }
 
-                            //CSV Export
-                            if (conversion.HasFlag(Cloud.ConversionType.Csv))
-                            {
-                                Log?.Log($"Memory used before CSV: {GC.GetTotalMemory(false) / (1024 * 1024)} MB");
-                                await CsvMultipartHelper.ToCsv(Storage, Bucket, Path.ChangeExtension(filename, ".csv"), rxd, signalsCollection, Log);
-                            }
+                                //CSV Export
+                                if (conversion.HasFlag(Cloud.ConversionType.Csv))
+                                {
+                                    Log?.Log($"Memory used before CSV: {GC.GetTotalMemory(false) / (1024 * 1024)} MB");
+                                    await CsvMultipartHelper.ToCsv(Storage, Bucket, Path.ChangeExtension(filename, ".csv"), rxd, signalsCollection, Log);
+                                }
 
-                            //Sync Export
-                            if (conversion.HasFlag(Cloud.ConversionType.Csv))
-                            {
-                                Log?.Log($"Memory used before CSV: {GC.GetTotalMemory(false) / (1024 * 1024)} MB");
-                                await CsvMultipartHelper.ToCsv(Storage, Bucket, Path.ChangeExtension(filename, ".csv"), rxd, signalsCollection, Log);
+                                //Sync Export
+                                if (conversion.HasFlag(Cloud.ConversionType.Csv))
+                                {
+                                    Log?.Log($"Memory used before CSV: {GC.GetTotalMemory(false) / (1024 * 1024)} MB");
+                                    await CsvMultipartHelper.ToCsv(Storage, Bucket, Path.ChangeExtension(filename, ".csv"), rxd, signalsCollection, Log);
+                                }
                             }
                         }
-                    }
                 }
                 catch (Exception e)
                 {
@@ -245,6 +249,9 @@ namespace Cloud
                                                 new RXDLogger("0002471", addon_files, LoadFileMethod),
                                             };
                             master.AttachedLoggers = attached;
+                            MDF.UseCompression = true;
+                            if (Config.ConfigJson.ContainsKey("MDF") && Config.ConfigJson.MDF.ContainsKey("usecompression"))
+                                MDF.UseCompression = Config.ConfigJson.usecompression;
                             MemoryStream mdfStream = (MemoryStream)master.ToMF4();
                             if (mdfStream is null)
                                 Log?.Log($"Mdf Conversion failed");

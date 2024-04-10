@@ -11,7 +11,11 @@ namespace SharedObjects
         static UInt32 pgnPdu2Flag = 0xF000u;
         static UInt32 identPdu2Flag = pgnPdu2Flag << 8;
 
+        public static UInt32 KanCanIdMask = 0x7FF0000;
+
         public UInt32 RawIdent { get; set; }
+
+        public UInt32 KanCanId => RawIdent & KanCanIdMask;
 
         // 3 bits unused
         public uint Unused

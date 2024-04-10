@@ -7,10 +7,10 @@ using System.Linq;
 namespace InfluxShared.FileObjects
 {
     public enum DBCByteOrder : byte { Intel, Motorola }
-    public enum DBCMessageType : byte { Standard, Extended, CanFDStandard, CanFDExtended, J1939PG }
+    public enum DBCMessageType : byte { Standard, Extended, CanFDStandard, CanFDExtended, J1939PG, Lin, KanCan, reserved }
     public enum DBCValueType : byte { Unsigned, Signed, IEEEFloat, IEEEDouble }
     public enum DBCSignalType : byte { Standard, Mode, ModeDependent }
-    public enum DBCFileType : byte { None, Generic, CAN, CANFD, LIN, J1939, Ethernet, FlexRay };
+    public enum DBCFileType : byte { None, Generic, CAN, CANFD, LIN, J1939, Ethernet, FlexRay, KanCan };
 
     public class DbcSelection
     {
@@ -48,6 +48,8 @@ namespace InfluxShared.FileObjects
             else
                 return false;
         }
+
+        public DbcItem Clone => (DbcItem)MemberwiseClone();
 
         public override ChannelDescriptor GetDescriptor => new ChannelDescriptor()
         {
@@ -252,6 +254,8 @@ namespace InfluxShared.FileObjects
                 case DBCMessageType.CanFDStandard: return "CAN FD Standard";
                 case DBCMessageType.CanFDExtended: return "CAN FD Extended";
                 case DBCMessageType.J1939PG: return "J1939 PG (ext. ID)";
+                case DBCMessageType.Lin: return "Lin";
+                case DBCMessageType.KanCan: return "KanCan";
                 default: return "Unknown";
             }
         }

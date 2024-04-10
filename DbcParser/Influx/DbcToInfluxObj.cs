@@ -1,4 +1,5 @@
 ﻿using InfluxShared.FileObjects;
+using SharedObjects;
 using System.Collections.Generic;
 
 namespace DbcParserLib.Influx
@@ -62,8 +63,14 @@ namespace DbcParserLib.Influx
                 msgI.DLC = msg.DLC;
                 msgI.Comment = msg.Comment;
                 msgI.Name = msg.Name;
-                msgI.MsgType = (DBCMessageType)(int)msg.Type;
+                msgI.MsgType = msg.Type;
                 msgI.Transmitter = msg.Transmitter;
+
+                if (dbc.FileType == DBCFileType.KanCan)
+                {
+                    msgI.CANID = msg.ID & CanIdentifier.KanCanIdMask;
+                    msgI.MsgType = DBCMessageType.KanCan;
+                }
 
                 influxDBC.Messages.Add(msgI);
                 foreach (var sig in msg.Signals)
@@ -100,11 +107,10 @@ namespace DbcParserLib.Influx
                                 sigI.Type = DBCSignalType.Mode;
                         }
                     }
-                    sigI.ValueType = sig.IsSigned == 1 ? DBCValueType.Signed : DBCValueType.Unsigned;
+                    sigI.ValueType = sig.ValueType;
                     sigI.ItemType = 0;
                     sigI.Ident = msg.ID;
                     sigI.Parent = msgI;
-                    //sigI.Mode = sig.Multiplexing
 
                     msgI.Items.Add(sigI);
                 }

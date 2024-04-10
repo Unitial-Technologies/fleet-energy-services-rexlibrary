@@ -1,4 +1,5 @@
-﻿using DbcParserLib.Model;
+﻿using DbcParser.Parsers;
+using DbcParserLib.Model;
 
 namespace DbcParserLib
 {
@@ -15,6 +16,8 @@ namespace DbcParserLib
         void LinkTableValuesToSignal(uint messageId, string signalName, string values);
 
         //        Influx Technology LTD
+        AttributeDefaultParser AttrDefaultParser { get; set; }
+
         void AddDBCAttribute(DBCAttribute attribute);
         void AddEnvVariable(EnvVariable variable);
         DBCAttribute GetDBCAttribute(string name);

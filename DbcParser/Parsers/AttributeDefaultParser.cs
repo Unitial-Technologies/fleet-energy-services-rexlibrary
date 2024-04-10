@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace DbcParser.Parsers
 {
-    public static class AttributeDefaultParser
+    public class AttributeDefaultParser
     {
 
-        public static List<uint> ID_List = new List<uint>();
-        public static Dictionary<string, string> AttrTypes = new Dictionary<string, string>();
-        public static bool isJ1939 = false;
+        public List<uint> ID_List = new List<uint>();
+        public Dictionary<string, string> AttrTypes = new Dictionary<string, string>();
+        public bool isJ1939 = false;
     }
 }

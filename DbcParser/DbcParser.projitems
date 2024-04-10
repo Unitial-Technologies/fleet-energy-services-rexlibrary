@@ -18,7 +18,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Influx\DbcToInfluxObj.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Model\MultiplexingInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Model\Node.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Packer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Parser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Parsers\AttributeLineParser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Parsers\CommentLineParser.cs" />

@@ -1,11 +1,10 @@
 using DbcParser.Parsers;
 using DbcParserLib.Model;
+using InfluxShared.FileObjects;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Xml.Linq;
 
 namespace DbcParserLib
 {
@@ -23,14 +22,16 @@ namespace DbcParserLib
         private Message m_currentMessage;
         private Attribute m_currentAttribute;
 
+        public AttributeDefaultParser AttrDefaultParser { get; set; } = new AttributeDefaultParser();
+
         public void SetDefaultAttrValues()
         {
 
-            foreach (uint ID in AttributeDefaultParser.ID_List)
+            foreach (uint ID in AttrDefaultParser.ID_List)
             {
                 if (m_messages.ContainsKey(ID))
                 {
-                    foreach (KeyValuePair<string, string> attrtypes in AttributeDefaultParser.AttrTypes)
+                    foreach (KeyValuePair<string, string> attrtypes in AttrDefaultParser.AttrTypes)
                     {
 
                         if (attrtypes.Key.Equals("VFrameFormat"))
@@ -40,15 +41,15 @@ namespace DbcParserLib
 
                                 switch (attrtypes.Value)
                                 {
-                                    case "StandardCAN": m_messages[ID].Type = Message.MsgType.Standard; break;
-                                    case "ExtendedCAN": m_messages[ID].Type = Message.MsgType.Extended; break;
-                                    case "CanFDStandard": m_messages[ID].Type = Message.MsgType.CanFDStandard; break;
-                                    case "CanFDExtended": m_messages[ID].Type = Message.MsgType.CanFDExtended; break;
-                                    case "StandardCAN_FD": m_messages[ID].Type = Message.MsgType.CanFDStandard; break;
-                                    case "ExtendedCAN_FD": m_messages[ID].Type = Message.MsgType.CanFDExtended; break;
-                                    case "J1939PG": m_messages[ID].Type = Message.MsgType.J1939PG; m_messages[ID].AttrValues["VFrameFormat"] = "3"; break;
-                                    case "Lin": m_messages[ID].Type = Message.MsgType.Lin; break;
-                                    case "reserved": m_messages[ID].Type = Message.MsgType.reserved; break;
+                                    case "StandardCAN": m_messages[ID].Type = DBCMessageType.Standard; break;
+                                    case "ExtendedCAN": m_messages[ID].Type = DBCMessageType.Extended; break;
+                                    case "CanFDStandard": m_messages[ID].Type = DBCMessageType.CanFDStandard; break;
+                                    case "CanFDExtended": m_messages[ID].Type = DBCMessageType.CanFDExtended; break;
+                                    case "StandardCAN_FD": m_messages[ID].Type = DBCMessageType.CanFDStandard; break;
+                                    case "ExtendedCAN_FD": m_messages[ID].Type = DBCMessageType.CanFDExtended; break;
+                                    case "J1939PG": m_messages[ID].Type = DBCMessageType.J1939PG; m_messages[ID].AttrValues["VFrameFormat"] = "3"; break;
+                                    case "Lin": m_messages[ID].Type = DBCMessageType.Lin; break;
+                                    case "reserved": m_messages[ID].Type = DBCMessageType.reserved; break;
                                     default: throw new Exception($"VFrameFormat Not Recognized:{attrtypes.Value}");
                                 }
 
@@ -57,14 +58,12 @@ namespace DbcParserLib
                             {
                                 switch (m_messages[ID].AttrValues["VFrameFormat"])
                                 {
-                                    case "0": m_messages[ID].Type = Message.MsgType.Standard; break;
-                                    case "1": m_messages[ID].Type = Message.MsgType.Extended; break;
-                                    case "14": m_messages[ID].Type = Message.MsgType.CanFDStandard; break;
-                                    case "15": m_messages[ID].Type = Message.MsgType.CanFDExtended; break;
-                                    case "3": m_messages[ID].Type = Message.MsgType.J1939PG; break;
-                                    case "Lin": m_messages[ID].Type = Message.MsgType.Lin; break;
-
-
+                                    case "0": m_messages[ID].Type = DBCMessageType.Standard; break;
+                                    case "1": m_messages[ID].Type = DBCMessageType.Extended; break;
+                                    case "14": m_messages[ID].Type = DBCMessageType.CanFDStandard; break;
+                                    case "15": m_messages[ID].Type = DBCMessageType.CanFDExtended; break;
+                                    case "3": m_messages[ID].Type = DBCMessageType.J1939PG; break;
+                                    case "Lin": m_messages[ID].Type = DBCMessageType.Lin; break;
                                 }
                             }
                         }
@@ -258,9 +257,35 @@ namespace DbcParserLib
             {
                 message.Value.Signals.Clear();
                 message.Value.Signals.AddRange(m_signals[message.Key].Values);
+
             }
 
-            return new Dbc(m_nodes.ToArray(), m_messages.Values.ToArray());
+            var dbc = new Dbc(m_nodes.ToArray(), m_messages.Values.ToArray());
+
+            string attrValue(string name) => AttrValues[name] ?? GetDBCAttribute(name)?.Default ?? "";
+
+            string dbcBus = attrValue("BusType");
+            if (dbcBus == "CAN")
+            {
+                string dbcProtocol = attrValue("ProtocolType");
+                if (dbcProtocol == "J1939")
+                    dbc.FileType = DBCFileType.J1939;
+                else if (dbcProtocol == "KanCan")
+                    dbc.FileType = DBCFileType.KanCan;
+                else
+                    dbc.FileType = DBCFileType.CAN;
+            }
+            else if (dbcBus == "CAN FD")
+                dbc.FileType = DBCFileType.CANFD;
+            else if (dbcBus == "LIN")
+                dbc.FileType = DBCFileType.LIN;
+            else
+            {
+                dbc.FileType = DBCFileType.Generic;
+
+            }
+
+            return dbc;
         }
     }
 

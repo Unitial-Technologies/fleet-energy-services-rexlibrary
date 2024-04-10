@@ -606,7 +606,11 @@ namespace RXD.Base
                         );
 
                     foreach (var group in mdfGroups)
+                    {
                         group.Value.dlblock.CreateNewData(builder).CreateWriteBuffers();
+                        /*if (group.Value.dlblock.CurrentDataBlock is DZBlock dz)
+                            dz.data.dz_zip_parameter = group.Value.cgblock.data.cg_size.cg_data_bytes + group.Value.dgblock.data.dg_rec_id_size;*/
+                    }
 
                     Type readerType = AttachedLoggers is null ? typeof(RXDataReader) : typeof(RXDataSyncReader);
                     using (var dr = (RXDataReader)Activator.CreateInstance(readerType, this))
@@ -679,6 +683,9 @@ namespace RXD.Base
                                 {
                                     FinishCurrentDLdatablock(dl);
                                     dl.CreateNewData(builder).CreateWriteBuffers();
+                                    /*if (dl.CurrentDataBlock is DZBlock dz)
+                                        dz.data.dz_zip_parameter = mdfGroups[frame.data.Type].cgblock.data.cg_size.cg_data_bytes + mdfGroups[frame.data.Type].dgblock.data.dg_rec_id_size;*/
+
                                 }
                             }
                         }

@@ -10,15 +10,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Drawing.Design;
 using System.Globalization;
-using System.Runtime.Intrinsics.Arm;
 using System.Threading;
 using System.Xml;
 using System.Collections.Generic;
 using System.Xml.Linq;
 using System.Drawing;
 using System.Drawing.Text;
-using System.ComponentModel.DataAnnotations;
 using System.Runtime.CompilerServices;
+using System.IO;
 
 namespace InfluxShared.FileObjects
 {   

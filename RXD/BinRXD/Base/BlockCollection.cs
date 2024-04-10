@@ -136,6 +136,11 @@ namespace RXD.Base
                             return CanIdentifier.IsPassFilter(busMsg.Message.CANID, record.data.CanID);
                         else
                             return false;
+                    case DBCMessageType.KanCan:
+                        if (!record.data.Flags.HasFlag(MessageFlags.EDL) && record.data.Flags.HasFlag(MessageFlags.IDE))
+                            return busMsg.Message.CANID == record.data.CanID.KanCanId;
+                        else
+                            return false;
                     default:
                         return false;
                 }

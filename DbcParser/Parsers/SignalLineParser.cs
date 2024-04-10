@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
+using InfluxShared.FileObjects;
 
 namespace DbcParserLib.Parsers
 {
@@ -11,69 +12,44 @@ namespace DbcParserLib.Parsers
 
         private const string SignalLineStarter = "SG_";
         private const string SignedSymbol = "-";
-        private static readonly string[] m_commaSeparator = new string[] { Helpers.Comma };
         private static readonly string[] m_commaSpaceSeparator = new string[] { Helpers.Space, Helpers.Comma };
-        private static readonly string[] m_signalLineSplittingItems = new string[] { Helpers.Space, "|", "@", "(", ")", "[", "|", "]" };
-        private const string SignalRegex = @"\s*SG_\s+([\w]+)\s*([Mm\d]*)\s*:\s*(\d+)\|(\d+)@([01])([+-])\s+\(([\d\+\-eE.]+),([\d\+\-eE.]+)\)\s+\[([\d\+\-eE.]+)\|([\d\+\-eE.]+)\]\s+""(.*)""\s+([\w\s,]+)";
+        private const string SignalRegex = @"\s*SG_\s+([A-Za-z0-9()_]+)\s*([Mm\d]*)\s*:\s*(\d+)\|(\d+)@([01])([+-])\s+\(([\d\+\-eE.]+),([\d\+\-eE.]+)\)\s+\[([\d\+\-eE.]+)\|([\d\+\-eE.]+)\]\s+""(.*)""\s+([\w\s,]+)";
 
-        private readonly ParsingStrategy m_parsingStrategy;
+        private const string SignalValTypeStarter = "SIG_VALTYPE_";
+        private const string SignalValTypeRegex = @"\s*SIG_VALTYPE_\s+(\d+)\s*([A-Za-z0-9()_]+)\s*:\s*(\d+)";
 
         public SignalLineParser()
-            : this(false)
+            : this(true)
         { }
 
         public SignalLineParser(bool withRegex)
         {
-            m_parsingStrategy = withRegex ? (ParsingStrategy)AddSignalRegex : AddSignal;
         }
 
         public bool TryParse(string line, IDbcBuilder builder)
         {
-            if (line.TrimStart().StartsWith(SignalLineStarter) == false)
+            if (line.TrimStart().StartsWith(SignalLineStarter))
+                AddSignal(line, builder);
+            else if (line.TrimStart().StartsWith(SignalValTypeStarter))
+                UpdateSignalValueType(line, builder);
+            else
                 return false;
 
-            m_parsingStrategy(line, builder);
             return true;
         }
 
-        private static void AddSignal(string line, IDbcBuilder builder)
+        private static void UpdateSignalValueType(string line, IDbcBuilder builder)
         {
-            int muxOffset = 0;
-            var records = line
-                .TrimStart()
-                .Split(m_signalLineSplittingItems, StringSplitOptions.RemoveEmptyEntries);
+            var match = Regex.Match(line, SignalValTypeRegex);
 
-            if (records.Length < 10)
+            if (match.Success == false)
                 return;
 
-            var sig = new Signal();
-            if (records[2] != ":")    // signal is multiplexed
-            {
-                muxOffset = 1;
-                sig.Multiplexing = records[2];
-            }
-
-            sig.Name = records[1];
-            sig.StartBit = ushort.Parse(records[3 + muxOffset], CultureInfo.InvariantCulture);
-            if (byte.TryParse(records[4 + muxOffset], NumberStyles.None, CultureInfo.InvariantCulture, out byte length) && length >= 0 && length <= 255)
-            {
-                sig.Length = length;
-            }
-            else
-            {
-                sig.Length = 8;
-            }
-            sig.ByteOrder = byte.Parse(records[5 + muxOffset].Substring(0, 1), CultureInfo.InvariantCulture);   // 0 = MSB (Motorola), 1 = LSB (Intel)
-            sig.IsSigned = (byte)(records[5 + muxOffset][1] == '+' ? 0 : 1);
-
-            sig.Factor = double.Parse(records[6 + muxOffset].Split(m_commaSeparator, StringSplitOptions.None)[0], CultureInfo.InvariantCulture);
-            sig.Offset = double.Parse(records[6 + muxOffset].Split(m_commaSeparator, StringSplitOptions.None)[1], CultureInfo.InvariantCulture);
-            sig.Minimum = double.Parse(records[7 + muxOffset], CultureInfo.InvariantCulture);
-            sig.Maximum = double.Parse(records[8 + muxOffset], CultureInfo.InvariantCulture);
-            sig.Unit = records[9 + muxOffset].Split(new string[] { "\"" }, StringSplitOptions.None)[1];
-            sig.Receiver = string.Join(Helpers.Space, records.Skip(10 + muxOffset)).Split(m_commaSpaceSeparator, StringSplitOptions.RemoveEmptyEntries);  // can be multiple receivers splitted by ","
-
-            builder.AddSignal(sig);
+            Signal sg;
+            if (int.TryParse(match.Groups[3].Value, out int sgType) && (sgType == 1 || sgType == 2))
+                if (uint.TryParse(match.Groups[1].Value, out UInt32 ident))
+                    if ((sg = builder.GetSignal(ident, match.Groups[2].Value)) != null)
+                        sg.ValueType = sgType == 1 ? DBCValueType.IEEEFloat : DBCValueType.IEEEDouble;
         }
 
         /// <summary>
@@ -82,21 +58,22 @@ namespace DbcParserLib.Parsers
         /// </summary>
         /// <param name="line">The line to be parsed</param>
         /// <param name="builder">The dbc builder to be used</param>
-        private static void AddSignalRegex(string line, IDbcBuilder builder)
+        private static void AddSignal(string line, IDbcBuilder builder)
         {
             var match = Regex.Match(line, SignalRegex);
 
             if (match.Success == false)
                 return;
 
+
             var sig = new Signal
             {
                 Multiplexing = match.Groups[2].Value,
                 Name = match.Groups[1].Value,
-                StartBit = byte.Parse(match.Groups[3].Value, CultureInfo.InvariantCulture),
-                Length = byte.Parse(match.Groups[4].Value, CultureInfo.InvariantCulture),
+                StartBit = ushort.Parse(match.Groups[3].Value, CultureInfo.InvariantCulture),                
+                //Length = byte.Parse(match.Groups[4].Value, CultureInfo.InvariantCulture),
                 ByteOrder = byte.Parse(match.Groups[5].Value, CultureInfo.InvariantCulture),   // 0 = MSB (Motorola), 1 = LSB (Intel)
-                IsSigned = (byte)(match.Groups[6].Value == SignedSymbol ? 1 : 0),
+                ValueType = match.Groups[6].Value == SignedSymbol ? DBCValueType.Signed : DBCValueType.Unsigned,
                 Factor = double.Parse(match.Groups[7].Value, CultureInfo.InvariantCulture),
                 Offset = double.Parse(match.Groups[8].Value, CultureInfo.InvariantCulture),
                 Minimum = double.Parse(match.Groups[9].Value, CultureInfo.InvariantCulture),
@@ -104,6 +81,12 @@ namespace DbcParserLib.Parsers
                 Unit = match.Groups[11].Value,
                 Receiver = match.Groups[12].Value.Split(m_commaSpaceSeparator, StringSplitOptions.RemoveEmptyEntries)  // can be multiple receivers splitted by ","
             };
+
+
+            if (byte.TryParse(match.Groups[4].Value, NumberStyles.None, CultureInfo.InvariantCulture, out byte length) && length >= 0 && length <= 255)
+                sig.Length = length;
+            else
+                sig.Length = 8;
 
             builder.AddSignal(sig);
         }
