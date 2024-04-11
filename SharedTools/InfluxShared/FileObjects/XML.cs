@@ -18,12 +18,14 @@ namespace InfluxShared.FileObjects
 {
     public class XML
     {
+
         public List<DbcMessage> CANMessages { get; set; }
+
         public string FileName { get; set; }
 
         public XML()
         {
-            CANMessages = new List<DbcMessage>();
+            CANMessages = new List<DbcMessage>();            
         }
 
         private bool isCondOk(XmlNode node, string text, bool byName, string byAttr)
@@ -61,7 +63,7 @@ namespace InfluxShared.FileObjects
             if (category.ToUpper() == "IDENTICAL")
             {
                 sig.MaxValue = Math.Pow(2, sig.BitCount);
-                if (sig.ValueType != DBCValueType.Signed)
+                if (sig.ValueType != DBCValueType.Unsigned)
                 {
                     sig.MaxValue = sig.MaxValue / 2;
                     sig.MinValue = sig.MaxValue * (-1);
@@ -100,8 +102,11 @@ namespace InfluxShared.FileObjects
                 if ((node1 == null) && (flagTable))
                 {
                     var s = strContent(XmlNode(child, "COMPU-CONST"), "VT");
-                    dbl = doubleContent(child, "LOWER-LIMIT");
-                    sig.Conversion.TableVerbal.Pairs.Add(dbl, s);
+                    //dbl = doubleContent(child, "LOWER-LIMIT");
+                    uint ll = uintContent(child, "LOWER-LIMIT");
+                    uint ul = uintContent(child, "UPPER-LIMIT");
+                    for (uint i = ll; i <= ul; i++)                    
+                        sig.Conversion.TableVerbal.Pairs.Add(i, s);
                 }
             }
         }

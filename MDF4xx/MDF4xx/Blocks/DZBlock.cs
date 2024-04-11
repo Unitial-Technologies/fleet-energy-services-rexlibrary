@@ -73,30 +73,20 @@ namespace MDF4xx.Blocks
 
         public UInt64 OrigDatalength => data.dz_org_data_length;
         public MemoryStream binary;
-        public ZlibStream zlBinary;
         public MemoryStream GetStream => binary;
 
-        public void CreateWriteBuffers()
-        {
-            binary = new MemoryStream();
-            zlBinary = new ZlibStream(binary, CompressionMode.Compress, CompressionLevel.Level4);
-            zlBinary.FlushMode = FlushType.Partial;
-        }
+        public void CreateWriteBuffers() => binary = new MemoryStream();
 
         public void EndWriting()
         {
-            zlBinary.Flush();
+            binary = new MemoryStream(ZlibStream.CompressBuffer(binary.ToArray()));
+            
             DataLength = binary.Length;
             data.dz_data_length = (UInt64)binary.Length;
         }
 
         public void FreeWriteBuffers()
         {
-            if (zlBinary is not null)
-            {
-                zlBinary.Dispose();
-                zlBinary = null;
-            }
             if (binary is not null)
             {
                 binary.Dispose();
@@ -107,7 +97,7 @@ namespace MDF4xx.Blocks
         public void WriteFrame(BaseDataFrame frame)
         {
             var fdata = frame.ToBytes();
-            zlBinary.Write(fdata, 0, fdata.Length);
+            binary.Write(fdata, 0, fdata.Length);
             data.dz_org_data_length += (UInt64)fdata.Length;
         }
 

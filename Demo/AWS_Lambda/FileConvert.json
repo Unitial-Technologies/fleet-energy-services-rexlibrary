@@ -7,7 +7,11 @@
     "bucket": "influx"
   },
   "CSV": {
-    "enabled": false
+    "enabled": false,
+    "resampling": {
+      "enabled": true,
+      "rate": 100
+    }
   },
   "AmazonTimestream": {
     "enabled": true,
@@ -18,5 +22,18 @@
     "enabled": true,
     "db_name": "default",
     "table_name": "default"
+  },
+  "MDF": {
+    "enabled": true,
+    "usecompression": false
+  },
+  "BLF": {
+    "enabled": false
+  },
+  "Synch": {
+    "enabled": true,
+    "main_logger": "",
+    "addon_loger1": "",
+    "lastfolder": ""
   }
 }

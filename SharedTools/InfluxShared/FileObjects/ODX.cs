@@ -18,6 +18,7 @@ using System.Drawing;
 using System.Drawing.Text;
 using System.Runtime.CompilerServices;
 using System.IO;
+using System.Security.Policy;
 
 namespace InfluxShared.FileObjects
 {   
@@ -34,6 +35,7 @@ namespace InfluxShared.FileObjects
         private List<ODX> List = new List<ODX>();
         private Dictionary<string, uint> IDList = new Dictionary<string, uint>();
         private string path; 
+        private ushort BytePos;
 
         public string FileName { get; set; }
         public XmlDocument xmlDoc = new XmlDocument();
@@ -58,7 +60,20 @@ namespace InfluxShared.FileObjects
             foreach (DbcMessage msgthis in CANMessages)
                 if (msgthis.CANID == msg.CANID)
                     return;
-                                       
+
+            // set DLC
+            ushort maxBitPos = 0;
+            foreach (DbcItem sig in msg.Items)
+                if (sig.StartBit + sig.BitCount > maxBitPos)
+                    maxBitPos = (ushort)(sig.StartBit + sig.BitCount);
+
+            msg.DLC = (byte)(maxBitPos / 8);
+            if (maxBitPos % 8 > 0)
+                msg.DLC = (byte)(msg.DLC + 1);
+
+            foreach (DbcItem sig in msg.Items)
+                sig.Parent = msg;
+          
             CANMessages.Add(msg);
         }
 
@@ -81,6 +96,10 @@ namespace InfluxShared.FileObjects
                 return DBCValueType.IEEEFloat;
             if (s.Contains("FLOAT64"))
                 return DBCValueType.IEEEDouble;
+            if (s.Contains("STRING"))
+                return DBCValueType.ASCII;
+            if (s.Contains("BYTEFIELD"))
+                return DBCValueType.BYTES;
 
             return DBCValueType.Unsigned;
         }
@@ -146,6 +165,22 @@ namespace InfluxShared.FileObjects
                 }*/
         }
 
+        private ushort BytePosition(XmlNode node)
+        {
+            if (node.ParentNode.ParentNode.Name == "STRUCTURE")                            
+                if (XmlNode(node, "BYTE-POSITION") != null)
+                    return (ushort)uintContent(node, "BYTE-POSITION");
+                else
+                    return 1;
+
+            if (node.ParentNode.ParentNode.Name == "POS-RESPONSE")
+                if (XmlNode(node, "BYTE-POSITION") != null)
+                    return (ushort)(uintContent(node, "BYTE-POSITION") - 3);
+
+
+            return ushort.MaxValue;
+        }
+
         private XmlNode PARAMBySemantic(XmlNode node, string semantic, int idx = 0)
         {
             if (node == null)
@@ -189,7 +224,8 @@ namespace InfluxShared.FileObjects
             int idx = 0;
             XmlNode prm = PARAMBySemantic(XmlNode(node, "PARAMS"), semantic, idx);
             while (prm != null)
-            {
+            {                
+                BytePos = BytePosition(prm);
                 ExtractDOP(prm, msg);
 
                 idx++;
@@ -279,6 +315,7 @@ namespace InfluxShared.FileObjects
             XmlNode struc = XmlNode(odxStructures, idRef, false, "ID");
             if (struc != null)
             {
+                msg.DLC = (byte)uintContent(struc, "BYTE-SIZE");
                 ExtractPARAM(struc, msg);
                 return;
             }
@@ -286,31 +323,31 @@ namespace InfluxShared.FileObjects
             if (dop == null)
                 return;
 
-            ushort bytePos = (ushort)(uintContent(node, "BYTE-POSITION") - 3);
-
             DbcItem sig = new DbcItem();
             sig.Ident = msg.CANID;
             sig.Name = IdentName(node);
             sig.Type = DBCSignalType.ModeDependent; // !
             sig.Comment = strContent(dop, "DESC");
-            sig.StartBit = (ushort)(bytePos * 8); // !
+
+            sig.StartBit = (ushort)(BytePos * 8 + uintContent(node, "BIT-POSITION"));
 
             XmlNode dct = XmlNode(dop, "DIAG-CODED-TYPE");
             sig.BitCount = (ushort)uintContent(dct, "BIT-LENGTH");
-            sig.ByteOrder = AttrByName(dct, "IS-HIGHLOW-BYTE-ORDER1") == "true" ? DBCByteOrder.Motorola : DBCByteOrder.Intel;
-            sig.ValueType = ValueType(XmlNode(dop, "PHYSICAL-TYPE"));
+            sig.ByteOrder = AttrByName(dct, "IS-HIGHLOW-BYTE-ORDER1") == "true" ? DBCByteOrder.Motorola : DBCByteOrder.Intel;            
+            sig.ValueType = ValueType(dct);
 
             ExtractCompuMethod(XmlNode(dop, "COMPU-METHOD"), sig);
 
             XmlNode ic = XmlNode(dop, "INTERNAL-CONSTR");
-            sig.MinValue = doubleContent(ic, "LOWER-LIMIT1", sig.MinValue);
+            sig.MinValue = doubleContent(ic, "LOWER-LIMIT", sig.MinValue);
             sig.MaxValue = doubleContent(ic, "UPPER-LIMIT", sig.MaxValue);
 
-            ExtractUnits(XmlNode(dop, "UNIT-REF"), sig);
+            ExtractUnits(XmlNode(dop, "UNIT-REF"), sig);            
+
+            if (sig.ValueType == DBCValueType.ASCII || sig.ValueType == DBCValueType.BYTES)
+                return;
 
             msg.Items.Add(sig);
-            byte dlc = (byte)(sig.BitCount / 8);
-            msg.DLC = (byte)(msg.DLC + dlc);           
         }
 
         private void ExtractREQUEST(XmlNode node, DbcMessage msg, uint id = 0)

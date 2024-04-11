@@ -125,7 +125,7 @@ namespace InfluxShared.FileObjects
                         {
                             sig.Type = DBCSignalType.ModeDependent;
                             sig.StartBit += (ushort)(segPos + 1);
-                            sig.Mode = val;
+                            sig.Mode = (byte)val;
                         }
                    
                     sigS.Conversion.TableVerbal.Pairs.Add(val, RefFromFullRef(Ref));
@@ -192,7 +192,7 @@ namespace InfluxShared.FileObjects
 
         public ARXML()
         {
-
+            //CANMessages = new List<DbcMessage>();
         }
 
         public void LoadFromFile(string filename)
