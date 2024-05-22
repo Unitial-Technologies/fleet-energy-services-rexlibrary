@@ -115,5 +115,6 @@ namespace InfluxShared.Generic
             return arr;
         }
 
+        public static string ToHexBinary(object obj) => BitConverter.ToString(ArrayToBytes(obj, (obj as Array).Length)).Replace("-", string.Empty);
     }
 }

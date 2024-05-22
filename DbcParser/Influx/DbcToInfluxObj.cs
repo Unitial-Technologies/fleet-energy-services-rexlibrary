@@ -1,12 +1,16 @@
 ﻿using InfluxShared.FileObjects;
+using InfluxShared.Helpers;
 using SharedObjects;
+using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 
 namespace DbcParserLib.Influx
 {
     public static class DbcToInfluxObj
     {
-        public static DBC FromList(List<DbcMessage> messages)
+        public static DBC FromList(List<ICanMessage> messages)
         {
             DBC influxDBC = new DBC();
             foreach (var msg in messages)
@@ -22,7 +26,7 @@ namespace DbcParserLib.Influx
                 msgI.Transmitter = msg.Transmitter;
 
                 influxDBC.Messages.Add(msgI);
-                foreach (var sig in msg.Items)
+                foreach (var sig in msg.Signals)
                 {
                     DbcItem sigI = new DbcItem();
                     sigI.Name = sig.Name;
@@ -133,11 +137,162 @@ namespace DbcParserLib.Influx
                     {
                         var expmsg = signalsCollection.AddMessage(i, msg);
                         foreach (var sig in msg.Items)
-                            expmsg.AddSignal(sig);
+                            if (sig is DbcItem dbcsignal)
+                                expmsg.AddSignal(dbcsignal);
                     }
                 }
             }
             return signalsCollection;
         }
+
+        static NumberFormatInfo nfi = new NumberFormatInfo() { NumberDecimalSeparator = ".", NumberGroupSeparator = "" };
+
+        static void WriteNodes(this DBC dbc, StreamWriter sw)
+        {
+            sw.WriteLine("");
+            string line = "BU_: Vector__XXX";
+            sw.WriteLine(line);
+        }
+
+        static string ModeStr(this ICanSignal sg) => sg.Type switch
+        {
+            DBCSignalType.Standard => "",
+            DBCSignalType.Mode => "M",
+            DBCSignalType.ModeDependent => $"m{sg.Mode}"
+        };
+
+        static void WriteMessages(this DBC dbc, StreamWriter sw)
+        {
+            foreach (DbcMessage msg in dbc.Messages)
+            {
+                sw.WriteLine(
+                    Environment.NewLine +
+                    $"BO_ {msg.CANID} {msg.Name.DbcNameClean()}: {msg.DLC} {msg.Transmitter ?? "Vector__XXX"}"
+                );
+
+                foreach (DbcItem sig in msg.Items)
+                    sw.WriteLine(
+                        $"\tSG_ {sig.Name.DbcNameClean()} {sig.ModeStr()} : {sig.StartBit} | {sig.BitCount}@" +
+                        (sig.ByteOrder == DBCByteOrder.Intel ? "1" : "0") +
+                        (sig.ValueType == DBCValueType.Unsigned ? "+" : "-") +
+                        $"({sig.Factor.ToString(nfi)},{sig.Offset.ToString(nfi)}) [{sig.MinValue.ToString(nfi)}|{sig.MaxValue.ToString(nfi)}]" +
+                        $"\"{sig.Units}\" Vector__XXX"
+                    );
+            }
+        }
+
+        static void WriteComments(this DBC dbc, StreamWriter sw)
+        {
+            sw.WriteLine("");
+
+            foreach (DbcMessage msg in dbc.Messages)
+            {
+                if (msg.Comment is not null && msg.Comment != "")
+                    sw.WriteLine(
+                        $"CM_ BO_ {msg.CANID} \"{msg.Comment}\";"
+                    );
+
+                foreach (DbcItem sig in msg.Items)
+                    if (sig.Comment is not null && sig.Comment != "")
+                        sw.WriteLine(
+                            $"CM_ SG_ {msg.CANID} {sig.Name.DbcNameClean()} \"{sig.Comment}\";"
+                        );
+            }
+        }
+
+        static void WriteEnumValues(this DBC dbc, StreamWriter sw)
+        {
+            sw.WriteLine("");
+
+            foreach (DbcMessage msg in dbc.Messages)
+                foreach (DbcItem sig in msg.Items)
+                    if (sig.Conversion.Type == ConversionType.FormulaAndTableVerbal)
+                    {
+                        sw.Write($"VAL_ {msg.CANID} {sig.Name.DbcNameClean()}");
+
+                        foreach (KeyValuePair<double, string> pair in sig.Conversion.TableVerbal.Pairs)
+                            sw.Write($" {pair.Key} \"{pair.Value}\"");
+                        sw.WriteLine(";");
+                    }
+        }
+
+        static void WriteFloatSignals(this DBC dbc, StreamWriter sw)
+        {
+            sw.WriteLine("");
+
+            foreach (DbcMessage msg in dbc.Messages)
+                foreach (DbcItem sig in msg.Items)
+                    if (sig.ValueType == DBCValueType.IEEEFloat || sig.ValueType == DBCValueType.IEEEDouble)
+                        sw.WriteLine(
+                            $"SIG_VALTYPE_ {msg.CANID} {sig.Name.DbcNameClean()} : {(sig.ValueType == DBCValueType.IEEEFloat ? "1" : "2")};"
+                        );
+        }
+
+        static private void SaveDBCToFile(this DBC dbc, string FileName)
+        {
+            using (StreamWriter sw = new StreamWriter(FileName))
+            {
+                sw.WriteLine(@"VERSION """"");
+                sw.WriteLine("");
+                sw.WriteLine("NS_:");
+                sw.WriteLine("");
+                sw.WriteLine("BS_:");
+
+                dbc.WriteNodes(sw);
+                dbc.WriteMessages(sw);
+                dbc.WriteComments(sw);
+
+                dbc.WriteEnumValues(sw);
+                dbc.WriteFloatSignals(sw);
+            }
+        }
+
+        static public void ExportToDBC(this List<ICanSignal> selected, string FileName)
+        {
+            if (FileName == "")
+                return;
+
+            if (selected.Count == 0)
+                return;
+
+            // export selected DbcItems to DbcMessage list like multiplexed signals
+            List<DbcMessage> Messages = new List<DbcMessage>();
+            DbcMessage msg = new DbcMessage();
+            msg.Name = "Service22MUXSignals";
+            msg.DLC = 8;
+            msg.Transmitter = "Vector__XXX";
+            msg.CANID = 0x7e8;  // must be user defined
+            msg.Comment = "Influx_Service_0x22_Items_To_MUX_Signals";
+
+            DbcItem sig = new DbcItem();
+            sig.Name = "Service22SELECTOR";
+            sig.Type = DBCSignalType.Mode;
+            sig.StartBit = 15;
+            sig.BitCount = 24;
+            sig.ByteOrder = DBCByteOrder.Motorola;
+            sig.ValueType = DBCValueType.Unsigned;
+            sig.Conversion.Formula.CoeffB = 1;
+            sig.Conversion.Formula.CoeffC = 0;
+            sig.MinValue = 0x620001;
+            sig.MaxValue = 0x62FFFF;
+            sig.Comment = "Service_0x22_ID_SELECTOR";
+
+            msg.Items.Add(sig);
+
+            foreach (DbcItem item in selected)
+            {
+                sig = item.Clone;
+                sig.Type = DBCSignalType.ModeDependent;
+                sig.Mode = (0x62 << 16) + (UInt32)sig.Ident;
+                sig.Ident = msg.CANID;
+                sig.StartBit = (ushort)(sig.StartBit + 32);
+
+                msg.Items.Add(sig);
+            }
+
+            Messages.Add(msg);
+            new DBC { Messages = Messages }.SaveDBCToFile(FileName);
+        }
+
     }
 }

@@ -4,24 +4,12 @@
  * ------------------------------------
  */
 
-using InfluxShared.Generic;
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Drawing.Design;
-using System.Globalization;
-using System.Threading;
-using System.Xml;
-using System.Collections.Generic;
-using System.Xml.Linq;
-using System.Drawing;
-using System.Drawing.Text;
-using System.Runtime.CompilerServices;
 using System.IO;
-using System.Security.Policy;
+using System.Xml;
 
 namespace InfluxShared.FileObjects
-{   
+{
     public class ODX : XML
     {
         private XmlNode odxDiagComms;
@@ -34,7 +22,7 @@ namespace InfluxShared.FileObjects
         private XmlNode odxTables;
         private List<ODX> List = new List<ODX>();
         private Dictionary<string, uint> IDList = new Dictionary<string, uint>();
-        private string path; 
+        private string path;
         private ushort BytePos;
 
         public string FileName { get; set; }
@@ -52,18 +40,18 @@ namespace InfluxShared.FileObjects
             odx.odxTables = XmlNode(odxDiagDataDictionarySpec, "TABLES");
         }
 
-        private void AddMsg(DbcMessage msg)
+        private void AddMsg(ICanMessage msg)
         {
-            if ((msg.CANID == 0) || (msg.Items.Count == 0))
+            if ((msg.CANID == 0) || (msg.Signals.Count == 0))
                 return;
 
-            foreach (DbcMessage msgthis in CANMessages)
+            foreach (var msgthis in CANMessages)
                 if (msgthis.CANID == msg.CANID)
                     return;
 
             // set DLC
             ushort maxBitPos = 0;
-            foreach (DbcItem sig in msg.Items)
+            foreach (var sig in msg.Signals)
                 if (sig.StartBit + sig.BitCount > maxBitPos)
                     maxBitPos = (ushort)(sig.StartBit + sig.BitCount);
 
@@ -71,9 +59,9 @@ namespace InfluxShared.FileObjects
             if (maxBitPos % 8 > 0)
                 msg.DLC = (byte)(msg.DLC + 1);
 
-            foreach (DbcItem sig in msg.Items)
-                sig.Parent = msg;
-          
+            foreach (var sig in msg.Signals)
+                ((DbcItem)sig).Parent = msg as DbcMessage;
+
             CANMessages.Add(msg);
         }
 
@@ -87,6 +75,9 @@ namespace InfluxShared.FileObjects
 
         private DBCValueType ValueType(XmlNode node)
         {
+            if (node == null)
+                return DBCValueType.Unsigned;
+
             string s = AttrByName(node, "BASE-DATA-TYPE");
             if (s.Contains("UINT"))
                 return DBCValueType.Unsigned;
@@ -106,12 +97,12 @@ namespace InfluxShared.FileObjects
 
         private ODX ODXFromList(string fileName)
         {
-            foreach (ODX odx in List)            
+            foreach (ODX odx in List)
                 if (odx.FileName.Contains(fileName))
                     return odx;
 
             string[] files = Directory.GetFiles(path);
-            foreach (string file in files)            
+            foreach (string file in files)
                 if (Path.GetFileName(file).Contains(fileName))
                 {
                     ODX odx = new ODX();
@@ -119,7 +110,7 @@ namespace InfluxShared.FileObjects
                     List.Add(odx);
 
                     return odx;
-                }            
+                }
 
             return null;
         }
@@ -133,11 +124,11 @@ namespace InfluxShared.FileObjects
                 foreach (ODX odx in List)
                     if (odx.FileName.Contains(fileName))
                         return true;
-                        
+
                 return false;
             }
-            
-            if (odxDiagComms != null)                        
+
+            if (odxDiagComms != null)
                 foreach (XmlNode child in odxDiagComms.ChildNodes)
                 {
                     XmlNode fcrs = XmlNode(child, "FUNCT-CLASS-REFS");
@@ -145,29 +136,29 @@ namespace InfluxShared.FileObjects
                         continue;
 
                     XmlNode fcr = XmlNode(fcrs, "FUNCT-CLASS-REF");
-                    string docRef = AttrByName(fcr, "DOCREF");                
+                    string docRef = AttrByName(fcr, "DOCREF");
                     if (existsInList(docRef) || (docRef == ""))
                         continue;
 
                     ODX odx = ODXFromList(docRef);
-                }    
-            
-/*            if (odxStructures != null)
-                foreach (XmlNode child in odxStructures.ChildNodes)
-                {
-                    XmlNode prms = XmlNode(child, "PARAMS");
-                    foreach (XmlNode prm in prms.ChildNodes)
-                    {
-                        string docRef = AttrByName(XmlNode(prm, "DOP-REF"), "DOCREF");
-                        if (existsInList(docRef) || (docRef == ""))
-                            continue;
-                    }
-                }*/
+                }
+
+            /*            if (odxStructures != null)
+                            foreach (XmlNode child in odxStructures.ChildNodes)
+                            {
+                                XmlNode prms = XmlNode(child, "PARAMS");
+                                foreach (XmlNode prm in prms.ChildNodes)
+                                {
+                                    string docRef = AttrByName(XmlNode(prm, "DOP-REF"), "DOCREF");
+                                    if (existsInList(docRef) || (docRef == ""))
+                                        continue;
+                                }
+                            }*/
         }
 
         private ushort BytePosition(XmlNode node)
         {
-            if (node.ParentNode.ParentNode.Name == "STRUCTURE")                            
+            if (node.ParentNode.ParentNode.Name == "STRUCTURE")
                 if (XmlNode(node, "BYTE-POSITION") != null)
                     return (ushort)uintContent(node, "BYTE-POSITION");
                 else
@@ -187,17 +178,17 @@ namespace InfluxShared.FileObjects
                 return null;
 
             int c = 0;
-            foreach (XmlNode child in node.ChildNodes)            
+            foreach (XmlNode child in node.ChildNodes)
                 if (AttrByName(child, "SEMANTIC").ToUpper() == semantic.ToUpper())
                 {
                     if (c == idx)
                         return child;
                     c++;
                 }
-            
+
             return null;
         }
-        private void ExtractUnits(XmlNode node, DbcItem sig)
+        private void ExtractUnits(XmlNode node, ICanSignal sig)
         {
             if (node == null)
                 return;
@@ -211,7 +202,7 @@ namespace InfluxShared.FileObjects
                 sig.Units = strContent(unit, "SHORT-NAME");
         }
 
-        private void ExtractCompuMethod(XmlNode node, DbcItem sig)
+        private void ExtractCompuMethod(XmlNode node, ICanSignal sig)
         {
             if (node == null)
                 return;
@@ -219,12 +210,12 @@ namespace InfluxShared.FileObjects
             CompuMethodContent(node, sig);
         }
 
-        private void ExtractPARAM(XmlNode node, DbcMessage msg, string semantic = "DATA")
+        private void ExtractPARAM(XmlNode node, ICanMessage msg, string semantic = "DATA")
         {
             int idx = 0;
             XmlNode prm = PARAMBySemantic(XmlNode(node, "PARAMS"), semantic, idx);
             while (prm != null)
-            {                
+            {
                 BytePos = BytePosition(prm);
                 ExtractDOP(prm, msg);
 
@@ -269,21 +260,21 @@ namespace InfluxShared.FileObjects
                 Ref = AttrByName(XmlNode(child, "STRUCTURE-REF"), "ID-REF");
                 XmlNode struc = XmlNode(odxStructures, Ref, false, "ID");
 
-                foreach (KeyValuePair<string, uint> pair in IDList)                
+                foreach (KeyValuePair<string, uint> pair in IDList)
                     if (pair.Key == key)
                     {
-                        DbcMessage msg = new DbcMessage();
+                        var msg = new DbcMessage();
                         msg.Name = key;
                         msg.CANID = pair.Value;
                         ExtractPARAM(struc, msg);
-                        AddMsg(msg);                        
-                    }                
+                        AddMsg(msg);
+                    }
             }
         }
 
-        private void ExtractEOPF(XmlNode node, DbcMessage msg)
+        private void ExtractEOPF(XmlNode node, ICanMessage msg)
         {
-            if(node == null) 
+            if (node == null)
                 return;
             if (node.Name.ToUpper() != "END-OF-PDU-FIELD")
                 return;
@@ -293,24 +284,24 @@ namespace InfluxShared.FileObjects
             ExtractPARAM(struc, msg);
         }
 
-        private void ExtractDOP(XmlNode node, DbcMessage msg)
+        private void ExtractDOP(XmlNode node, ICanMessage msg)
         {
             if (node == null)
                 return;
 
             XmlNode Ref = XmlNode(node, "DOP-REF");
             string idRef = AttrByName(Ref, "ID-REF");
-            string docRef = AttrByName(Ref, "DOCREF");           
+            string docRef = AttrByName(Ref, "DOCREF");
             XmlNode dop = XmlNode(odxDiagDataDictionarySpec, idRef, false, "ID");
             if (dop == null)
                 dop = ObjFromExternalFile(docRef, idRef);
-            
+
             if (dop != null)
                 if (dop.Name.ToUpper() == "END-OF-PDU-FIELD")
                 {
                     ExtractEOPF(dop, msg);
-                    return;               
-            }
+                    return;
+                }
 
             XmlNode struc = XmlNode(odxStructures, idRef, false, "ID");
             if (struc != null)
@@ -333,8 +324,8 @@ namespace InfluxShared.FileObjects
 
             XmlNode dct = XmlNode(dop, "DIAG-CODED-TYPE");
             sig.BitCount = (ushort)uintContent(dct, "BIT-LENGTH");
-            sig.ByteOrder = AttrByName(dct, "IS-HIGHLOW-BYTE-ORDER1") == "true" ? DBCByteOrder.Motorola : DBCByteOrder.Intel;            
-            sig.ValueType = ValueType(dct);
+            sig.ByteOrder = AttrByName(dct, "IS-HIGHLOW-BYTE-ORDER1") == "true" ? DBCByteOrder.Motorola : DBCByteOrder.Intel;
+            sig.ValueType = ValueType(XmlNode(dop, "PHYSICAL-TYPE"));
 
             ExtractCompuMethod(XmlNode(dop, "COMPU-METHOD"), sig);
 
@@ -342,15 +333,15 @@ namespace InfluxShared.FileObjects
             sig.MinValue = doubleContent(ic, "LOWER-LIMIT", sig.MinValue);
             sig.MaxValue = doubleContent(ic, "UPPER-LIMIT", sig.MaxValue);
 
-            ExtractUnits(XmlNode(dop, "UNIT-REF"), sig);            
+            ExtractUnits(XmlNode(dop, "UNIT-REF"), sig);
 
             if (sig.ValueType == DBCValueType.ASCII || sig.ValueType == DBCValueType.BYTES)
                 return;
 
-            msg.Items.Add(sig);
+            (msg as DbcMessage).Items.Add(sig);
         }
 
-        private void ExtractREQUEST(XmlNode node, DbcMessage msg, uint id = 0)
+        private void ExtractREQUEST(XmlNode node, ICanMessage msg, uint id = 0)
         {
             XmlNode reqRef = XmlNode(node, "REQUEST-REF");
             string Ref = AttrByName(reqRef, "ID-REF");
@@ -377,13 +368,13 @@ namespace InfluxShared.FileObjects
 
             IDList.Clear();
             Ref = AttrByName(XmlNode(prm, "DOP-SNREF"), "SHORT-NAME");
-            XmlNode dop = XmlNode(odxDataObjectProp, Ref, false, "ID");            
+            XmlNode dop = XmlNode(odxDataObjectProp, Ref, false, "ID");
             if (strContent(XmlNode(dop, "COMPU-METHOD"), "CATEGORY").ToUpper() != "TEXTTABLE")
                 return;
             XmlNode citp = XmlNode(XmlNode(dop, "COMPU-METHOD"), "COMPU-INTERNAL-TO-PHYS");
             citp = XmlNode(citp, "COMPU-SCALES");
             foreach (XmlNode child in citp.ChildNodes)
-            {               
+            {
                 uint ID = uintContent(child, "LOWER-LIMIT");
                 XmlNode cc = XmlNode(child, "COMPU-CONST");
                 string name = strContent(cc, "VT");
@@ -391,7 +382,7 @@ namespace InfluxShared.FileObjects
             }
         }
 
-        private void ExtractPOS_RESP(XmlNode node, DbcMessage msg, uint id = 0)
+        private void ExtractPOS_RESP(XmlNode node, ICanMessage msg, uint id = 0)
         {
             XmlNode prr = XmlNode(node, "POS-RESPONSE-REFS");
             string Ref = AttrByName(XmlNode(prr, "POS-RESPONSE-REF"), "ID-REF");
@@ -407,7 +398,7 @@ namespace InfluxShared.FileObjects
 
         private void ExtractPOS_RESP(XmlNode node, uint id)
         {
-            if (IDList.Count == 0) 
+            if (IDList.Count == 0)
                 return;
 
             XmlNode prr = XmlNode(node, "POS-RESPONSE-REFS");
@@ -419,16 +410,16 @@ namespace InfluxShared.FileObjects
         {
             if (node.Name != "DIAG-SERVICE")
                 return;
-            
+
             string shname = strContent(node, "SHORT-NAME"); ///
 
-            DbcMessage msg = new DbcMessage();
+            var msg = new DbcMessage();
             msg.Name = IdentName(node);
             ExtractREQUEST(node, msg, id);
 
             ExtractPOS_RESP(node, msg, id);
-            if (msg.CANID != 0)                                                                     
-                AddMsg(msg);            
+            if (msg.CANID != 0)
+                AddMsg(msg);
         }
 
         public ODX()
@@ -443,7 +434,7 @@ namespace InfluxShared.FileObjects
                 odx.LoadTmpNodes(this, odx.xmlDoc);
                 if (odx.odxDiagComms != null)
                     foreach (XmlNode child in odx.odxDiagComms.ChildNodes)
-                    {                    
+                    {
                         CreateServiceByID(child, 0x22);
                     }
             }
@@ -472,7 +463,7 @@ namespace InfluxShared.FileObjects
             //CheckExternalFiles();
             DoProcess(this);
             foreach (ODX odx in List)
-                DoProcess(odx);                    
+                DoProcess(odx);
         }
 
         // MDX (GDX) support
@@ -492,10 +483,10 @@ namespace InfluxShared.FileObjects
 
             if (node.ChildNodes.Count == 0)
                 return;
-           
+
             foreach (XmlNode child in node.ChildNodes)
             {
-                DbcMessage msg = new DbcMessage();                
+                var msg = new DbcMessage();
                 msg.Name = strContent(child, "NAME");
                 msg.CANID = hexContent(child, "NUMBER");
                 msg.DLC = (byte)uintContent(child, "BYTE_SIZE");
@@ -507,9 +498,9 @@ namespace InfluxShared.FileObjects
             }
         }
 
-        public void ExtractSubField(XmlNode node, DbcMessage msg)
+        public void ExtractSubField(XmlNode node, ICanMessage msg)
         {
-            if (node == null) 
+            if (node == null)
                 return;
 
             foreach (XmlNode child in node.ChildNodes)
@@ -517,44 +508,44 @@ namespace InfluxShared.FileObjects
                 if (child.Name.ToUpper() != "SUB_FIELD")
                     continue;
 
-                DbcItem sig = new DbcItem();
+                var sig = new DbcItem();
                 sig.Ident = msg.CANID;
                 sig.Name = strContent(child, "NAME");
                 if (sig.Name == "")
                     sig.Name = msg.Name;
-                
+
                 string lsb = strContent(child, "LEAST_SIG_BIT");
                 string msb = strContent(child, "MOST_SIG_BIT");
                 sig.ByteOrder = (lsb.Contains("-") || msb.Contains("-")) ? DBCByteOrder.Motorola : DBCByteOrder.Intel;  // надявам се да е вярно               
 
                 sig.StartBit = (ushort)uintContent(child, "LEAST_SIG_BIT");
-                if (sig.ByteOrder == DBCByteOrder.Intel)                   
-                    sig.BitCount = (ushort)(uintContent(child, "MOST_SIG_BIT") - sig.StartBit + 1);                
-                else                
-                    sig.BitCount = (ushort)(sig.StartBit - uintContent(child, "MOST_SIG_BIT") + 1);               
+                if (sig.ByteOrder == DBCByteOrder.Intel)
+                    sig.BitCount = (ushort)(uintContent(child, "MOST_SIG_BIT") - sig.StartBit + 1);
+                else
+                    sig.BitCount = (ushort)(sig.StartBit - uintContent(child, "MOST_SIG_BIT") + 1);
 
                 ExtractDataDefinition(child, sig);
 
-                if (sig.Conversion.Type == ConversionType.None)    
+                if (sig.Conversion.Type == ConversionType.None)
                     return;
 
-                msg.Items.Add(sig);
+                (msg as DbcMessage).Items.Add(sig);
             }
         }
 
-        private void ExtractDataDefinition(XmlNode node, DbcItem sig)
+        private void ExtractDataDefinition(XmlNode node, ICanSignal sig)
         {
-            if (node == null) 
+            if (node == null)
                 return;
 
             XmlNode dataDef = XmlNode(node, "DATA_DEFINITION");
-            if (dataDef == null) 
+            if (dataDef == null)
                 return;
 
             sig.Comment = strContent(dataDef, "DESCRIPTION");
             string dataType = strContent(dataDef, "DATA_TYPE").Replace(" ", string.Empty);
             sig.Conversion.Type = ConversionType.Formula;
-            if (dataType.ToLower() == "enumerated") 
+            if (dataType.ToLower() == "enumerated")
                 sig.Conversion.Type = ConversionType.FormulaAndTableVerbal;
             // DATA_TYPE ascii, bcd, bytes не са реализирани
             if (dataType.ToLower() == "unknown")    // има и такъв, не знам какво да го правя, затова ...
@@ -571,13 +562,13 @@ namespace InfluxShared.FileObjects
             ExtractNumericParams(dataDef, sig);
         }
 
-        private void ExtractEnumParams(XmlNode node, DbcItem sig)
+        private void ExtractEnumParams(XmlNode node, ICanSignal sig)
         {
             if (node == null)
                 return;
 
             XmlNode enumParams = XmlNode(node, "ENUMERATED_PARAMETERS");
-            if (enumParams == null) 
+            if (enumParams == null)
                 return;
 
             foreach (XmlNode child in enumParams.ChildNodes)
@@ -591,7 +582,7 @@ namespace InfluxShared.FileObjects
             }
         }
 
-        private void ExtractNumericParams(XmlNode node, DbcItem sig)
+        private void ExtractNumericParams(XmlNode node, ICanSignal sig)
         {
             if (node == null)
                 return;
@@ -607,7 +598,7 @@ namespace InfluxShared.FileObjects
             XmlNode resolution = XmlNode(numParams, "RESOLUTION");
             sig.Conversion.Formula.CoeffB = doubleContent(resolution, "RESOLUTION", 1);
             sig.Conversion.Formula.CoeffC = doubleContent(numParams, "OFFSET");
-            
+
             // ailetnative way to calc CoeffB            
             if ((AttrByName(resolution, "numerator") != "") && (AttrByName(resolution, "denominator") != ""))
             {

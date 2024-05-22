@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace InfluxShared.Helpers
 {
@@ -19,6 +20,7 @@ namespace InfluxShared.Helpers
         private static char[] UpperLookup = new char[CaseLookupSize];
 
         private static string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        private static string DbcChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_";
 
         static StringHelper()
         {
@@ -91,6 +93,17 @@ namespace InfluxShared.Helpers
                 tmp += AllowedChars.Contains(c) ? c : ReplaceWith;
 
             return tmp;
+        }
+
+        public static bool IsDigit(this char ch) => ch >= '0' && ch <= '9';
+
+        public static string DbcNameClean(this string str)
+        {
+            str = str.ReplaceInvalid(DbcChars.ToCharArray(), "_");
+            if (str.Length > 0 && str[0].IsDigit())
+                str = '_' + str;
+
+            return str;
         }
 
         public static string GenerateFileName(this string Directory, string Extension, int FileNameLength = 20)

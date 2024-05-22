@@ -102,8 +102,8 @@
     <Content Include="InfluxStudio.ico" />
     <Content Include="RexDesk_24.ico" />
   </ItemGroup>
-  <Import Project="..\BinRXD\BinRXD.projitems" Label="Shared" />
   <Import Project="..\..\SharedTools\InfluxShared\InfluxShared.projitems" Label="Shared" />
   <Import Project="..\..\MDF4xx\MDF4xx\MDF4xx.projitems" Label="Shared" />
+  <Import Project="..\BinRXD\BinRXD.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

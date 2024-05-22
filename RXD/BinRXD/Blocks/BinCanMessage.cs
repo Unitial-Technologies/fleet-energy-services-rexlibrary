@@ -1,4 +1,5 @@
-﻿using System;
+﻿using InfluxShared.Generic;
+using System;
 
 namespace RXD.Blocks
 {
@@ -8,13 +9,6 @@ namespace RXD.Blocks
         Input,
         OutputEvent,
         OutputPeriodic
-    }
-
-    public enum CanFDMessageType : byte
-    {
-        NORMAL_CAN,
-        FD_CAN,
-        FD_FAST_CAN,
     }
 
     #endregion
@@ -45,6 +39,10 @@ namespace RXD.Blocks
             Downsampling,
             Delay,
             NextOutputMessageID,
+           /* ResponseUID,
+            ResponseTimeout,
+            ResponseAttempts,
+            ResponseObligatory*/
         }
 
         #region Do not touch these
@@ -102,6 +100,15 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.Delay, typeof(UInt32));
                 data.AddProperty(BinProp.NextOutputMessageID, typeof(UInt16));
             });
+           /* Versions[9] = new Action(() =>
+            {
+                Versions[8].DynamicInvoke();
+                data.AddProperty(BinProp.ResponseUID, typeof(ushort));
+                data.AddProperty(BinProp.ResponseTimeout, typeof(uint));
+                data.AddProperty(BinProp.ResponseAttempts, typeof(ushort));
+                data.AddProperty(BinProp.ResponseObligatory, typeof(byte));
+
+            });*/
             AddInput(BinProp.InterfaceUID.ToString());
             AddInput(BinProp.InputMessageUID.ToString());
             AddOutput("UID");

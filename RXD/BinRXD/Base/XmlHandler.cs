@@ -34,7 +34,7 @@ namespace RXD.Base
 
         ValidationEventHandler xmlValidationHandler = null;
 
-        public XmlHandler(string xmlPath)
+        public XmlHandler(string xmlPath, string xsdPath = null)
         {
             xmlFileName = xmlPath;
             if (File.Exists(xmlFileName))
@@ -45,7 +45,7 @@ namespace RXD.Base
             //xmlValidationHandler = new ValidationEventHandler((object sender, ValidationEventArgs args) => { });
 
             // Read XSD schema from local file
-            XmlTextReader schemaReader = new XmlTextReader(xsdLocalPath);
+            XmlTextReader schemaReader = new XmlTextReader(xsdPath ?? xsdLocalPath);
             schema = XmlSchema.Read(schemaReader, xmlValidationHandler);
         }
 

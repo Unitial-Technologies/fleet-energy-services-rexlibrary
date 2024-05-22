@@ -9,6 +9,7 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <!-- Generate ready to run images during publishing to improve cold start time. -->
     <PublishReadyToRun>true</PublishReadyToRun>
+    <Version>1.2.36</Version>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\..\SharedTools\Shared\Helpers\DataHelper.cs" Link="DataHelper.cs" />

@@ -168,13 +168,6 @@ namespace Cloud
                                     Log?.Log($"Memory used before CSV: {GC.GetTotalMemory(false) / (1024 * 1024)} MB");
                                     await CsvMultipartHelper.ToCsv(Storage, Bucket, Path.ChangeExtension(filename, ".csv"), rxd, signalsCollection, Log);
                                 }
-
-                                //Sync Export
-                                if (conversion.HasFlag(Cloud.ConversionType.Csv))
-                                {
-                                    Log?.Log($"Memory used before CSV: {GC.GetTotalMemory(false) / (1024 * 1024)} MB");
-                                    await CsvMultipartHelper.ToCsv(Storage, Bucket, Path.ChangeExtension(filename, ".csv"), rxd, signalsCollection, Log);
-                                }
                             }
                         }
                 }
@@ -286,16 +279,30 @@ namespace Cloud
             for (int i = 0; i < 4; i++)
             {
                 string dbcPath = Path.Combine(LoggerDir, $"dbc_can{i}.dbc").Replace("\\", "/");
-                Stream dbcStream = await Storage.GetFile(bucket, dbcPath);
-                if (dbcStream is null)
+                Stream s3Stream = await Storage.GetFile(bucket, dbcPath);
+                if (s3Stream is null)
                 {
                     Log?.Log($"DBC File Not Found! {dbcPath}");
                     listDbc.Add(null);
                     continue;
                 }
+                Stream dbcStream = new MemoryStream();
+                s3Stream.CopyTo(dbcStream);
+                s3Stream.Dispose();
+                dbcStream.Position = 0;
+                Log?.Log($"DBC Stream size is {dbcStream.Length}");
+                
                 Parser dbcParser = new();
                 Dbc dbc = dbcParser.ParseFromStream(dbcStream);
-                Log?.Log("DBC Messages count:" + dbc.Messages.ToList().Count.ToString());
+                Log?.Log($"DBC Messages count dbc_can{i}.dbc :" + dbc.Messages.ToList().Count.ToString());
+
+                //Debug DBC messages
+                /*string allmsg = "";
+                foreach (var msg in dbc.Messages)
+                {
+                    allmsg += $"0x{msg.ID.ToString("X4")}:{msg.Name}" + Environment.NewLine;
+                }
+                Log?.Log(allmsg);*/
 
                 if (dbc is null)
                 {

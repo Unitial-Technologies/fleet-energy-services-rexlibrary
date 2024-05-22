@@ -1,9 +1,10 @@
-﻿using InfluxShared.Objects;
+﻿using InfluxShared.Helpers;
+using InfluxShared.Objects;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
+using System.Runtime.CompilerServices;
 
 namespace InfluxShared.FileObjects
 {
@@ -13,6 +14,7 @@ namespace InfluxShared.FileObjects
     public enum DBCSignalType : byte { Standard, Mode, ModeDependent }
     public enum DBCFileType : byte { None, Generic, CAN, CANFD, LIN, J1939, Ethernet, FlexRay, KanCan };
 
+    
 
     public class DbcSelection
     {
@@ -20,7 +22,7 @@ namespace InfluxShared.FileObjects
         public DbcItem Item { get; set; }
     }
 
-    public class DbcItem : BasicItemInfo
+    public class DbcItem : BasicItemInfo, ICanSignal
     {        
         public ushort StartBit { get; set; }
         public ushort BitCount { get; set; }
@@ -28,30 +30,24 @@ namespace InfluxShared.FileObjects
         public UInt32 Mode { get; set; }   //If the signal is Mode Dependent
         public DBCByteOrder ByteOrder { get; set; }
         public DBCValueType ValueType { get; set; }        
-
         public bool Log { get; set; }
         public override string ToString() => Name;
         public double Factor => Conversion.Type.HasFlag(ConversionType.Formula) ? Conversion.Formula.CoeffB : 1;
         public double Offset => Conversion.Type.HasFlag(ConversionType.Formula) ? Conversion.Formula.CoeffC : 0;
         public TableNumericConversion Table => Conversion.Type.HasFlag(ConversionType.TableNumeric) ? Conversion.TableNumeric : null;
-        internal DbcMessage Parent { get; set; }
 
-        public static bool operator ==(DbcItem item1, DbcItem item2) =>
-            item1.StartBit == item2.StartBit &&
-            item1.BitCount == item2.BitCount &&
-            item1.Type == item2.Type &&
-            item1.Mode == item2.Mode &&
-            item1.ByteOrder == item2.ByteOrder &&
-            item1.ValueType == item2.ValueType;// &&
-            //item1.BytePos == item2.BytePos;
-        public static bool operator !=(DbcItem item1, DbcItem item2) => !(item1 == item2);
-        public override bool Equals(object obj)
-        {
-            if (obj is DbcItem)
-                return this == (DbcItem)obj;
-            else
-                return false;
-        }
+        internal DbcMessage Parent { get; set; }
+        public override uint Ident => Parent?.CANID ?? 0;
+        public override string IdentHex => Parent?.HexIdent ?? "";
+
+        public bool EqualProps(object item) =>
+            item is DbcItem dbc &&
+            dbc.StartBit == StartBit &&
+            dbc.BitCount == BitCount &&
+            dbc.Type == Type &&
+            dbc.Mode == Mode &&
+            dbc.ByteOrder == ByteOrder &&
+            dbc.ValueType == ValueType;
 
         public DbcItem Clone => (DbcItem)MemberwiseClone();
 
@@ -70,49 +66,31 @@ namespace InfluxShared.FileObjects
         };
     }
 
-    public class DbcMessage
+    public class DbcMessage: ICanMessage
     {
-        private uint _canId;
-        private Regex BadCharacters = new Regex("[^a-zA-Z0-9_]");
-        public string CleanName { get => BadCharacters.Replace(Name, ""); }
-
-        public string Name { get ; set ; }
-        public uint CANID { get => _canId; set => SetCanID(value); }
-
-        private void SetCanID(uint value)
-        {
-            _canId = value;
-            foreach (var item in Items)
-            {
-                item.Ident = _canId;
-            }
-        }
-        
+        public string Name { get; set; }
+        public uint CANID { get; set; }
         public string HexIdent => "0x" + (isExtended ? CANID.ToString("X8") : CANID.ToString("X3"));
         public byte DLC { get; set; }
         public DBCMessageType MsgType { get; set; }
         public bool isExtended => MsgType == DBCMessageType.Extended || MsgType == DBCMessageType.CanFDExtended || MsgType == DBCMessageType.J1939PG;
         public string Transmitter { get; set; }
         public string Comment { get; set; }
+        public List<ICanSignal> Signals => Items.Cast<ICanSignal>().ToList();
         public List<DbcItem> Items { get; set; }
         public bool Log { get; set; }
 
         public uint FullID => isExtended ? (uint)(CANID | (1 << 31)) : CANID;
 
-        public static bool operator ==(DbcMessage item1, DbcMessage item2) => !(item1 is null) && !(item2 is null) && item1.MsgType == item2.MsgType && item1.CANID == item2.CANID;
-        public static bool operator !=(DbcMessage item1, DbcMessage item2) => !(item1 == item2);
-        public override bool Equals(object obj)
-        {
-            if (obj is DbcMessage)
-                return this == (DbcMessage)obj;
-            else
-                return false;
-        }
+        public bool EqualProps(object obj) =>
+            obj is not null && obj is DbcMessage msg &&
+            msg.MsgType == MsgType && 
+            msg.CANID == CANID;
 
         public DbcMessage()
         {
             Items = new List<DbcItem>();
-        } 
+        }
     }
 
     public class DBC
@@ -134,143 +112,6 @@ namespace InfluxShared.FileObjects
             return false;
         } 
 
-        private void WriteMessages(StreamWriter sw, List<DbcMessage> messages)
-        {
-            sw.WriteLine("");
-
-            string line;
-            foreach (DbcMessage msg in messages)
-            {
-                string transmitter = msg.Transmitter != null ? msg.Transmitter : "Vector__XXX";
-                line = "BO_ " + msg.CANID.ToString() + " " + msg.CleanName + ": " + msg.DLC.ToString() + " " + transmitter;
-                sw.WriteLine(line);
-
-                foreach(DbcItem sig in msg.Items)
-                {
-                    string mode = "";
-                    if (sig.Type == DBCSignalType.Mode)
-                        mode = " M";
-                    if (sig.Type == DBCSignalType.ModeDependent)
-                        mode = " m" + sig.Mode;
-
-                    string byteorder = sig.ByteOrder == DBCByteOrder.Intel ? "1" : "0";
-                    string datatype = sig.ValueType == DBCValueType.Unsigned ? "+" : "-";
-                    string receivers = "Vector__XXX";
-                    line = "\tSG_ " + sig.CleanName + " " + mode + " : " + sig.StartBit.ToString() + "|" + sig.BitCount.ToString() + "@" + byteorder + datatype +
-                        " (" + sig.Factor.ToString() + "," + sig.Offset.ToString() + ") [" + sig.MinValue.ToString() + "|" + sig.MaxValue.ToString() +
-                        "] " + Convert.ToChar(34) + sig.Units + Convert.ToChar(34) + " " + receivers;
-
-                    sw.WriteLine(line);
-                }
-            }
-        }
-
-        private void WriteComments(StreamWriter sw, List<DbcMessage> messages)
-        {
-            sw.WriteLine("");
-
-            string line;
-            foreach (DbcMessage msg in messages)
-            {
-                if ((msg.Comment != null) && (msg.Comment != ""))
-                {
-                    line = "CM_ BO_ " + msg.CANID.ToString() + " " + Convert.ToChar(34) + msg.Comment + Convert.ToChar(34) + ";";
-                    sw.WriteLine(line);
-                }
-
-                foreach (DbcItem sig in msg.Items)               
-                    if ((sig.Comment != null) && (sig.Comment != ""))
-                    {
-                        line = "CM_ SG_ " + msg.CANID.ToString() + " " + sig.CleanName + " " + Convert.ToChar(34) + sig.Comment + Convert.ToChar(34) + ";";
-                        sw.WriteLine(line);
-                    }                
-            }
-        }
-
-        private void WriteEnumValues(StreamWriter sw, List<DbcMessage> messages)
-        {
-            sw.WriteLine("");
-
-            string line;
-            foreach (DbcMessage msg in messages)            
-                foreach (DbcItem sig in msg.Items)                
-                    if (sig.Conversion.Type == ConversionType.FormulaAndTableVerbal)                
-                    {                    
-                        line = "VAL_ " + msg.CANID.ToString() + " " + sig.CleanName;
-                    
-                        foreach (KeyValuePair<double, string> pair in sig.Conversion.TableVerbal.Pairs   )                                         
-                            line = line + " " + pair.Key.ToString() + " " + Convert.ToChar(34) + pair.Value + Convert.ToChar(34);
-                        line = line + ";";
-
-                        sw.WriteLine(line);                
-                    }               
-        }
-
-        private void SaveDBCToFile(List<DbcMessage> messages)
-        {
-            using (StreamWriter sw = new StreamWriter(FileName))
-            {
-                sw.WriteLine(@"VERSION """"");
-                sw.WriteLine("");
-                sw.WriteLine("NS_:");
-                sw.WriteLine("");
-                sw.WriteLine("BS_:");
-                sw.WriteLine("");
-                sw.WriteLine("BU_: Vector__XXX");
-
-                WriteMessages(sw, messages);
-                WriteComments(sw, messages);
-                WriteEnumValues(sw, messages);
-                //sw.Close();
-            }
-        }
-        public void ExportSelected(List<DbcItem> selected)
-        {
-            if (FileName == "")
-                return;
-
-            if (selected.Count == 0)
-                return;
-
-            // export selected DbcItems to DbcMessage list like multiplexed signals
-            List<DbcMessage> Messages = new List<DbcMessage>();
-            DbcMessage msg = new DbcMessage();
-            msg.Name = "Service22MUXSignals";
-            msg.DLC = 8;
-            msg.Transmitter = "Vector__XXX";
-            msg.CANID = 0x7e8;  // must be user defined
-            msg.Comment = "Influx_Service_0x22_Items_To_MUX_Signals";
-
-            DbcItem sig = new DbcItem();
-            sig.Name = "Service22SELECTOR";
-            sig.Type = DBCSignalType.Mode;
-            sig.StartBit = 15;
-            sig.BitCount = 24;
-            sig.ByteOrder = DBCByteOrder.Motorola;
-            sig.ValueType = DBCValueType.Unsigned;
-            sig.Conversion.Formula.CoeffB = 1;
-            sig.Conversion.Formula.CoeffC = 0;
-            sig.MinValue = 0x620001;
-            sig.MaxValue = 0x62FFFF;
-            sig.Comment = "Service_0x22_ID_SELECTOR";
-
-            msg.Items.Add(sig);
-
-            foreach (DbcItem item in selected)
-            {
-                sig = item.Clone;                
-                sig.Type = DBCSignalType.ModeDependent;
-                sig.Mode = (0x62 << 16) + (UInt32)sig.Ident;                    
-                sig.Ident = msg.CANID;
-                sig.StartBit = (ushort)(sig.StartBit + 32);
-
-                msg.Items.Add(sig);
-            }            
-
-            Messages.Add(msg);
-
-            SaveDBCToFile(Messages);
-        }
         public DBC()
         {
             Messages = new List<DbcMessage>();
@@ -295,16 +136,16 @@ namespace InfluxShared.FileObjects
         public UInt64 uniqueid { get; set; }
         public byte BusChannel { get; set; }
         public DbcMessage Message { get; set; }
-        public List<DbcItem> Signals { get; set; }
+        public List<ICanSignal> Signals { get; set; }
 
-        public DbcItem multiplexor = null;
+        public ICanSignal multiplexor = null;
         public BinaryData multiplexorData = null;
         // Multiplexor map is dictionary with pair - mode value and list of signal indexes
         public Dictionary<UInt16, List<UInt16>> multiplexorMap = null;
         // Mode dependant group ids
         public List<UInt64> multiplexorGroups = null;
 
-        public static bool operator ==(ExportDbcMessage item1, ExportDbcMessage item2) => item1.BusChannel == item2.BusChannel && item1.Message == item2.Message;
+        public static bool operator ==(ExportDbcMessage item1, ExportDbcMessage item2) => item1.BusChannel == item2.BusChannel && item1.Message.EqualProps(item2.Message);
         public static bool operator !=(ExportDbcMessage item1, ExportDbcMessage item2) => !(item1 == item2);
         public override bool Equals(object obj)
         {
@@ -314,7 +155,7 @@ namespace InfluxShared.FileObjects
                 return false;
         }
 
-        public void AddSignal(DbcItem Signal)
+        public void AddSignal(ICanSignal Signal)
         {
             Signals.Add(Signal);
             multiplexor = GetMode();
@@ -322,7 +163,7 @@ namespace InfluxShared.FileObjects
                 multiplexorData = multiplexor.GetDescriptor.CreateBinaryData();
         }
 
-        public DbcItem GetMode()
+        public ICanSignal GetMode()
         {
             if (Signals[0].Type == DBCSignalType.Mode)
             {
@@ -336,7 +177,7 @@ namespace InfluxShared.FileObjects
             }
             else
             {
-                DbcItem mode = Signals.FirstOrDefault(s => s.Type == DBCSignalType.Mode);
+                ICanSignal mode = Signals.FirstOrDefault(s => s.Type == DBCSignalType.Mode);
                 if (mode is not null)
                 {
                     Signals.Remove(mode);
@@ -371,14 +212,14 @@ namespace InfluxShared.FileObjects
         public ExportDbcMessage AddMessage(byte BusChannel, DbcMessage Message)
         {
             foreach (ExportDbcMessage m in this)
-                if (m.BusChannel == BusChannel && m.Message == Message)
+                if (m.BusChannel == BusChannel && m.Message.EqualProps(Message))
                     return m;
 
             ExportDbcMessage channel = new ExportDbcMessage()
             {
                 BusChannel = BusChannel,
                 Message = Message,
-                Signals = new List<DbcItem>()
+                Signals = new List<ICanSignal>()
             };
             Add(channel);
             return channel;

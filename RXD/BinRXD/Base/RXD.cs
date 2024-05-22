@@ -844,7 +844,7 @@ namespace RXD.Base
                                             for (int i = 0; i < busMsg.Signals.Count; i++)
                                             {
                                                 var sig = busMsg.Signals[i];
-                                                var obj = ddata.Object(sig, (1u << 30) | ((uint)i << 16) | (uint)id, SA);
+                                                var obj = ddata.Object(sig as BasicItemInfo, (1u << 30) | ((uint)i << 16) | (uint)id, SA);
                                                 obj.BusChannel = $"CAN{canrec.BusChannel}";
 
                                                 if (i == 1 && mode is not null)
@@ -1030,6 +1030,9 @@ namespace RXD.Base
                         {
                             XmlSchemaElement xsdPropType = xml.xsdObjectProperty(xsdBinType, prop.Value.Name);
                             if (xsdPropType is null)
+                                continue;
+
+                            if (xsdPropType.MinOccurs == 0 && prop.Value.IsDefault)
                                 continue;
 
                             xblock.Add(xml.NewElement(prop.Value.Name, prop.Value.Value));

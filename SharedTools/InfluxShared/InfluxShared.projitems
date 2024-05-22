@@ -21,10 +21,14 @@
     <Compile Include="$(MSBuildThisFileDirectory)FileObjects\DBC.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FileObjects\DoubleData.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FileObjects\DoubleDataCollection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FileObjects\ICanMessage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FileObjects\ICanSignal.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FileObjects\ItemConversion.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FileObjects\LDF.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FileObjects\ModuleXml.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FileObjects\ObjectLibrary.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FileObjects\ODX.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FileObjects\OutputMessage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FileObjects\ProcessingRules.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FileObjects\ProcessingRulesCollection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FileObjects\ReferenceCollection.cs" />
@@ -32,6 +36,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)FileObjects\XML.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Generic\Bytes.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Generic\DateUtility.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Generic\Enums.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Generic\PinObj.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Generic\Structures.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\ArrayHelper.cs" />

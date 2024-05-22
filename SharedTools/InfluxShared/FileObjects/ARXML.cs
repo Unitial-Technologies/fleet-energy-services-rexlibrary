@@ -4,12 +4,7 @@
  * ------------------------------------
  */
 
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Threading;
 using System.Xml;
-using System.Xml.Linq;
 
 namespace InfluxShared.FileObjects
 {
@@ -179,7 +174,7 @@ namespace InfluxShared.FileObjects
 
         private void CreateCANFrameTriggerings(XmlNode node)
         {
-            DbcMessage msg = new DbcMessage();
+            var msg = new DbcMessage();
 
             msg.Name = strContent(node, "SHORT-NAME");
             msg.MsgType = strContent(node, "CAN-ADDRESSING-MODE") == "STANDARD" ? DBCMessageType.Standard : DBCMessageType.Extended;

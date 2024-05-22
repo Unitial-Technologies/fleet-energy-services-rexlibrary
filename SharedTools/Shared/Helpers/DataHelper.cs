@@ -103,7 +103,12 @@ namespace Influx.Shared.Helpers
             if (row is not ITraceConvertAdapter)
                 return;
 
-            if (row is TraceCan can)
+            // TraceCanError should be first because it inherits TraceCan, and check for TraceCan will handle TraceCanErrors also. This produces crashes.
+            if (row is TraceCanError canerr)
+            {
+                blf.WriteCanError((UInt64)(canerr.FloatTimestamp * 1000000), (byte)(canerr.BusChannel + 1), canerr.ErrorCode);
+            }
+            else if (row is TraceCan can)
             {
                 if (can.flagEDL)
                     blf.WriteCanFDMessage(
@@ -121,10 +126,6 @@ namespace Influx.Shared.Helpers
                         can.flagDIR,
                         (byte)can.DLC, can.Data
                     );
-            }
-            else if (row is TraceCanError canerr)
-            {
-                blf.WriteCanError((UInt64)(canerr.FloatTimestamp * 1000000), (byte)(canerr.BusChannel + 1), canerr.ErrorCode);
             }
             else if (row is TraceLin lin)
             {
@@ -178,7 +179,7 @@ namespace Influx.Shared.Helpers
                     return true;
                 }
             }
-            catch
+            catch (Exception e)
             {
                 return false;
             }

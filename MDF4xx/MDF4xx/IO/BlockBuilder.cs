@@ -431,18 +431,7 @@ namespace MDF4xx.IO
             return cc;
         }
 
-        internal CNDataType ConvertType(DbcItem signal)
-        {
-            switch (signal.ValueType)
-            {
-                case DBCValueType.Unsigned: return (signal.ByteOrder == DBCByteOrder.Intel) ? CNDataType.IntelUnsigned : CNDataType.MotorolaUnsigned;
-                case DBCValueType.Signed: return (signal.ByteOrder == DBCByteOrder.Intel) ? CNDataType.IntelSigned : CNDataType.MotorolaSigned;
-                case DBCValueType.IEEEFloat: return (signal.ByteOrder == DBCByteOrder.Intel) ? CNDataType.IntelFloat : CNDataType.MotorolaFloat;
-                default: return CNDataType.IntelSigned;
-            }
-        }
-
-        internal CNDataType ConvertType(LdfItem signal)
+        internal CNDataType ConvertType(ICanSignal signal)
         {
             switch (signal.ValueType)
             {
@@ -495,7 +484,7 @@ namespace MDF4xx.IO
                     groupid++;
             }
 
-            void AddDbcChannelGroup(string name, IEnumerable<DbcItem> channels, UInt16 dlc)
+            void AddDbcChannelGroup(string name, IEnumerable<ICanSignal> channels, UInt16 dlc)
             {
                 CGBlock cg = BuildCG(
                     BuildDG((byte)Marshal.SizeOf(Enum.GetUnderlyingType(typeof(FrameType)))), 

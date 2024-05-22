@@ -20,6 +20,7 @@ namespace RXD.Blocks
 
         public object Data = null;
 
+        public dynamic DefaultValue = null;
         public dynamic Value
         {
             get => Data;
@@ -39,6 +40,8 @@ namespace RXD.Blocks
                         SubElementCount.Value = ((string)value).Length;
             }
         }
+
+        public bool IsDefault => Data?.Equals(DefaultValue);
 
         public Int32 Size
         {
@@ -107,7 +110,7 @@ namespace RXD.Blocks
 
             Data = CreateDefault();
             if (DefaultValue != null)
-                Value = DefaultValue;
+                Value = this.DefaultValue = DefaultValue;
         }
         #endregion
 

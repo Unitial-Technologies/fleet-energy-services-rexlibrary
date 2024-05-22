@@ -4,14 +4,11 @@
  * ------------------------------------
  */
 
-using InfluxShared.Generic;
 using System;
 using System.Collections.Generic;
-using System.Drawing.Design;
 using System.Globalization;
 using System.Threading;
 using System.Xml;
-using System.Xml.Linq;
 
 
 namespace InfluxShared.FileObjects
@@ -19,13 +16,13 @@ namespace InfluxShared.FileObjects
     public class XML
     {
 
-        public List<DbcMessage> CANMessages { get; set; }
+        public List<ICanMessage> CANMessages { get; set; }
 
         public string FileName { get; set; }
 
         public XML()
         {
-            CANMessages = new List<DbcMessage>();            
+            CANMessages = new List<ICanMessage>();            
         }
 
         private bool isCondOk(XmlNode node, string text, bool byName, string byAttr)
@@ -53,7 +50,7 @@ namespace InfluxShared.FileObjects
             return words[words.Length - 1];
         }
 
-        public void CompuMethodContent(XmlNode node, DbcItem sig)
+        public void CompuMethodContent(XmlNode node, ICanSignal sig)
         {
             string category = strContent(node, "CATEGORY");
             bool flagLinear = category.Contains("LINEAR");

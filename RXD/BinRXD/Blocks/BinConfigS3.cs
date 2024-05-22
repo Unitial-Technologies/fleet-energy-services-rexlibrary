@@ -41,6 +41,8 @@ namespace RXD.Blocks
             RootCertificateSize,
             RootCertificate,
             UploadAllLogsBeforeSleep,
+            /*UploadLogs,
+            UploadStatus*/
         }
 
         #region Do not touch these
@@ -77,13 +79,19 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.EncryptPass, typeof(bool));
                 data.AddProperty(BinProp.KeepLogFilesOnDevice, typeof(bool));
                 data.AddProperty(BinProp.RootCertificateSize, typeof(UInt16));
-                data.AddProperty(BinProp.RootCertificate, typeof(string), BinProp.RootCertificateSize);
+                data.AddProperty(BinProp.RootCertificate, typeof(string), BinProp.RootCertificateSize);                
             });
             Versions[2] = new Action(() =>
             {
                 Versions[1].DynamicInvoke();
-                data.AddProperty(BinProp.UploadAllLogsBeforeSleep, typeof(bool));
+                data.AddProperty(BinProp.UploadAllLogsBeforeSleep, typeof(bool), false);
             });
+            /*Versions[3] = new Action(() =>
+            {
+                Versions[2].DynamicInvoke();
+                data.AddProperty(BinProp.UploadLogs, typeof(bool), true);
+                data.AddProperty(BinProp.UploadStatus, typeof(bool), true);
+            });*/
         }
     }
 }
