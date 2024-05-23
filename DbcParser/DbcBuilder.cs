@@ -257,7 +257,7 @@ namespace DbcParserLib
             {
                 message.Value.Signals.Clear();
                 message.Value.Signals.AddRange(m_signals[message.Key].Values);
-
+                message.Value.ID &= 0x1fffffff;
             }
 
             var dbc = new Dbc(m_nodes.ToArray(), m_messages.Values.ToArray());

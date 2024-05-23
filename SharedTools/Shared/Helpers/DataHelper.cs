@@ -422,7 +422,8 @@ namespace Influx.Shared.Helpers
                     {
                         DoubleDataCollection BuildChannels(TimeFormatType csvTimeFormat = TimeFormatType.Seconds)
                         {
-                            channels = rxd.ToDoubleData(settings);
+                            if (rxd is not null)
+                                channels = rxd.ToDoubleData(settings);
                             if (channels is null || channels.Count == 0)
                                 throw new Exception("There is no data channels to export!");
                             else

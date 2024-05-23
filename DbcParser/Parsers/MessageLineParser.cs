@@ -1,5 +1,6 @@
 using DbcParser.Parsers;
 using InfluxShared.FileObjects;
+using System;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
@@ -7,6 +8,7 @@ namespace DbcParserLib.Parsers
 {
     public class MessageLineParser : ILineParser
     {
+        static readonly UInt32 ExtendedFlag = 0x80000000;
         private const string MessageLineStarter = "BO_ ";
         private const string MessageRegex = @"BO_ (\d+)\s+([A-Za-z0-9()_]+)\s*:\s*(\d+)\s+(\w+)";
 
@@ -28,7 +30,7 @@ namespace DbcParserLib.Parsers
                 uint id = msg.ID;
                 if (!builder.AttrDefaultParser.ID_List.Contains(id))
                     builder.AttrDefaultParser.ID_List.Add(id);
-                msg.Type = CheckExtID(ref id);
+                msg.Type = (id & ExtendedFlag) == ExtendedFlag ? DBCMessageType.Extended : DBCMessageType.Standard;
                 msg.ID = id;
                 builder.AddMessage(msg);
             }
@@ -36,16 +38,5 @@ namespace DbcParserLib.Parsers
             return true;
         }
 
-        private DBCMessageType CheckExtID(ref uint id)
-        {
-            // For extended ID bit 31 is always 1
-            if (id >= 0x80000000)
-            {
-                //               id -= 0x80000000;
-                return DBCMessageType.Extended;
-            }
-            else
-                return DBCMessageType.Standard;
-        }
     }
 }
