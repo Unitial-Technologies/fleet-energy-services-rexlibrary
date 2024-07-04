@@ -16,7 +16,9 @@
   "AmazonTimestream": {
     "enabled": true,
     "db_name": "default",
-    "table_name": "default"
+    "table_name": "default",
+    "downsampling": true,
+    "downsampling_tolerance": 0.01
   },
   "Snapshot": {
     "enabled": true,
