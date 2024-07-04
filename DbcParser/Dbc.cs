@@ -1,6 +1,6 @@
 using DbcParserLib.Model;
-using System.Collections.Generic;
 using InfluxShared.FileObjects;
+using System.Collections.Generic;
 
 namespace DbcParserLib
 {

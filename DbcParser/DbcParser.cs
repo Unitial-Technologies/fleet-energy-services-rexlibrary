@@ -2,12 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using int64_T = System.Int64;
-using uint64_T = System.UInt64;
-using uint8_T = System.Byte;
 
 /* 
  * ------------------------------------

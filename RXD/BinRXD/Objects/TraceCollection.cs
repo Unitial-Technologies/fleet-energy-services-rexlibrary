@@ -21,7 +21,7 @@ namespace RXD.Objects
         internal void InitStaticValues()
         {
             StaticValuesCollection = this.OfType<IItemGridDetails>().GroupBy(i => i.strItemName).Select(x => x.Last()).ToList();
-            if (!ShowFullStaticItems )
+            if (!ShowFullStaticItems)
                 StaticValuesCollection = StaticValuesCollection.Take(LimitStaticItemsCount).ToList();
         }
 

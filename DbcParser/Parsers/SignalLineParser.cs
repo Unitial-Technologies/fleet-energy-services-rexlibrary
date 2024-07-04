@@ -1,8 +1,7 @@
+using InfluxShared.FileObjects;
 using System;
 using System.Globalization;
-using System.Linq;
 using System.Text.RegularExpressions;
-using InfluxShared.FileObjects;
 
 namespace DbcParserLib.Parsers
 {
@@ -70,7 +69,7 @@ namespace DbcParserLib.Parsers
             {
                 Multiplexing = match.Groups[2].Value,
                 Name = match.Groups[1].Value,
-                StartBit = ushort.Parse(match.Groups[3].Value, CultureInfo.InvariantCulture),                
+                StartBit = ushort.Parse(match.Groups[3].Value, CultureInfo.InvariantCulture),
                 //Length = byte.Parse(match.Groups[4].Value, CultureInfo.InvariantCulture),
                 ByteOrder = byte.Parse(match.Groups[5].Value, CultureInfo.InvariantCulture),   // 0 = MSB (Motorola), 1 = LSB (Intel)
                 ValueType = match.Groups[6].Value == SignedSymbol ? DBCValueType.Signed : DBCValueType.Unsigned,

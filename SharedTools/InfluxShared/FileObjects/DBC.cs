@@ -1,10 +1,8 @@
-﻿using InfluxShared.Helpers;
-using InfluxShared.Objects;
+﻿using InfluxShared.Objects;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 
 namespace InfluxShared.FileObjects
 {
@@ -12,9 +10,114 @@ namespace InfluxShared.FileObjects
     public enum DBCMessageType : byte { Standard, Extended, CanFDStandard, CanFDExtended, J1939PG, Lin, KanCan, reserved }
     public enum DBCValueType : byte { Unsigned, Signed, IEEEFloat, IEEEDouble, ASCII, BYTES }
     public enum DBCSignalType : byte { Standard, Mode, ModeDependent }
+
+    /* Unmerged change from project 'Oscilloscope'
+    Before:
+        public enum DBCFileType : byte { None, Generic, CAN, CANFD, LIN, J1939, Ethernet, FlexRay, KanCan };
+
+
+
+        public class DbcSelection
+    After:
+        public enum DBCFileType : byte { None, Generic, CAN, CANFD, LIN, J1939, Ethernet, FlexRay, KanCan };
+
+
+
+        public class DbcSelection
+    */
+
+    /* Unmerged change from project 'RXDDemo'
+    Before:
+        public enum DBCFileType : byte { None, Generic, CAN, CANFD, LIN, J1939, Ethernet, FlexRay, KanCan };
+
+
+
+        public class DbcSelection
+    After:
+        public enum DBCFileType : byte { None, Generic, CAN, CANFD, LIN, J1939, Ethernet, FlexRay, KanCan };
+
+
+
+        public class DbcSelection
+    */
+
+    /* Unmerged change from project 'ReXusbcanDemo'
+    Before:
+        public enum DBCFileType : byte { None, Generic, CAN, CANFD, LIN, J1939, Ethernet, FlexRay, KanCan };
+
+
+
+        public class DbcSelection
+    After:
+        public enum DBCFileType : byte { None, Generic, CAN, CANFD, LIN, J1939, Ethernet, FlexRay, KanCan };
+
+
+
+        public class DbcSelection
+    */
+
+    /* Unmerged change from project 'ModuleConfigurator'
+    Before:
+        public enum DBCFileType : byte { None, Generic, CAN, CANFD, LIN, J1939, Ethernet, FlexRay, KanCan };
+
+
+
+        public class DbcSelection
+    After:
+        public enum DBCFileType : byte { None, Generic, CAN, CANFD, LIN, J1939, Ethernet, FlexRay, KanCan };
+
+
+
+        public class DbcSelection
+    */
+
+    /* Unmerged change from project 'ReXdeskConvert'
+    Before:
+        public enum DBCFileType : byte { None, Generic, CAN, CANFD, LIN, J1939, Ethernet, FlexRay, KanCan };
+
+
+
+        public class DbcSelection
+    After:
+        public enum DBCFileType : byte { None, Generic, CAN, CANFD, LIN, J1939, Ethernet, FlexRay, KanCan };
+
+
+
+        public class DbcSelection
+    */
+
+    /* Unmerged change from project 'RxLibrary'
+    Before:
+        public enum DBCFileType : byte { None, Generic, CAN, CANFD, LIN, J1939, Ethernet, FlexRay, KanCan };
+
+
+
+        public class DbcSelection
+    After:
+        public enum DBCFileType : byte { None, Generic, CAN, CANFD, LIN, J1939, Ethernet, FlexRay, KanCan };
+
+
+
+        public class DbcSelection
+    */
+
+    /* Unmerged change from project 'RxdToolkit'
+    Before:
+        public enum DBCFileType : byte { None, Generic, CAN, CANFD, LIN, J1939, Ethernet, FlexRay, KanCan };
+
+
+
+        public class DbcSelection
+    After:
+        public enum DBCFileType : byte { None, Generic, CAN, CANFD, LIN, J1939, Ethernet, FlexRay, KanCan };
+
+
+
+        public class DbcSelection
+    */
     public enum DBCFileType : byte { None, Generic, CAN, CANFD, LIN, J1939, Ethernet, FlexRay, KanCan };
 
-    
+
 
     public class DbcSelection
     {
@@ -23,13 +126,13 @@ namespace InfluxShared.FileObjects
     }
 
     public class DbcItem : BasicItemInfo, ICanSignal
-    {        
+    {
         public ushort StartBit { get; set; }
         public ushort BitCount { get; set; }
         public DBCSignalType Type { get; set; }
         public UInt32 Mode { get; set; }   //If the signal is Mode Dependent
         public DBCByteOrder ByteOrder { get; set; }
-        public DBCValueType ValueType { get; set; }        
+        public DBCValueType ValueType { get; set; }
         public bool Log { get; set; }
         public override string ToString() => Name;
         public double Factor => Conversion.Type.HasFlag(ConversionType.Formula) ? Conversion.Formula.CoeffB : 1;
@@ -66,7 +169,7 @@ namespace InfluxShared.FileObjects
         };
     }
 
-    public class DbcMessage: ICanMessage
+    public class DbcMessage : ICanMessage
     {
         public string Name { get; set; }
         public uint CANID { get; set; }
@@ -84,7 +187,7 @@ namespace InfluxShared.FileObjects
 
         public bool EqualProps(object obj) =>
             obj is not null && obj is DbcMessage msg &&
-            msg.MsgType == MsgType && 
+            msg.MsgType == MsgType &&
             msg.CANID == CANID;
 
         public DbcMessage()
@@ -110,7 +213,7 @@ namespace InfluxShared.FileObjects
                     return true;
             }
             return false;
-        } 
+        }
 
         public DBC()
         {

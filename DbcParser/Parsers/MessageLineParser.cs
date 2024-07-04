@@ -1,4 +1,3 @@
-using DbcParser.Parsers;
 using InfluxShared.FileObjects;
 using System;
 using System.Globalization;

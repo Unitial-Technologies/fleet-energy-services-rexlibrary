@@ -1,13 +1,10 @@
 ﻿using Amazon.S3.Model;
 using Amazon.TimestreamWrite;
 using Amazon.TimestreamWrite.Model;
+using Cloud;
 using InfluxShared.FileObjects;
 using InfluxShared.Generic;
 using Newtonsoft.Json;
-using Cloud;
-using System.Reactive;
-using System.Drawing;
-using InfluxDB.Client.Api.Domain;
 
 namespace AWSLambdaFileConvert.Providers
 {
@@ -32,6 +29,7 @@ namespace AWSLambdaFileConvert.Providers
 
             try
             {
+
                 foreach (var point in item.Points)
                 {
                     writeRecordsRequest.Records.Add(new Record
@@ -78,7 +76,11 @@ namespace AWSLambdaFileConvert.Providers
 
             try
             {
+                Log?.Log($"ddc.InitReading()");
+
                 ddc.InitReading();
+                Log?.Log($"ddc.InitReading() finished points:{ddc.Count}");
+
                 double time = 0;
                 double value = 0;
                 foreach (DoubleData data in ddc)

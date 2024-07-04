@@ -30,10 +30,20 @@
   "BLF": {
     "enabled": false
   },
+  "Parquet": {
+    "enabled": true,
+    "resampling": {
+      "enabled": false,
+      "rate": 1000
+    }
+  },
   "Synch": {
     "enabled": true,
     "main_logger": "",
     "addon_loger1": "",
     "lastfolder": ""
+  },
+  "RxdSettings": {
+    "MaxTimeGap": 0
   }
 }

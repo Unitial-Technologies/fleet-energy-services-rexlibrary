@@ -124,7 +124,7 @@ namespace RXD.Base
                     }
             }
             while (base.ReadNext());
-            
+
             return false;
         }
 
@@ -132,7 +132,7 @@ namespace RXD.Base
         {
             do
             {
-                StartReading:
+            StartReading:
                 if (base.MessageCollection is not null)
                     while (base.MessageCollection.Count > 0)
                     {
@@ -209,7 +209,7 @@ namespace RXD.Base
                     else
                         break;
 
-            
+
                 if (MessageCollectionBuffer.Count == 0)
                     return false;
 

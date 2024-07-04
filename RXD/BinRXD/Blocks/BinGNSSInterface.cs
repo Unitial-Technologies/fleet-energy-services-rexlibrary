@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace RXD.Blocks
 {
     public class BinGNSSInterface : BinBase
     {
-        public enum GNSSPlatformType: byte
+        public enum GNSSPlatformType : byte
         {
             PORTABLE = 0,
             STATIONARY = 2,
@@ -22,13 +20,13 @@ namespace RXD.Blocks
             ELECTRIC_KICK_SCOOTER = 12
         }
 
-        public enum MountAlignment: byte
+        public enum MountAlignment : byte
         {
             Manual,
             Auto
         }
 
-        public enum GNSSSystemType: byte
+        public enum GNSSSystemType : byte
         {
             GPS,
             SBAS,
@@ -59,6 +57,7 @@ namespace RXD.Blocks
             Latitude,
             Longitude,
             Radius,
+            IMU_Enable,
         }
 
         #region Do not touch these
@@ -89,7 +88,7 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.AutomaticMountAlignment, typeof(bool));
                 data.AddProperty(BinProp.MountYaw, typeof(Single));
                 data.AddProperty(BinProp.MountPitch, typeof(Single));
-                data.AddProperty(BinProp.MountRoll, typeof(Single));                
+                data.AddProperty(BinProp.MountRoll, typeof(Single));
                 data.AddProperty(BinProp.GNSS_SystemCount, typeof(byte));
                 data.AddProperty(BinProp.Type, typeof(GNSSSystemType[]), BinProp.GNSS_SystemCount);
                 data.AddProperty(BinProp.ChannelMin, typeof(byte[]), BinProp.GNSS_SystemCount);
@@ -104,6 +103,11 @@ namespace RXD.Blocks
                 data.Property(BinProp.Latitude).XmlSequenceGroup = "Geofence";
                 data.Property(BinProp.Longitude).XmlSequenceGroup = "Geofence";
                 data.Property(BinProp.Radius).XmlSequenceGroup = "Geofence";
+            });
+            Versions[3] = new Action(() =>
+            {
+                Versions[2].DynamicInvoke();
+                data.AddProperty(BinProp.IMU_Enable, typeof(bool));
             });
         }
     }

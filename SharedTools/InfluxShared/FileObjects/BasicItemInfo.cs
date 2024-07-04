@@ -1,6 +1,4 @@
-﻿using System.Xml.Serialization;
-
-namespace InfluxShared.FileObjects
+﻿namespace InfluxShared.FileObjects
 {
     public class BasicItemInfo
     {
@@ -24,5 +22,6 @@ namespace InfluxShared.FileObjects
         }
 
         public virtual ChannelDescriptor GetDescriptor => null;
+        public object TempObj = null;
     }
 }

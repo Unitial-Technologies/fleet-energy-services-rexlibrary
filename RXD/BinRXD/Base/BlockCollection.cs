@@ -203,6 +203,6 @@ namespace RXD.Base
                 return 0;
             else
                 return CanMessageListLevel(this[bin[BinCanMessage.BinProp.NextOutputMessageID]]) + 1;
-        }        
+        }
     }
 }

@@ -1,7 +1,4 @@
 ﻿using InfluxShared.Helpers;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace InfluxShared.FileObjects
 {

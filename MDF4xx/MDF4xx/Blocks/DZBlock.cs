@@ -80,7 +80,7 @@ namespace MDF4xx.Blocks
         public void EndWriting()
         {
             binary = new MemoryStream(ZlibStream.CompressBuffer(binary.ToArray()));
-            
+
             DataLength = binary.Length;
             data.dz_data_length = (UInt64)binary.Length;
         }

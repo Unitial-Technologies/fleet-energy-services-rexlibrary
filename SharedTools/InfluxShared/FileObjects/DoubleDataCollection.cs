@@ -22,6 +22,7 @@ namespace InfluxShared.FileObjects
         internal TimeFormatType DefaultCsvDateFormat = TimeFormatType.Seconds;
         private bool disposedValue = false;
         internal bool ObjectOwner = true;
+        SortedSet<double> ChannelTimes = new SortedSet<double>();
 
         internal readonly string DisplayName;
         internal DateTime RealTime = DateTime.Now;
@@ -153,8 +154,13 @@ namespace InfluxShared.FileObjects
 
         internal void InitReading()
         {
+            ChannelTimes.Clear();
             foreach (DoubleData data in this)
+            {
                 data.InitReading();
+                if (!double.IsNaN(data.TempTime))
+                    ChannelTimes.Add(data.TempTime);
+            }
 
             //FirstTimestamp = double.IsNaN(FirstTimestamp) ? FirstTimestamp = LowestTime() : Math.Min(FirstTimestamp, LowestTime());
         }
@@ -189,6 +195,8 @@ namespace InfluxShared.FileObjects
                     {
                         ValList[i + 1] = this[i].TempData;
                         this[i].ReadNext();
+                        if (!double.IsNaN(this[i].TempTime))
+                            ChannelTimes.Add(this[i].TempTime);
                     }
                     else
                         ValList[i + 1] = double.NaN;
@@ -203,6 +211,15 @@ namespace InfluxShared.FileObjects
 
         double LowestTime()
         {
+            // new logic for fast detection of lowest timestamp for huge amount of signals
+            if (ChannelTimes.Count == 0)
+                return double.NaN;
+
+            double TempTime = ChannelTimes.First();
+            ChannelTimes.Remove(TempTime);
+            return TempTime;
+
+            /* Old logic 
             double TempTime = double.NaN;
             foreach (DoubleData data in this)
                 if (!double.IsNaN(data.TempTime))
@@ -212,7 +229,7 @@ namespace InfluxShared.FileObjects
                     else
                         TempTime = Math.Min(TempTime, data.TempTime);
                 }
-            return TempTime;
+            return TempTime;//*/
         }
 
         public bool ToSV(string csvFileName, Action<object> ProgressCallback = null) => ToSV(csvFileName, DefaultCsvDateFormat, ProgressCallback);
@@ -385,5 +402,7 @@ namespace InfluxShared.FileObjects
                 return false;
             }
         }
+
+       
     }
 }

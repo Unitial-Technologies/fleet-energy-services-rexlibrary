@@ -96,7 +96,7 @@ namespace InfluxShared.FileObjects
             Data = new byte[DLC];
         }
 
-        
+
 
     }
 
@@ -174,7 +174,7 @@ namespace InfluxShared.FileObjects
             {
                 string groupID = "";
                 //messages.Clear();
-                foreach (var xmlMsg in modXml.PollingItemList.Items.GroupBy(x=>x.Ident ).Select(group => group.First()).OrderBy(x=>x.Order))
+                foreach (var xmlMsg in modXml.PollingItemList.Items.GroupBy(x => x.Ident).Select(group => group.First()).OrderBy(x => x.Order))
                 {
                     canMsg = new OutputMessage();
                     messages.Add(canMsg);
@@ -192,15 +192,15 @@ namespace InfluxShared.FileObjects
                         canMsg.Can2 = true;
                     else if (modXml.Config?.CanBus == 3)
                         canMsg.Can3 = true;
-                    else 
+                    else
                         canMsg.Can0 = true;
-                    canMsg.Data = new byte[] { 3,0x22, (byte)(xmlMsg.Ident >> 8), (byte)xmlMsg.Ident };
+                    canMsg.Data = new byte[] { 3, 0x22, (byte)(xmlMsg.Ident >> 8), (byte)xmlMsg.Ident };
                     canMsg.DLC = 4;// (byte)(xmlMsg.Data.Length);
                     canMsg.BRS = false;
                     canMsg.Linked = true;
                     canMsg.TxIdent = xmlMsg.TxIdent;
                 }
-                
+
                 return true;
             }
             catch (Exception exc)

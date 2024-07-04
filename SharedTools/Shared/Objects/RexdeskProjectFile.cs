@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
-using System.Text;
 
 namespace Influx.Shared.Objects
 {
@@ -22,8 +20,8 @@ namespace Influx.Shared.Objects
         public byte Module { get; set; }
     }
 
-    public  class RexdeskProjectFile
-    {        
+    public class RexdeskProjectFile
+    {
 
         ZipArchive Rpf;
 
@@ -33,7 +31,7 @@ namespace Influx.Shared.Objects
         {
             if (Path.GetExtension(filename).ToLower() == ".isf")
             {
-                return new FileDescription() { Name = filename, FileType = EntryFileType.Library};
+                return new FileDescription() { Name = filename, FileType = EntryFileType.Library };
             }
             else if (Path.GetExtension(filename).ToLower() == ".xml")
             {
@@ -60,13 +58,13 @@ namespace Influx.Shared.Objects
                         {
                             file.Close();
                         }
-                    }                    
+                    }
                 }
-                
+
             }
             return new FileDescription() { Name = filename, FileType = EntryFileType.General };
         }
-   
+
 
         public static EntryFileType GetXmlType(string filePath)
         {
@@ -84,7 +82,7 @@ namespace Influx.Shared.Objects
                 }
                 return EntryFileType.General;
             }
-            
+
         }
 
         public Stream GetFile(EntryFileType fileType, byte module, out string fileName)
@@ -102,9 +100,9 @@ namespace Influx.Shared.Objects
                             {
                                 fileName = item.FullName;
                                 return item.Open();
-                            }                            
+                            }
                         }
-                    }                     
+                    }
                 }
                 catch (Exception)
                 {
@@ -131,7 +129,7 @@ namespace Influx.Shared.Objects
                 {
                     return EntryFileType.General;
                 }
-            return EntryFileType.General; 
+            return EntryFileType.General;
         }
 
         public string GetFileName(EntryFileType fileType, byte module)
@@ -146,7 +144,7 @@ namespace Influx.Shared.Objects
                         {
                             if (fileType != EntryFileType.ModuleXml || (fileType == EntryFileType.ModuleXml && module == descr.Module))
                             {
-                                return item.FullName; 
+                                return item.FullName;
                             }
                         }
                     }
@@ -169,7 +167,7 @@ namespace Influx.Shared.Objects
                         {
                             var file = Rpf.GetEntry(item.Name);
                             return file?.Open();
-                        }                       
+                        }
                     }
 
                 }
@@ -196,7 +194,7 @@ namespace Influx.Shared.Objects
                                 break;
                             }
                         }
-                    }                    
+                    }
                     var entry = Rpf.CreateEntry(fileName);
                     using (Stream entryStream = entry.Open())
                     {
@@ -215,7 +213,7 @@ namespace Influx.Shared.Objects
             FullFileName = fullFileName;
             if (!File.Exists(fullFileName))
                 Rpf = ZipFile.Open(fullFileName, ZipArchiveMode.Create);
-            else 
+            else
                 Rpf = ZipFile.Open(fullFileName, ZipArchiveMode.Update);
         }
 
@@ -231,10 +229,10 @@ namespace Influx.Shared.Objects
             return list;
         }
 
-        
+
 
         public void Close()
-        {   
+        {
             Rpf?.Dispose();
         }
     }

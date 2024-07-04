@@ -22,7 +22,7 @@ namespace InfluxShared.FileObjects
 
         public XML()
         {
-            CANMessages = new List<ICanMessage>();            
+            CANMessages = new List<ICanMessage>();
         }
 
         private bool isCondOk(XmlNode node, string text, bool byName, string byAttr)
@@ -67,7 +67,7 @@ namespace InfluxShared.FileObjects
                 }
                 return;
             }
-            
+
             if (flagLinear && !flagTable)
                 sig.Conversion.Type = ConversionType.Formula;
             if (/*flagLinear &&*/ flagTable)
@@ -102,7 +102,7 @@ namespace InfluxShared.FileObjects
                     //dbl = doubleContent(child, "LOWER-LIMIT");
                     uint ll = uintContent(child, "LOWER-LIMIT");
                     uint ul = uintContent(child, "UPPER-LIMIT");
-                    for (uint i = ll; i <= ul; i++)                    
+                    for (uint i = ll; i <= ul; i++)
                         sig.Conversion.TableVerbal.Pairs.Add(i, s);
                 }
             }
@@ -173,7 +173,7 @@ namespace InfluxShared.FileObjects
                 {
                     string hex = child.InnerText.ToString();
                     hex = hex.Replace("0x", string.Empty);
-                    return UInt32.Parse(hex, System.Globalization.NumberStyles.HexNumber);                    
+                    return UInt32.Parse(hex, System.Globalization.NumberStyles.HexNumber);
                 }
             return 0;
         }

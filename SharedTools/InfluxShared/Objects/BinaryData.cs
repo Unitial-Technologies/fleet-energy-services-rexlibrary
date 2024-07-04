@@ -143,7 +143,9 @@ namespace InfluxShared.Objects
 
             // Extract raw data
             hex.Unsigned = ByteRead(HexMessage, byteOffset, canBytes);
-            hex.Unsigned = (hex.Unsigned >> bitOffset) & bitMask;
+            if (bitOffset > 0)
+                hex.Unsigned >>= bitOffset;
+            hex.Unsigned &= bitMask;
 
             // Fix sign
             if (HexType == typeof(Int64))

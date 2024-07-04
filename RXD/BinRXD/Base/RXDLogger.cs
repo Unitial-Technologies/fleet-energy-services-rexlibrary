@@ -61,8 +61,8 @@ namespace RXD.Base
         {
             if (rxd is not null || isFirst)
             {
-                while (!LoadNext(out rxd)) 
-                    if (FileList.Count ==0)
+                while (!LoadNext(out rxd))
+                    if (FileList.Count == 0)
                         return false;
 
                 if (rxd is not null)
@@ -76,7 +76,7 @@ namespace RXD.Base
             return false;
         }
 
-        
+
         #region Destructors
         protected virtual void Dispose(bool disposing)
         {

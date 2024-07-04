@@ -7,7 +7,7 @@ namespace Influx.Shared.Objects
 
     public class WmiWatcher
     {
-        static string DeviceID = @"USB\VID_16D0&PID_0F14\";        
+        static string DeviceID = @"USB\VID_16D0&PID_0F14\";
 
         public RexChangedNotify RexChangedEvent = null;
 

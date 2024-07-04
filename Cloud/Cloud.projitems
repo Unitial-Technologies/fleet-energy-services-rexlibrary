@@ -14,6 +14,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Downsampling.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Export\Csv.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Export\InfluxDB.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Export\Parquet.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Export\XmlConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ILogProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IStorageProvider.cs" />

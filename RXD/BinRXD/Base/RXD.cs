@@ -50,6 +50,8 @@ namespace RXD.Base
         public static string EncryptionContainerName = "ReXgen";
         public static byte[] EncryptionKeysBlob = null;
 
+        public static UInt64 MaxTimeGap = 0;//20000 * 1000 * 100; // Config[BinConfig.BinProp.TimeStampPrecision]
+
         static byte headersizebytes = 4;
         internal static UInt32 StructureOffset = 0;
         internal readonly DataOrigin dataSource;
@@ -362,7 +364,7 @@ namespace RXD.Base
                         if (bin.Value is BinCanMessage)
                         {
                             var msg = bin.Value as BinCanMessage;
-                            byte[] hex = msg[BinCanMessage.BinProp.DefaultHex]; 
+                            byte[] hex = msg[BinCanMessage.BinProp.DefaultHex];
                             if (msg[BinCanMessage.BinProp.DLC] != hex.Length)
                             {
                                 msg[BinCanMessage.BinProp.DefaultHex] = new byte[msg[BinCanMessage.BinProp.DLC]];
@@ -424,7 +426,7 @@ namespace RXD.Base
                 if (dataSource == DataOrigin.Memory)
                     throw new Exception("Sortng stream data is not supported!");
 
-                if (reloadSorted == rxdUri) 
+                if (reloadSorted == rxdUri)
                     return false;
 
                 if (rxdUri.EndsWith(SortedSuffix + Extension))
@@ -525,28 +527,28 @@ namespace RXD.Base
             }
         }
 
-        public bool ToMF4(string outputfn, ExportCollections frameSignals = null, Action<object> ProgressCallback = null)
+        public bool ToMF4(string outputfn, ExportSettings settings = null, Action<object> ProgressCallback = null)
         {
             using (FileStream fs = new FileStream(outputfn, FileMode.Create, FileAccess.Write, FileShare.None))
             {
-                return ToMf4Stream(fs, frameSignals, ProgressCallback);
+                return ToMf4Stream(fs, settings, ProgressCallback);
             }
         }
 
-        public Stream ToMF4(ExportCollections frameSignals = null, Action<object> ProgressCallback = null)
+        public Stream ToMF4(ExportSettings settings = null, Action<object> ProgressCallback = null)
         {
             MemoryStream ms = new MemoryStream();
-            ToMf4Stream(ms, frameSignals, ProgressCallback);
+            ToMf4Stream(ms, settings, ProgressCallback);
             return ms;
         }
 
-        bool ToMf4Stream(Stream mdfStream, ExportCollections frameSignals = null, Action<object> ProgressCallback = null)
+        bool ToMf4Stream(Stream mdfStream, ExportSettings settings = null, Action<object> ProgressCallback = null)
         {
             object FindMessageFrameID(RecBase rec, out UInt16 GroupID, out byte DLC)
             {
                 if (rec is RecCanTrace)
                 {
-                    foreach (var fmsg in frameSignals.dbcCollection)
+                    foreach (var fmsg in settings.SignalsDatabase.dbcCollection)
                         if (DbcEqualsRecord(fmsg, rec as RecCanTrace))
                         {
                             DLC = fmsg.Message.DLC;
@@ -557,7 +559,7 @@ namespace RXD.Base
                 else if (rec is RecLinTrace)
                 {
                     if (((rec as RecLinTrace).data.Flags & LinMessageFlags.Error) == 0)
-                        foreach (var fmsg in frameSignals.ldfCollection)
+                        foreach (var fmsg in settings.SignalsDatabase.ldfCollection)
                             if (LdfEqualsRecord(fmsg, rec as RecLinTrace))
                             {
                                 DLC = fmsg.Message.DLC;
@@ -571,6 +573,9 @@ namespace RXD.Base
                 return null;
             }
 
+            settings ??= new();
+            bool Exportable(BinBase bin) => settings.ChannelFilter is null || settings.ChannelFilter.Contains(bin.header.uniqueid);
+
             UInt64 LastTimestampCan = 0;
             UInt64 TimeOffsetCan = 0;
             UInt64 LastTimestampCanError = 0;
@@ -583,14 +588,14 @@ namespace RXD.Base
             try
             {
                 Dictionary<UInt16, ChannelDescriptor> Signals =
-                     this.Where(r => r.Value.RecType == RecordType.MessageData).
+                     this.Where(r => r.Value.RecType == RecordType.MessageData && Exportable(r.Value)).
                      Select(dg => new { ID = (UInt16)dg.Key, Data = dg.Value.GetDataDescriptor }).
                      ToDictionary(dg => dg.ID, dg => dg.Data);
-                
+
                 MDF mdf = new MDF();
                 using (BlockBuilder builder = new BlockBuilder(mdf, 8/*Config[BinConfig.BinProp.TimeStampSize]*/, Config[BinConfig.BinProp.TimeStampPrecision]))
                 {
-                    mdf.BuildLoggerStruct(builder, DatalogStartTime, Signals, frameSignals);
+                    mdf.BuildLoggerStruct(builder, DatalogStartTime, Signals, settings.SignalsDatabase);
                     mdf.Write(mdfStream);
 
                     var mdfGroups =
@@ -699,7 +704,7 @@ namespace RXD.Base
                                 foreach (var mdfframe in rec.ToMdfFrame())
                                     WriteMdfFrame(mdfframe, rec.LinkedBin.RecType);
 
-                                if (frameSignals != null)
+                                if (settings.SignalsDatabase != null)
                                     if ((fmsg = FindMessageFrameID(rec, out UInt16 groupid, out byte DLC)) != null)
                                     {
                                         WriteMdfFrame(rec.ConvertToMdfMessageFrame(groupid, DLC), rec.LinkedBin.RecType);
@@ -793,24 +798,42 @@ namespace RXD.Base
             ddata.ProcessingRules = settings.ProcessingRules;
 
             UInt32 FileTimestamp = 0;
-            UInt64 LastTimestampCan = 0;
-            UInt64 LastTimestampLin = 0;
-            UInt64 TimeOffsetCan = 0;
-            UInt64 TimeOffsetLin = 0;
-            bool isLastBlock = false;
-
-            double WriteData(DoubleData dd, UInt64 Timestamp, byte[] BinaryArray, ref UInt64 LastTimestamp, ref UInt64 TimeOffset)
+            UInt64[] LastTimestamp = new UInt64[UInt16.MaxValue + 1];
+            UInt64[] TimeOffset = new UInt64[UInt16.MaxValue + 1];
+            for (var i = 0; i <= UInt16.MaxValue; i++)
             {
-                if (Timestamp < LastTimestamp)
-                    TimeOffset += 0x100000000;
-                LastTimestamp = Timestamp;
-                Timestamp += TimeOffset;
-
-                return dd.WriteBinaryData((Timestamp - FileTimestamp) * TimestampCoeff, BinaryArray);
+                LastTimestamp[i] = 0;
+                TimeOffset[i] = 0;
             }
+
+            bool isLastBlock = false;
+            bool bigGapFound = false;
 
             try
             {
+                double WriteData(DoubleData dd, UInt64 Timestamp, byte[] BinaryArray, ref UInt64 LastTimestamp, ref UInt64 TimeOffset)
+                {
+                    if (Timestamp < LastTimestamp)
+                    {
+                        TimeOffset += 0x100000000;
+                        if (LastTimestamp > 0 && MaxTimeGap > 0 && Timestamp + TimeOffset - LastTimestamp > MaxTimeGap)
+                        {
+                            bigGapFound = true;
+                            return double.NaN;
+                        }
+                    }
+                    if (LastTimestamp > 0 && MaxTimeGap > 0 && Timestamp + TimeOffset - LastTimestamp > MaxTimeGap)
+                    {
+                        bigGapFound = true;
+                        return double.NaN;
+                    }
+
+                    LastTimestamp = Timestamp;
+                    Timestamp += TimeOffset;
+
+                    return dd.WriteBinaryData((Timestamp - FileTimestamp) * TimestampCoeff, BinaryArray);
+                }
+
                 settings.ProgressCallback?.Invoke(0);
                 settings.ProgressCallback?.Invoke("Extracting channel data...");
                 using (RXDataReader dr = new RXDataReader(this))
@@ -821,11 +844,17 @@ namespace RXD.Base
                     if (settings.ProcessingRules is not null)
                         settings.ProcessingRules.FirstTime = (LowestTimestamp - FileTimestamp) * TimestampCoeff;
 
+                    if (settings.SignalsDatabase is not null && settings.SignalsDatabase.dbcCollection is not null)
+                        foreach (var msg in settings.SignalsDatabase.dbcCollection)
+                            foreach (BasicItemInfo sig in msg.Signals)
+                                sig.TempObj = null;
+
                     while (dr.ReadNext())
                     {
                         isLastBlock = (dr.Messages.ID + dr.DataSectorStart) * RXDataReader.SectorSize == (UInt64)rxdFullSize;
 
                         foreach (RecBase rec in dr.Messages)
+                        {
                             switch (rec.LinkedBin.RecType)
                             {
                                 case RecordType.Unknown:
@@ -836,22 +865,25 @@ namespace RXD.Base
                                         if (FindMessageFrameID(canrec, out int id))
                                         {
                                             ExportDbcMessage busMsg = settings.SignalsDatabase.dbcCollection[id];
-                                            byte SA = (byte)((busMsg.Message.MsgType == DBCMessageType.J1939PG) ? canrec.data.CanID.Source : 0xFF);
-
-                                            var mode = busMsg.GetMode();
-                                            double modeval = double.NaN;
-                                            double lastval = double.NaN;
-                                            for (int i = 0; i < busMsg.Signals.Count; i++)
+                                            if (busMsg.Signals.Count > 0)
                                             {
-                                                var sig = busMsg.Signals[i];
-                                                var obj = ddata.Object(sig as BasicItemInfo, (1u << 30) | ((uint)i << 16) | (uint)id, SA);
-                                                obj.BusChannel = $"CAN{canrec.BusChannel}";
+                                                byte SA = (byte)((busMsg.Message.MsgType == DBCMessageType.J1939PG) ? canrec.data.CanID.Source : 0xFF);
 
-                                                if (i == 1 && mode is not null)
-                                                    modeval = lastval;
-                                                if ((sig.Type == DBCSignalType.ModeDependent && sig.Mode == modeval) || sig.Type != DBCSignalType.ModeDependent)
-                                                    lastval = WriteData(obj, canrec.data.Timestamp, rec.VariableData, ref LastTimestampCan, ref TimeOffsetCan);
-                                            }
+                                                var mode = busMsg.GetMode();
+                                                double modeval = double.NaN;
+                                                double lastval = double.NaN;
+                                                for (int i = 0; i < busMsg.Signals.Count; i++)
+                                                {
+                                                    var sig = busMsg.Signals[i];
+                                                    var obj = ddata.Object(sig as BasicItemInfo, (1u << 30) | ((uint)i << 16) | (uint)id, SA);
+                                                    obj.BusChannel = $"CAN{canrec.BusChannel}";
+
+                                                    if (i == 1 && mode is not null)
+                                                        modeval = lastval;
+                                                    if ((sig.Type == DBCSignalType.ModeDependent && sig.Mode == modeval) || sig.Type != DBCSignalType.ModeDependent)
+                                                        lastval = WriteData(obj, canrec.data.Timestamp, rec.VariableData, ref LastTimestamp[rec.header.UID], ref TimeOffset[rec.header.UID]);
+                                                }
+                                            }                                            
                                         }
                                     break;
                                 case RecordType.CanError:
@@ -866,7 +898,7 @@ namespace RXD.Base
                                             {
                                                 var obj = ddata.Object(busMsg.Signals[i], (2u << 30) | ((uint)i << 16) | (uint)id);
                                                 obj.BusChannel = "LIN";
-                                                WriteData(obj, linrec.data.Timestamp, rec.VariableData, ref LastTimestampLin, ref TimeOffsetLin);
+                                                WriteData(obj, linrec.data.Timestamp, rec.VariableData, ref LastTimestamp[rec.header.UID], ref TimeOffset[rec.header.UID]);
                                             }
                                         }
                                     break;
@@ -874,16 +906,20 @@ namespace RXD.Base
                                     if (Exportable(rec.LinkedBin))
                                     {
                                         ddata.Object(rec.LinkedBin).BusChannel = $"CAN{rec.BusChannel}";
-                                        WriteData(ddata.Object(rec.LinkedBin), (rec as RecMessage).data.Timestamp, rec.VariableData, ref LastTimestampCan, ref TimeOffsetCan);
+                                        WriteData(ddata.Object(rec.LinkedBin), (rec as RecMessage).data.Timestamp, rec.VariableData, ref LastTimestamp[rec.header.UID], ref TimeOffset[rec.header.UID]);
                                     }
                                     break;
                                 default:
                                     break;
                             }
+                            if (bigGapFound)
+                                goto finalize;
+                        }
                         settings.ProgressCallback?.Invoke((int)dr.GetProgress);
                     }
+                finalize:
                     if (settings.ProcessingRules is not null)
-                        ddata.FinishWrite((Math.Max(LastTimestampCan + TimeOffsetCan, LastTimestampLin + TimeOffsetLin) - FileTimestamp) * TimestampCoeff);
+                        ddata.FinishWrite((LastTimestamp.Zip(TimeOffset, (t, o) => t + o).Max() - FileTimestamp) * TimestampCoeff);
                 }
 
                 ddata.SortByIdentifier();

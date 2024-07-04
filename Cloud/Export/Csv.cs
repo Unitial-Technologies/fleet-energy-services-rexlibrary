@@ -48,7 +48,7 @@ namespace Cloud.Export
                 return false;
             }
             log?.Log($"Double data points count {ddcCsv.Count}");
-            if (storage.GetType().ToString() == "AwsS3StorageProvider")
+            if (storage.GetType().ToString().Contains("AwsS3StorageProvider"))
                 return await ddcCsv.ToCSVMultipart(storage, bucket, destFile, log);
             else
                 return await ddcCsv.ToCSV(storage, bucket, destFile, log);
@@ -128,7 +128,7 @@ namespace Cloud.Export
                         csvStream.Position = 0;
                         log?.Log($"Uploading part {partId} with size {csvStream.Length}");
                         await storage.UploadPart(csvStream, bucket, key, uploadId, partId);
-                        log?.Log($"Uploaded part {partId}");
+                        //log?.Log($"Uploaded part {partId}");
                         partId++;
                         csvStream.Seek(0, SeekOrigin.Begin);
                         csvStream.Position = 0;

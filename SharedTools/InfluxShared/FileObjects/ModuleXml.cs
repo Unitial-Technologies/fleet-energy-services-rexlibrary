@@ -137,10 +137,11 @@ namespace InfluxShared.FileObjects
         [XmlIgnore]
         public byte[] Data { get; set; }
         [XmlElement("DATA")]
-        public string DataHex {
+        public string DataHex
+        {
             get => Bytes.ToHexBinary(Data);
             set => Data = Bytes.FromHexBinary(value);
-        }        
+        }
 
         [XmlElement("DELAY")]
         public long Delay { get; set; }
@@ -167,7 +168,7 @@ namespace InfluxShared.FileObjects
         }
 
         [XmlElement("ENDIAN")]
-        public string Endian 
+        public string Endian
         {
             get => ByteOrder.ToString().ToUpper();
             set
@@ -198,7 +199,9 @@ namespace InfluxShared.FileObjects
         public string Name { get; set; }
 
         [XmlElement("OFFSET")]
-        public double Offset { get => Conversion.Type.HasFlag(ConversionType.Formula) ? Conversion.Formula.CoeffB : 1;
+        public double Offset
+        {
+            get => Conversion.Type.HasFlag(ConversionType.Formula) ? Conversion.Formula.CoeffB : 1;
             set
             {
                 Conversion.Type = ConversionType.Formula;
@@ -265,7 +268,7 @@ namespace InfluxShared.FileObjects
         [XmlElement("MODE_START_BIT")]
         public short ModeStartBit { get; set; }
         [XmlElement("MODE_VALUE")]
-        public int ModeValue { get; set; }        
+        public int ModeValue { get; set; }
     }
 
     public class PollingItem : Item
@@ -290,5 +293,5 @@ namespace InfluxShared.FileObjects
         public PollingItem(ICanSignal msg) => msg.CopyProperties(this);
     }
 
-   
+
 }

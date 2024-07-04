@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace InfluxShared.Generic
+﻿namespace InfluxShared.Generic
 {
     public enum CanFDMessageType : byte
     {
@@ -11,5 +7,5 @@ namespace InfluxShared.Generic
         FD_FAST_CAN,
     }
 
-    
+
 }

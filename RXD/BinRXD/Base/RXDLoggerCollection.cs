@@ -6,7 +6,7 @@ namespace RXD.Base
     {
         public RXDLoggerCollection()
         {
-           
+
         }
 
     }

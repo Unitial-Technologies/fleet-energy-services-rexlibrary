@@ -246,13 +246,13 @@ namespace MDF4xx.IO
         {
             //cg.data.cg_size.cg_data_bytes = 4/*timestamp*/ + 8/*fixed hdr*/ + 64/*can data*/;
             string framename = "CAN_DataFrame";
-            
+
             CGBlock cg = BuildCG(
-                BuildDG((byte)Marshal.SizeOf(Enum.GetUnderlyingType(typeof(FrameType)))), 
-                framename, 
-                Convert.ToUInt32(FrameType.CAN_DataFrame), 
+                BuildDG((byte)Marshal.SizeOf(Enum.GetUnderlyingType(typeof(FrameType)))),
+                framename,
+                Convert.ToUInt32(FrameType.CAN_DataFrame),
                 BuildSI(SIType.BUS, SIBusType.CAN, "CAN")
-            ); 
+            );
             cg.FlagBusEvent = true;
             cg.FlagPlainBusEvent = true;
             CNBlock cnTime = BuildTimeChannel(cg);
@@ -279,9 +279,9 @@ namespace MDF4xx.IO
             string framename = "CAN_ErrorFrame";
 
             CGBlock cg = BuildCG(
-                BuildDG((byte)Marshal.SizeOf(Enum.GetUnderlyingType(typeof(FrameType)))), 
-                framename, 
-                Convert.ToUInt32(FrameType.CAN_ErrorFrame), 
+                BuildDG((byte)Marshal.SizeOf(Enum.GetUnderlyingType(typeof(FrameType)))),
+                framename,
+                Convert.ToUInt32(FrameType.CAN_ErrorFrame),
                 BuildSI(SIType.BUS, SIBusType.CAN, "CAN")
             );
             cg.FlagBusEvent = true;
@@ -306,9 +306,9 @@ namespace MDF4xx.IO
             string framename = "LIN_Frame";
 
             CGBlock cg = BuildCG(
-                BuildDG((byte)Marshal.SizeOf(Enum.GetUnderlyingType(typeof(FrameType)))), 
-                framename, 
-                Convert.ToUInt32(FrameType.LIN_DataFrame), 
+                BuildDG((byte)Marshal.SizeOf(Enum.GetUnderlyingType(typeof(FrameType)))),
+                framename,
+                Convert.ToUInt32(FrameType.LIN_DataFrame),
                 BuildSI(SIType.BUS, SIBusType.LIN, "LIN")
             );
 
@@ -370,9 +370,9 @@ namespace MDF4xx.IO
             string framename = "LIN_TransmissionError";
 
             CGBlock cg = BuildCG(
-                BuildDG((byte)Marshal.SizeOf(Enum.GetUnderlyingType(typeof(FrameType)))), 
-                framename, 
-                Convert.ToUInt32(FrameType.LIN_TransmissionErrorFrame), 
+                BuildDG((byte)Marshal.SizeOf(Enum.GetUnderlyingType(typeof(FrameType)))),
+                framename,
+                Convert.ToUInt32(FrameType.LIN_TransmissionErrorFrame),
                 BuildSI(SIType.BUS, SIBusType.LIN, "LIN")
             );
 
@@ -487,8 +487,8 @@ namespace MDF4xx.IO
             void AddDbcChannelGroup(string name, IEnumerable<ICanSignal> channels, UInt16 dlc)
             {
                 CGBlock cg = BuildCG(
-                    BuildDG((byte)Marshal.SizeOf(Enum.GetUnderlyingType(typeof(FrameType)))), 
-                    name, 
+                    BuildDG((byte)Marshal.SizeOf(Enum.GetUnderlyingType(typeof(FrameType)))),
+                    name,
                     groupid
                 );
 
@@ -549,7 +549,7 @@ namespace MDF4xx.IO
 
                     CGBlock cg = BuildCG(
                         BuildDG((byte)Marshal.SizeOf(Enum.GetUnderlyingType(typeof(FrameType)))),
-                        "LIN" + msg.BusChannel.ToString() + "." + msg.Message.Name, 
+                        "LIN" + msg.BusChannel.ToString() + "." + msg.Message.Name,
                         groupid
                     );
                     //cg.FlagBusEvent = true;
@@ -591,8 +591,8 @@ namespace MDF4xx.IO
                 if (sig.Value is not null)
                 {
                     CGBlock cg = BuildCG(
-                        BuildDG((byte)Marshal.SizeOf(Enum.GetUnderlyingType(typeof(FrameType)))), 
-                        sig.Value.Name, 
+                        BuildDG((byte)Marshal.SizeOf(Enum.GetUnderlyingType(typeof(FrameType)))),
+                        sig.Value.Name,
                         sig.Key
                     );
 

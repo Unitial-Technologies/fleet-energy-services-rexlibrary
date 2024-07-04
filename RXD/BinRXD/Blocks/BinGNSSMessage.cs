@@ -39,11 +39,11 @@ namespace RXD.Blocks
         GEOFENCE_4,
         GNSS_TIMESTAMP
     }
-    
+
     #endregion
 
     public class BinGNSSMessage : BinBase
-    {        
+    {
 
         internal enum BinProp
         {

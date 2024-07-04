@@ -1,7 +1,5 @@
 ﻿using InfluxShared.FileObjects;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace RXD.Blocks
 {

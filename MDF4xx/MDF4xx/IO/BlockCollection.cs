@@ -85,20 +85,20 @@ namespace MDF4xx.IO
 
         public void BuildLoggerStruct(BlockBuilder builder, DateTime DatalogStartTime, Dictionary<UInt16, ChannelDescriptor> Signals = null, ExportCollections frameSignals = null)
         {
-                builder.BuildID();
-                builder.BuildHD(DatalogStartTime);
-                builder.BuildFH();
+            builder.BuildID();
+            builder.BuildHD(DatalogStartTime);
+            builder.BuildFH();
 
-                builder.BuildCanDataFrameGroup();
-                builder.BuildCanErrorFrameGroup();
-                builder.BuildLinDataFrameGroup();
-                builder.BuildLinChecksumErrorFrameGroup();
-                builder.BuildLinTransmissionErrorFrameGroup();
+            builder.BuildCanDataFrameGroup();
+            builder.BuildCanErrorFrameGroup();
+            builder.BuildLinDataFrameGroup();
+            builder.BuildLinChecksumErrorFrameGroup();
+            builder.BuildLinTransmissionErrorFrameGroup();
 
-                if (Signals != null)
-                    builder.BuildSignals(Signals);
-                if (frameSignals != null)
-                    builder.BuildFrameSignalGroups(frameSignals);
+            if (Signals != null)
+                builder.BuildSignals(Signals);
+            if (frameSignals != null)
+                builder.BuildFrameSignalGroups(frameSignals);
         }
 
     }

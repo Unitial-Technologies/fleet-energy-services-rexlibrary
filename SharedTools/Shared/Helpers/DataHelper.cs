@@ -2,33 +2,34 @@
 using MatlabFile.Base;
 using MDF4xx.IO;
 using RXD.Base;
-using RXD.DataRecords;
 using RXD.Objects;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace Influx.Shared.Helpers
 {
     public static class DataHelper
     {
+        [Flags]
+        public enum TypeFlags
+        {
+            AllowMerge = 1 << 0,
+            ContainTrace = 1 << 1,
+            ContainData = 1 << 2,
+        }
+
         public class FileType
         {
             public string Filter;
             public string Extension;
             public string Name;
             public override string ToString() => Filter.Split('|')[0];
-            public bool supportMerge =>
-                Filter == DoubleDataCollection.Filter ||
-                Filter == DoubleDataCollection.svFilter ||
-                Filter == Matlab.Filter ||
-                Filter == ASC.Filter ||
-                Filter == BLF.Filter ||
-                Filter == MDF.Filter ||
-                Filter == BinRXD.Filter;
+            public TypeFlags Flags;
+            public bool supportMerge => Flags.HasFlag(TypeFlags.AllowMerge);
+            public bool traceOnly => Flags.HasFlag(TypeFlags.ContainTrace) && !Flags.HasFlag(TypeFlags.ContainData);
         }
 
         public class FileTypeList : List<FileType>
@@ -39,48 +40,64 @@ namespace Influx.Shared.Helpers
                 {
                     Filter = DoubleDataCollection.Filter,
                     Extension = DoubleDataCollection.Extension,
-                    Name = "DiaLOG"
+                    Name = "DiaLOG",
+                    Flags = TypeFlags.AllowMerge | TypeFlags.ContainData,
                 });
                 Add(new FileType()
                 {
                     Filter = DoubleDataCollection.svFilter,
                     Extension = DoubleDataCollection.svExtension,
-                    Name = "Regional"
+                    Name = "Regional",
+                    Flags = TypeFlags.AllowMerge | TypeFlags.ContainData,
                 });
                 Add(new FileType()
                 {
                     Filter = Matlab.Filter,
-                    Extension = Matlab.Extension
+                    Extension = Matlab.Extension,
+                    Flags = TypeFlags.AllowMerge | TypeFlags.ContainData,
+                });
+                Add(new FileType()
+                {
+                    Filter = ApacheParquet.Filter,
+                    Extension = ApacheParquet.Extension,
+                    Flags = TypeFlags.AllowMerge | TypeFlags.ContainData,
                 });
                 Add(new FileType()
                 {
                     Filter = ASC.Filter,
-                    Extension = ASC.Extension
+                    Extension = ASC.Extension,
+                    Flags = TypeFlags.AllowMerge | TypeFlags.ContainTrace,
                 });
                 Add(new FileType()
                 {
                     Filter = BLF.Filter,
-                    Extension = BLF.Extension
+                    Extension = BLF.Extension,
+                    Flags = TypeFlags.AllowMerge | TypeFlags.ContainTrace,
                 });
                 Add(new FileType()
                 {
                     Filter = TRC.Filter,
-                    Extension = TRC.Extension
+                    Extension = TRC.Extension,
+                    Flags = TypeFlags.ContainTrace,
+
                 });
                 Add(new FileType()
                 {
                     Filter = CSTrace.Filter,
-                    Extension = CSTrace.Extension
+                    Extension = CSTrace.Extension,
+                    Flags = TypeFlags.ContainTrace,
                 });
                 Add(new FileType()
                 {
                     Filter = MDF.Filter,
-                    Extension = MDF.Extension
+                    Extension = MDF.Extension,
+                    Flags = TypeFlags.AllowMerge | TypeFlags.ContainTrace | TypeFlags.ContainData,
                 });
                 Add(new FileType()
                 {
                     Filter = BinRXD.Filter,
-                    Extension = BinRXD.Extension
+                    Extension = BinRXD.Extension,
+                    Flags = TypeFlags.AllowMerge | TypeFlags.ContainTrace | TypeFlags.ContainData,
                 });
                 Add(new FileType()
                 {
@@ -132,10 +149,10 @@ namespace Influx.Shared.Helpers
 
                 if (!lin.isError)
                     blf.WriteLinMessage(
-                        lin.LinID, 
-                        (UInt64)(lin.FloatTimestamp * 1000000), 
-                        (byte)(lin.BusChannel + 1), 
-                        lin.flagDIR, 
+                        lin.LinID,
+                        (UInt64)(lin.FloatTimestamp * 1000000),
+                        (byte)(lin.BusChannel + 1),
+                        lin.flagDIR,
                         lin.DLC,
                         lin.Data
                     );
@@ -143,18 +160,18 @@ namespace Influx.Shared.Helpers
                 {
                     if (lin.flagLCSE)
                         blf.WriteLinCrcError(
-                            lin.LinID, 
-                            (UInt64)(lin.FloatTimestamp * 1000000), 
-                            (byte)(lin.BusChannel + 1), 
-                            lin.flagDIR, 
-                            lin.DLC, 
+                            lin.LinID,
+                            (UInt64)(lin.FloatTimestamp * 1000000),
+                            (byte)(lin.BusChannel + 1),
+                            lin.flagDIR,
+                            lin.DLC,
                             lin.Data
                         );
                     else if (lin.flagLTE)
                         blf.WriteLinSendError(
-                            lin.LinID, 
-                            (UInt64)(lin.FloatTimestamp * 1000000), 
-                            (byte)(lin.BusChannel + 1), 
+                            lin.LinID,
+                            (UInt64)(lin.FloatTimestamp * 1000000),
+                            (byte)(lin.BusChannel + 1),
                             lin.DLC
                         );
                 }
@@ -395,8 +412,8 @@ namespace Influx.Shared.Helpers
                     else if (ext.Equals(XmlHandler.Extension, StringComparison.OrdinalIgnoreCase))
                         return rxd.ToXML(outputPath);
                     else if (ext.Equals(MDF.Extension, StringComparison.OrdinalIgnoreCase))
-                    {                        
-                        return rxd.ToMF4(outputPath, settings.SignalsDatabase, ProgressCallback);
+                    {
+                        return rxd.ToMF4(outputPath, settings, ProgressCallback);
                     }
                 }
 
@@ -435,6 +452,8 @@ namespace Influx.Shared.Helpers
 
                         if (ext.Equals(Matlab.Extension, StringComparison.OrdinalIgnoreCase))
                             return BuildChannels().ToMatlab;
+                        else if (ext.Equals(ApacheParquet.Extension, StringComparison.OrdinalIgnoreCase))
+                            return BuildChannels().ToApacheParquet;
                         else if (ext.Equals(DoubleDataCollection.Extension, StringComparison.OrdinalIgnoreCase))
                         {
                             bool FullDateTime = outputFormat.Contains("_FullDateTime");
@@ -452,7 +471,7 @@ namespace Influx.Shared.Helpers
 
                     var ChannelConvert = GetChannelConverter();
                     if (ChannelConvert != null)
-                        return ChannelConvert(outputPath, ProgressCallback);
+                        return isError = !ChannelConvert(outputPath, ProgressCallback);
                 }
 
                 Exported = false;
@@ -521,7 +540,7 @@ namespace Influx.Shared.Helpers
 
                 if (channels != null || rxd != null)
                 {
-                     Func<Stream, Action<object>, bool> GetChannelConverter()
+                    Func<Stream, Action<object>, bool> GetChannelConverter()
                     {
                         DoubleDataCollection BuildChannels(TimeFormatType csvTimeFormat = TimeFormatType.Seconds)
                         {
@@ -534,6 +553,8 @@ namespace Influx.Shared.Helpers
 
                         if (ext.Equals(Matlab.Extension, StringComparison.OrdinalIgnoreCase))
                             return BuildChannels().ToMatlab;
+                        else if (ext.Equals(ApacheParquet.Extension, StringComparison.OrdinalIgnoreCase))
+                            return BuildChannels().ToApacheParquet;
                         else if (ext.Equals(DoubleDataCollection.Extension, StringComparison.OrdinalIgnoreCase))
                         {
                             bool FullDateTime = outputFormat.Contains("_FullDateTime");
@@ -551,7 +572,7 @@ namespace Influx.Shared.Helpers
 
                     var ChannelConvert = GetChannelConverter();
                     if (ChannelConvert != null)
-                        return ChannelConvert(outputStream, ProgressCallback);
+                        return isError = !ChannelConvert(outputStream, ProgressCallback);
                 }
 
                 Exported = false;

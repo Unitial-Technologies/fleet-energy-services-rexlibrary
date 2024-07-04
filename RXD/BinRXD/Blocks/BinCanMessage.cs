@@ -1,5 +1,7 @@
 ﻿using InfluxShared.Generic;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace RXD.Blocks
 {
@@ -39,7 +41,7 @@ namespace RXD.Blocks
             Downsampling,
             Delay,
             NextOutputMessageID,
-           /* ResponseUID,
+          /*  ResponseUID,
             ResponseTimeout,
             ResponseAttempts,
             ResponseObligatory*/

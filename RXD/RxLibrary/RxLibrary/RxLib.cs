@@ -88,8 +88,8 @@ namespace RxLibrary
             if (rxd is null)
                 return false;
 
-            var canlist = rxd.Where(x=>x.Value is BinCanInterface).Select(b => (BinCanInterface)b.Value).ToList();
-            var msglist = rxd.Where(can=>can.Value is BinCanMessage).Select(b => (BinCanMessage)b.Value).ToList();
+            var canlist = rxd.Where(x => x.Value is BinCanInterface).Select(b => (BinCanInterface)b.Value).ToList();
+            var msglist = rxd.Where(can => can.Value is BinCanMessage).Select(b => (BinCanMessage)b.Value).ToList();
             msglist = msglist.Where(m => m[BinCanMessage.BinProp.InterfaceUID] > 0).ToList();
             var errlist = rxd.Where(err => err.Value is BinCanError).Select(b => (BinCanError)b.Value).ToList();
             errlist = errlist.Where(e => e[BinCanError.BinProp.InterfaceID] > 0).ToList();

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace InfluxShared.FileObjects
+﻿namespace InfluxShared.FileObjects
 {
     public class A2LItem : BasicItemInfo
     {

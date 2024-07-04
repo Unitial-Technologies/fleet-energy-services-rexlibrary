@@ -24,6 +24,7 @@ namespace RXD.Base
     {
         public static bool CreateDebugFiles = false;
         public static AllowDebugInfo ExternalDebugChecker = null;
+        internal string DebugOutput = null;
 
         internal static readonly UInt16 SectorSize = 0x200;
         static readonly UInt16 MaxBufferBlocks = 0x7F;
@@ -66,6 +67,7 @@ namespace RXD.Base
             SectorID = DataSectorStart = (UInt32)(collection.DataOffset / SectorSize);
 
             CreateDebugFiles = collection.dataSource == DataOrigin.File && ExternalDebugChecker is not null && ExternalDebugChecker();
+            DebugOutput = collection.rxdUri;
 
             OutputDebugSectors();
             ReadSector = rxStream.Read;
@@ -117,7 +119,7 @@ namespace RXD.Base
             UInt32 LastTimestamp = 0;
             UInt32 pboffset = 0;
             byte[] tmp;
-            using (FileStream dbg = new FileStream(Path.ChangeExtension(collection.rxdUri, ".sectors"), FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
+            using (FileStream dbg = new FileStream(Path.ChangeExtension(DebugOutput, ".sectors"), FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
             using (FileStream fs = new FileStream(collection.rxdUri, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 fs.Seek(DataSectorStart * SectorSize, SeekOrigin.Begin);
@@ -249,10 +251,10 @@ namespace RXD.Base
             if (CreateDebugFiles)
             {
                 if (sb.Length > 0)
-                    using (var reclog = File.AppendText(Path.ChangeExtension(collection.rxdUri, ".records")))
+                    using (var reclog = File.AppendText(Path.ChangeExtension(DebugOutput, ".records")))
                         reclog.Write(sb.ToString());
                 if (dbg.Length > 0)
-                    using (var reclog = File.AppendText(Path.ChangeExtension(collection.rxdUri, ".aws")))
+                    using (var reclog = File.AppendText(Path.ChangeExtension(DebugOutput, ".aws")))
                         reclog.Write(dbg.ToString());
             }
         }

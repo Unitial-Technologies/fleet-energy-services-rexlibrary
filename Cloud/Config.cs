@@ -16,6 +16,7 @@ namespace Cloud
         Rxc = 16,
         Mdf = 32,
         Blf = 64,
+        Parquet = 128,
     }
     internal static class Config
     {
@@ -27,8 +28,8 @@ namespace Cloud
         internal class TimestreamSettings
         {
             public bool enabled { get; set; }
-            public string db_name { get; set; }
-            public string table_name { get; set; }
+            public string db_name { get; set; } = "";
+            public string table_name { get; set; } = "";
             public bool downsampling { get; set; } = false;
             public double downsampling_tolerance { get; set; } = 0.1;
         }
@@ -115,6 +116,8 @@ namespace Cloud
                 convert |= Cloud.ConversionType.Mdf;
             if (Config.ConfigJson.ContainsKey("BLF") && Config.ConfigJson.BLF.ContainsKey("enabled") && (Config.ConfigJson.BLF.enabled == true))
                 convert |= Cloud.ConversionType.Blf;
+            if (Config.ConfigJson.ContainsKey("Parquet") && Config.ConfigJson.Parquet.ContainsKey("enabled") && (Config.ConfigJson.Parquet.enabled == true))
+                convert |= Cloud.ConversionType.Parquet;
             return convert;
         }
     }

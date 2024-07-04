@@ -128,10 +128,10 @@ namespace MDF4xx.Blocks
                 }
             }
 
-            public dynamicData(BlockData mainData, DLFlags ControlFlag, bool FlagValue = true) 
-            { 
+            public dynamicData(BlockData mainData, DLFlags ControlFlag, bool FlagValue = true)
+            {
                 this.mainData = mainData;
-                this.ControlFlag = ControlFlag; 
+                this.ControlFlag = ControlFlag;
                 this.FlagValue = FlagValue;
             }
         }
@@ -194,7 +194,7 @@ namespace MDF4xx.Blocks
         public UInt64 CurrentOffset = 0;
         public IDataBlock CurrentDataBlock;
 
-        public IDataBlock CreateNewData(BlockBuilder builder) => 
+        public IDataBlock CreateNewData(BlockBuilder builder) =>
             CurrentDataBlock = MDF.UseCompression ? builder.BuildDZ(this, 0) : builder.BuildDT(this, 0);
 
         public void AppendCurrentDataBlock()
@@ -203,7 +203,7 @@ namespace MDF4xx.Blocks
             dl_count++;
             dl_offset.data[dl_count - 1] = CurrentOffset;
             LinkCount++;
-            links.SetObject(links.Count-1, bb);
+            links.SetObject(links.Count - 1, bb);
 
             CurrentOffset += CurrentDataBlock.OrigDatalength;
         }

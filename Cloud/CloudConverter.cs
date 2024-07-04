@@ -2,6 +2,7 @@
 using DbcParserLib;
 using DbcParserLib.Influx;
 using Influx.Shared.Helpers;
+using InfluxDB.Client.Api.Domain;
 using InfluxShared.FileObjects;
 using MDF4xx.IO;
 using Minio.DataModel;
@@ -32,7 +33,7 @@ namespace Cloud
             if (!conversion.HasFlag(ConversionType.Csv) && !conversion.HasFlag(ConversionType.InfluxDB) &&
                    !conversion.HasFlag(ConversionType.TimeStream) && !conversion.HasFlag(ConversionType.Mdf)
                    && !conversion.HasFlag(ConversionType.Blf) && !conversion.HasFlag(ConversionType.Rxc)
-                    && !conversion.HasFlag(ConversionType.Snapshot))
+                    && !conversion.HasFlag(ConversionType.Snapshot) && !conversion.HasFlag(ConversionType.Parquet))
             {
                 Log?.Log("No valid Conversion requested!");
                 return false;
@@ -100,7 +101,17 @@ namespace Cloud
                                         Log?.Log($"ExportSettingsBUS:{collection.BusChannel} signal:{item.Name}");
                                     }
                                 }*/
+                                BinRXD.MaxTimeGap = 0;
+                                if (Config.ConfigJson.ContainsKey("RxdSettings") && Config.ConfigJson.RxdSettings.ContainsKey("MaxTimeGap"))
+                                {
+                                    if (Config.ConfigJson.RxdSettings.MaxTimeGap > 0)
+                                    {
+                                        BinRXD.MaxTimeGap = Config.ConfigJson.RxdSettings.MaxTimeGap * 1000 * 100;
+                                        Log?.Log($"Using MaxTimeGap correction: {Config.ConfigJson.RxdSettings.MaxTimeGap} seconds");
+                                    }                                    
+                                }
                                 DoubleDataCollection ddc = rxd.ToDoubleData(export);
+
                                 Log?.Log($"Memory used after ddc: {GC.GetTotalMemory(false) / (1024 * 1024)} MB");
 
                                 //Write to InfluxDB
@@ -131,7 +142,7 @@ namespace Cloud
                                     MDF.UseCompression = true;
                                     if (Config.ConfigJson.ContainsKey("MDF") && Config.ConfigJson.MDF.ContainsKey("usecompression"))
                                         MDF.UseCompression = Config.ConfigJson.usecompression;
-                                    MemoryStream mdfStream = (MemoryStream)rxd.ToMF4(export.SignalsDatabase);
+                                    MemoryStream mdfStream = (MemoryStream)rxd.ToMF4(new BinRXD.ExportSettings() { SignalsDatabase = export.SignalsDatabase});
                                     if (mdfStream is null)
                                         Log?.Log($"Mdf Conversion failed");
                                     else
@@ -160,6 +171,16 @@ namespace Cloud
                                         else
                                             Log?.Log($"Blf write to S3 failed");
                                     }
+                                }
+
+                                //Parquet Export
+                                if (conversion.HasFlag(Cloud.ConversionType.Parquet))
+                                {
+                                    Log?.Log($"Starting Parquet conversion {rxd.Count}");
+                                    //if (Config.ConfigJson.ContainsKey("Parquet") && Config.ConfigJson.Parquet.ContainsKey("usecompression"))
+                                    //    MDF.UseCompression = Config.ConfigJson.usecompression;
+                                    await Export.Parquet.ToParquet(Storage, Bucket, Path.ChangeExtension(filename, ".parquet"), rxd, signalsCollection, Log);
+
                                 }
 
                                 //CSV Export

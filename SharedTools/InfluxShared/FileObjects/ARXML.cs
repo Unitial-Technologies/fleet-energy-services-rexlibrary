@@ -41,7 +41,7 @@ namespace InfluxShared.FileObjects
             if (node == null)
                 return;
 
-            if (strContent(node, "NATIVE-DECLARATION").ToString().Contains("sint"))            
+            if (strContent(node, "NATIVE-DECLARATION").ToString().Contains("sint"))
                 sig.ValueType = DBCValueType.Signed;
         }
 
@@ -122,7 +122,7 @@ namespace InfluxShared.FileObjects
                             sig.StartBit += (ushort)(segPos + 1);
                             sig.Mode = (byte)val;
                         }
-                   
+
                     sigS.Conversion.TableVerbal.Pairs.Add(val, RefFromFullRef(Ref));
                 }
             }
@@ -131,7 +131,7 @@ namespace InfluxShared.FileObjects
         }
 
         private void CreateCANPdus(XmlNode Ref, DbcMessage msg)
-        {  
+        {
             XmlNode node = NodeFromRef(arxmlPDUs, Ref);
             if (node == null)
                 return;
@@ -145,7 +145,7 @@ namespace InfluxShared.FileObjects
                     sig.Name = strContent(child, "SHORT-NAME");
                     sig.ByteOrder = strContent(child, "PACKING-BYTE-ORDER") == "MOST-SIGNIFICANT-BYTE-LAST" ? DBCByteOrder.Intel : DBCByteOrder.Motorola;
                     sig.StartBit = (ushort)uintContent(child, "START-POSITION");
-                    sig.Type = DBCSignalType.Standard;                    
+                    sig.Type = DBCSignalType.Standard;
 
                     CreateCANSignals(XmlNode(child, "I-SIGNAL-REF"), sig);
 
@@ -180,7 +180,7 @@ namespace InfluxShared.FileObjects
             msg.MsgType = strContent(node, "CAN-ADDRESSING-MODE") == "STANDARD" ? DBCMessageType.Standard : DBCMessageType.Extended;
             CreateCANFrames(XmlNode(node, "FRAME-REF"), msg);
             msg.CANID = (uint)uintContent(node, "IDENTIFIER");
-            
+
             if (msg.CANID != 0/*)//*/ && msg.Items.Count > 0)
                 CANMessages.Add(msg);
         }
@@ -202,7 +202,7 @@ namespace InfluxShared.FileObjects
             foreach (XmlNode child in arxmlDoc.DocumentElement.ChildNodes)
                 if (child.Name == "AR-PACKAGES")
                     node = child;
-                    
+
             arxmlFrames = ELEMENTSNode(XmlNode(node, "Frames", false));
             arxmlPDUs = ELEMENTSNode(XmlNode(node, "PDUs", false));
             arxmlSignals = ELEMENTSNode(XmlNode(node, "Signals", false));
