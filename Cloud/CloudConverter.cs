@@ -139,9 +139,9 @@ namespace Cloud
                                 if (conversion.HasFlag(Cloud.ConversionType.Mdf))
                                 {
                                     Log?.Log($"Starting Mdf conversion {rxd.Count}");
-                                    MDF.UseCompression = true;
+                                    MDF.UseCompression = true;      
                                     if (Config.ConfigJson.ContainsKey("MDF") && Config.ConfigJson.MDF.ContainsKey("usecompression"))
-                                        MDF.UseCompression = Config.ConfigJson.usecompression;
+                                        MDF.UseCompression = Config.ConfigJson.MDF.usecompression;
                                     MemoryStream mdfStream = (MemoryStream)rxd.ToMF4(new BinRXD.ExportSettings() { SignalsDatabase = export.SignalsDatabase});
                                     if (mdfStream is null)
                                         Log?.Log($"Mdf Conversion failed");

@@ -87,6 +87,9 @@ namespace InfluxShared.FileObjects
         public bool IsChild { get; set; }
         public bool LogTx { get; set; }
         public uint TxIdent { get; set; }
+        public uint RxIdent {  get; set; }
+        public uint Timeout { get; set; }
+        public ushort Attempts { get; set; }
         public List<Object> LinkedParameters { get; set; } = new();
 
         public OutputMessage()
@@ -199,6 +202,7 @@ namespace InfluxShared.FileObjects
                     canMsg.BRS = false;
                     canMsg.Linked = true;
                     canMsg.TxIdent = xmlMsg.TxIdent;
+                    canMsg.RxIdent = xmlMsg.RxIdent;
                 }
 
                 return true;
