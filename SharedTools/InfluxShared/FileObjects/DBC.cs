@@ -1,4 +1,5 @@
-﻿using InfluxShared.Objects;
+﻿using InfluxShared.Helpers;
+using InfluxShared.Objects;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -130,6 +131,12 @@ namespace InfluxShared.FileObjects
         public ushort StartBit { get; set; }
         public ushort BitCount { get; set; }
         public DBCSignalType Type { get; set; }
+        public string DisplayType => Type switch
+        {
+            DBCSignalType.Mode => "Mode",
+            DBCSignalType.ModeDependent => "Mode dependent",
+            _ => ""
+        };
         public UInt32 Mode { get; set; }   //If the signal is Mode Dependent
         public DBCByteOrder ByteOrder { get; set; }
         public DBCValueType ValueType { get; set; }
@@ -218,6 +225,40 @@ namespace InfluxShared.FileObjects
         public DBC()
         {
             Messages = new List<DbcMessage>();
+        }
+
+        public static DBC CreateMode22(List<PollingItem> ItemList)
+        {
+            DBC dbc = new DBC();
+            var groupedItems = ItemList.GroupBy(i => i.RxIdent).Select(grp => grp.ToList()).ToList();
+            foreach (var items in groupedItems)
+            {
+                var msg = new DbcMessage() { Name = "Mode 0x22", CANID = items[0].RxIdent, DLC = 8, MsgType = DBCMessageType.Standard };
+                dbc.Messages.Add(msg);
+                msg.Items.Add(new DbcItem()
+                {
+                    Name = "mode",
+                    ItemType = 0,
+                    StartBit = 16,
+                    BitCount = 16,
+                    ByteOrder = DBCByteOrder.Intel,
+                    Type = DBCSignalType.Mode,
+                    ValueType = DBCValueType.Unsigned,
+                });
+
+                foreach (var sig in items)
+                {
+                    DbcItem newSig = new DbcItem();
+                    sig.CopyProperties(newSig);
+                    newSig.Type = DBCSignalType.ModeDependent;
+                    newSig.Mode = ((sig.Ident >> 8) | (sig.Ident << 8)) & 0xFFFF;
+                    newSig.Ident = sig.RxIdent;
+                    newSig.StartBit += 32;
+                    msg.Items.Add(newSig);
+                }
+            }
+
+            return dbc;
         }
 
         public void AddToReferenceCollection(ReferenceCollection collection, byte BusChannel)

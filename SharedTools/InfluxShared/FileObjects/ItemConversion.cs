@@ -32,7 +32,7 @@ namespace InfluxShared.FileObjects
                 if ((value == ConversionType.Formula) || (value == ConversionType.FormulaAndTableNumeric) || (value == ConversionType.FormulaAndTableVerbal))
                 {
                     if (Formula is null)
-                        Formula = new FormulaConversion();
+                        Formula = new FormulaConversion() { CoeffB = 1, CoeffF = 1 };
                 }
                 if ((value == ConversionType.TableNumeric) || (value == ConversionType.FormulaAndTableNumeric))
                 {

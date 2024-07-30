@@ -36,7 +36,7 @@ namespace RXD.Helpers
                 //    data.BusChannel = (bin as BinCanInterface)[BinCanInterface.BinProp.PhysicalNumber];
 
                 if (SourceAddress != 0xFF)
-                    (signal.TempObj as DoubleData).ChannelName += " [SA: " + SourceAddress.ToString("X2") + "]";
+                    (signal.TempObj as DoubleData).ChannelName += " [SA " + SourceAddress.ToString("X2") + "]";
             }
             return signal.TempObj as DoubleData;
         }

@@ -20,7 +20,7 @@ namespace InfluxShared.FileObjects
             set
             {
                 for (DBCMessageType mt = DBCMessageType.Standard; mt <= DBCMessageType.CanFDExtended; mt++)
-                    if (mt.ToDisplayName().Equals(value))
+                    if (mt.ToDisplayName().ToLower().Replace(" ", "").Equals(value.ToLower().Replace(" ", "")))
                     {
                         CanMsgType = mt;
                         break;
@@ -86,10 +86,10 @@ namespace InfluxShared.FileObjects
         public bool Linked { get; set; }
         public bool IsChild { get; set; }
         public bool LogTx { get; set; }
-        public uint TxIdent { get; set; }
         public uint RxIdent {  get; set; }
         public uint Timeout { get; set; }
         public ushort Attempts { get; set; }
+        public Protocol_Type ProtocolType { get; set; }
         public List<Object> LinkedParameters { get; set; } = new();
 
         public OutputMessage()
@@ -170,6 +170,21 @@ namespace InfluxShared.FileObjects
             }
         }
 
+        public static bool LoadCfgMessagesFromModuleXml(this List<OutputMessage> messages, ModuleXml modXml)
+        {
+            foreach (var cfgMsg in modXml.ConfigItemList.Items.OrderBy(x => x.Order))
+            {
+                OutputMessage canMsg = new OutputMessage();
+                messages.Add(canMsg);
+                canMsg.CanID = cfgMsg.TxIdent;
+                canMsg.RxIdent = cfgMsg.RxIdent;
+                canMsg.Data = cfgMsg.Data;
+                canMsg.DLC = 8;// (byte)cfgMsg.Data.Length;
+                canMsg.Delay = (uint)cfgMsg.Delay;
+            }
+            return true;
+        }
+
         public static bool LoadFromModuleXml(this List<OutputMessage> messages, ModuleXml modXml)
         {
             OutputMessage canMsg;
@@ -197,13 +212,13 @@ namespace InfluxShared.FileObjects
                         canMsg.Can3 = true;
                     else
                         canMsg.Can0 = true;
-                    canMsg.Data = new byte[] { 3, 0x22, (byte)(xmlMsg.Ident >> 8), (byte)xmlMsg.Ident };
-                    canMsg.DLC = 4;// (byte)(xmlMsg.Data.Length);
+                    canMsg.Data = new byte[8] { 3, 0x22, (byte)(xmlMsg.Ident >> 8), (byte)xmlMsg.Ident, 0, 0, 0, 0 };
+                    canMsg.DLC = 8;// (byte)(xmlMsg.Data.Length);
                     canMsg.BRS = false;
                     canMsg.Linked = true;
-                    canMsg.TxIdent = xmlMsg.TxIdent;
                     canMsg.RxIdent = xmlMsg.RxIdent;
-                }
+                    canMsg.ProtocolType = Protocol_Type.UDS;
+                }                
 
                 return true;
             }

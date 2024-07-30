@@ -50,7 +50,7 @@ namespace RXD.Base
         public static string EncryptionContainerName = "ReXgen";
         public static byte[] EncryptionKeysBlob = null;
 
-        public static UInt64 MaxTimeGap = 0;//20000 * 1000 * 100; // Config[BinConfig.BinProp.TimeStampPrecision]
+        public static UInt64 MaxTimeGap = 0; //100 * 1000 * 100; // Config[BinConfig.BinProp.TimeStampPrecision]
 
         static byte headersizebytes = 4;
         internal static UInt32 StructureOffset = 0;
@@ -814,14 +814,7 @@ namespace RXD.Base
                 double WriteData(DoubleData dd, UInt64 Timestamp, byte[] BinaryArray, ref UInt64 LastTimestamp, ref UInt64 TimeOffset)
                 {
                     if (Timestamp < LastTimestamp)
-                    {
                         TimeOffset += 0x100000000;
-                        if (LastTimestamp > 0 && MaxTimeGap > 0 && Timestamp + TimeOffset - LastTimestamp > MaxTimeGap)
-                        {
-                            bigGapFound = true;
-                            return double.NaN;
-                        }
-                    }
                     if (LastTimestamp > 0 && MaxTimeGap > 0 && Timestamp + TimeOffset - LastTimestamp > MaxTimeGap)
                     {
                         bigGapFound = true;

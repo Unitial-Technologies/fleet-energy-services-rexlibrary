@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.IO.Compression;
 
@@ -92,7 +93,7 @@ namespace Influx.Shared.Objects
                 try
                 {
                     foreach (var item in Rpf.Entries)
-                    {
+                    {                        
                         var descr = GetFileDescription(item.FullName);
                         if (descr.FileType == fileType)
                         {
@@ -229,7 +230,17 @@ namespace Influx.Shared.Objects
             return list;
         }
 
-
+        public void DeleteDbcFiles()
+        {
+            if (Rpf.Mode != ZipArchiveMode.Update)
+                return;
+            for (int i = Rpf.Entries.Count - 1; i >= 0; i--)
+            {
+                string entry = Rpf.Entries[i].Name;
+                if (Path.GetExtension(entry).ToLower() == ".isf" && entry.ToLower().Contains(".dbc"))
+                    Rpf.Entries[i].Delete();
+            } 
+        }
 
         public void Close()
         {

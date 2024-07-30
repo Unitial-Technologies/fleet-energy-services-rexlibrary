@@ -149,6 +149,8 @@ namespace InfluxShared.FileObjects
         public byte Order { get; set; }
         [XmlElement("TX_IDENT")]
         public uint TxIdent { get; set; }
+        [XmlElement("RX_IDENT")]
+        public uint RxIdent { get; set; }
     }
 
     public class Item : ICanSignal

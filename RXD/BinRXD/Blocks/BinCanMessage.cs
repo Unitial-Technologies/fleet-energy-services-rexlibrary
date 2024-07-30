@@ -41,10 +41,11 @@ namespace RXD.Blocks
             Downsampling,
             Delay,
             NextOutputMessageID,
-          /*  ResponseUID,
+            ResponseUID,
             ResponseTimeout,
             ResponseAttempts,
-            ResponseObligatory*/
+            ResponseObligatory,
+            Protocol_Type,
         }
 
         #region Do not touch these
@@ -102,7 +103,7 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.Delay, typeof(UInt32));
                 data.AddProperty(BinProp.NextOutputMessageID, typeof(UInt16));
             });
-           /* Versions[9] = new Action(() =>
+            Versions[9] = new Action(() =>
             {
                 Versions[8].DynamicInvoke();
                 data.AddProperty(BinProp.ResponseUID, typeof(ushort));
@@ -110,7 +111,12 @@ namespace RXD.Blocks
                 data.AddProperty(BinProp.ResponseAttempts, typeof(ushort));
                 data.AddProperty(BinProp.ResponseObligatory, typeof(byte));
 
-            });*/
+            });
+            Versions[10] = new Action(() =>
+            {
+                Versions[9].DynamicInvoke();
+                data.AddProperty(BinProp.Protocol_Type, typeof(Protocol_Type), Protocol_Type.NO);
+            });
             AddInput(BinProp.InterfaceUID.ToString());
             AddInput(BinProp.InputMessageUID.ToString());
             AddOutput("UID");

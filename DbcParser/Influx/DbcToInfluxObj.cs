@@ -228,7 +228,7 @@ namespace DbcParserLib.Influx
                         );
         }
 
-        static private void SaveDBCToFile(this DBC dbc, string FileName)
+        static public void SaveDBCToFile(this DBC dbc, string FileName)
         {
             using (StreamWriter sw = new StreamWriter(FileName))
             {
@@ -246,53 +246,5 @@ namespace DbcParserLib.Influx
                 dbc.WriteFloatSignals(sw);
             }
         }
-
-        static public void ExportToDBC(this List<ICanSignal> selected, string FileName)
-        {
-            if (FileName == "")
-                return;
-
-            if (selected.Count == 0)
-                return;
-
-            // export selected DbcItems to DbcMessage list like multiplexed signals
-            List<DbcMessage> Messages = new List<DbcMessage>();
-            DbcMessage msg = new DbcMessage();
-            msg.Name = "Service22MUXSignals";
-            msg.DLC = 8;
-            msg.Transmitter = "Vector__XXX";
-            msg.CANID = 0x7e8;  // must be user defined
-            msg.Comment = "Influx_Service_0x22_Items_To_MUX_Signals";
-
-            DbcItem sig = new DbcItem();
-            sig.Name = "Service22SELECTOR";
-            sig.Type = DBCSignalType.Mode;
-            sig.StartBit = 15;
-            sig.BitCount = 24;
-            sig.ByteOrder = DBCByteOrder.Motorola;
-            sig.ValueType = DBCValueType.Unsigned;
-            sig.Conversion.Formula.CoeffB = 1;
-            sig.Conversion.Formula.CoeffC = 0;
-            sig.MinValue = 0x620001;
-            sig.MaxValue = 0x62FFFF;
-            sig.Comment = "Service_0x22_ID_SELECTOR";
-
-            msg.Items.Add(sig);
-
-            foreach (DbcItem item in selected)
-            {
-                sig = item.Clone;
-                sig.Type = DBCSignalType.ModeDependent;
-                sig.Mode = (0x62 << 16) + (UInt32)sig.Ident;
-                sig.Ident = msg.CANID;
-                sig.StartBit = (ushort)(sig.StartBit + 32);
-
-                msg.Items.Add(sig);
-            }
-
-            Messages.Add(msg);
-            new DBC { Messages = Messages }.SaveDBCToFile(FileName);
-        }
-
     }
 }

@@ -7,5 +7,9 @@
         FD_FAST_CAN,
     }
 
-
+    public enum Protocol_Type : byte
+    {
+        NO,
+        UDS
+    }
 }
