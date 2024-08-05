@@ -362,6 +362,9 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
+# MacOS
+.DS_Store
+
 dir_to_ignore/Gateway
 dir_to_ignore/Licensing
 dir_to_ignore/Oscilloscope

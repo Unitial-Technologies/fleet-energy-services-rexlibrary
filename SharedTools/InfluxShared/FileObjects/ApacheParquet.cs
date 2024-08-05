@@ -102,7 +102,7 @@ namespace InfluxShared.FileObjects
                 ddata.InitReading();
 
                 Dictionary<string, int> dict = new Dictionary<string, int>();
-                List<DataField> fields = [new DataField<double>("Time")];
+                List<DataField> fields = new List<DataField>() {new DataField<double>("Time")};
                 foreach (var data in ddata)
                 {
                     if (dict.ContainsKey(data.ChannelName))
