@@ -163,6 +163,7 @@ public class Function
                 LambdaGlobals.Context?.Logger.Log("Triggered by S3 Event");
                 dynamic s3Event = JsonConvert.DeserializeObject(request);
                 LambdaGlobals.Bucket = s3Event.Records[0].s3.bucket.name;
+
                 filename = s3Event.Records[0].s3.@object.key;
                 await GetConversionJson(LambdaGlobals.Bucket, context);
                 convert = Config.GetConversions();
@@ -190,6 +191,9 @@ public class Function
             LambdaGlobals.FilePath ??= "";
             LambdaGlobals.LoggerDir = filename.Substring(0, filename.IndexOf('/'));
             LambdaGlobals.Context?.Logger.LogInformation("Processing file : " + LambdaGlobals.FileName);
+            if(Config.ConfigJson.ContainsKey("outputBucket")){
+                LambdaGlobals.OutputBucket = Config.ConfigJson.outputBucket;
+            }
             await LambdaGlobals.S3Client.GetObjectMetadataAsync(LambdaGlobals.Bucket, LambdaGlobals.FileName);
 
             bool res = false;
@@ -204,7 +208,10 @@ public class Function
                 CloudConverter rxdConverter = new CloudConverter(log
                     , new AwsS3StorageProvider(LambdaGlobals.S3Client)
                     , new AwsTimeStreamProvider(log)
-                    ,LambdaGlobals.Bucket, LambdaGlobals.LoggerDir);
+                    ,LambdaGlobals.Bucket
+                    ,LambdaGlobals.LoggerDir
+                    ,LambdaGlobals.OutputBucket
+                    );
                 res = (bool) await rxdConverter.Convert(LambdaGlobals.LoggerDir, LambdaGlobals.FileName, convert);
             }
 

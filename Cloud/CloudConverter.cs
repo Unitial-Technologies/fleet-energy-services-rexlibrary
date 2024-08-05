@@ -15,16 +15,18 @@ namespace Cloud
         ILogProvider Log;
         IStorageProvider Storage;
         ITimeStreamProvider TimeStream;
-        string Bucket;
+        string InputBucket;
+        string OutputBucket;
         string LoggerDir;
         public FileLoaderFunc LoadFileMethod;
 
-        public CloudConverter(ILogProvider logProvider, IStorageProvider storageProvider, ITimeStreamProvider timestream, string bucket, string loggerDir)
+        public CloudConverter(ILogProvider logProvider, IStorageProvider storageProvider, ITimeStreamProvider timestream, string inputBucket, string loggerDir, string outputBucket = "")
         {
             Log = logProvider;
             Storage = storageProvider;
             TimeStream = timestream;
-            Bucket = bucket;
+            InputBucket = inputBucket;
+            OutputBucket = outputBucket.Length > 0 ? outputBucket : inputBucket;
             LoggerDir = loggerDir;
         }
         public async Task<bool> Convert(string loggerDir, string filename, ConversionType conversion)
@@ -41,7 +43,7 @@ namespace Cloud
 
             if (conversion.HasFlag(ConversionType.Rxc))
             {
-                return await XmlToRxcAsync(Bucket, filename);
+                return await XmlToRxcAsync(InputBucket, filename);
             }
             else if (Path.GetExtension(filename).ToLower() == ".json")
             {
@@ -49,7 +51,7 @@ namespace Cloud
                 {
                     if (conversion.HasFlag(ConversionType.Snapshot) && TimeStream != null)
                     {
-                        var jsonStream = await GetFile(Bucket, filename.Replace(Bucket + '/', ""));
+                        var jsonStream = await GetFile(InputBucket, filename.Replace(InputBucket + '/', ""));
                         if (jsonStream != null)
                         {
                             using (StreamReader reader = new(jsonStream))
@@ -57,7 +59,7 @@ namespace Cloud
                                 string json = reader.ReadToEnd();
                                 int startIndex = loggerDir.IndexOf("_SN") + 3;
                                 string sn = loggerDir.Substring(startIndex, 7);
-                                await TimeStream.WriteSnapshot(sn, json, filename.Replace(Bucket + '/', ""));
+                                await TimeStream.WriteSnapshot(sn, json, filename.Replace(InputBucket + '/', ""));
                             }
                         }
                     }
@@ -66,9 +68,9 @@ namespace Cloud
             else if (Path.GetExtension(filename).ToLower() == ".rxd")
                 try
                 {
-                    List<DBC?> dbcList = await LoadDBCList(Bucket);
+                    List<DBC?> dbcList = await LoadDBCList(InputBucket);
                     Log?.Log("GetRxd!");
-                    Stream rxdStream = await Storage.GetFile(Bucket, filename.Replace(Bucket + '/', ""));
+                    Stream rxdStream = await Storage.GetFile(InputBucket, filename.Replace(InputBucket + '/', ""));
                     Log?.Log($"Memory used: {GC.GetTotalMemory(false) / (1024 * 1024)} MB");
                     ExportDbcCollection signalsCollection = DbcToInfluxObj.LoadExportSignalsFromDBC(dbcList);
                     Log?.Log($"Memory after DBC used: {GC.GetTotalMemory(false) / (1024 * 1024)} MB");
@@ -148,7 +150,7 @@ namespace Cloud
                                     else
                                     {
                                         Log?.Log($"Mdf Stream Size: {mdfStream?.Length}");
-                                        if (await Storage.UploadFile(Bucket, Path.ChangeExtension(filename, ".mf4"), mdfStream))
+                                        if (await Storage.UploadFile(OutputBucket, Path.ChangeExtension(filename, ".mf4"), mdfStream))
                                             Log?.Log($"Mdf written successfuly");
                                         else
                                             Log?.Log($"Mdf write to S3 failed");
@@ -166,7 +168,7 @@ namespace Cloud
                                     else
                                     {
                                         Log?.Log($"Blf Stream Size: {blfStream?.Length}");
-                                        if (await Storage.UploadFile(Bucket, Path.ChangeExtension(filename, ".blf"), blfStream))
+                                        if (await Storage.UploadFile(OutputBucket, Path.ChangeExtension(filename, ".blf"), blfStream))
                                             Log?.Log($"Blf written successfuly");
                                         else
                                             Log?.Log($"Blf write to S3 failed");
@@ -179,7 +181,7 @@ namespace Cloud
                                     Log?.Log($"Starting Parquet conversion {rxd.Count}");
                                     //if (Config.ConfigJson.ContainsKey("Parquet") && Config.ConfigJson.Parquet.ContainsKey("usecompression"))
                                     //    MDF.UseCompression = Config.ConfigJson.usecompression;
-                                    await Export.Parquet.ToParquet(Storage, Bucket, Path.ChangeExtension(filename, ".parquet"), rxd, signalsCollection, Log);
+                                    await Export.Parquet.ToParquet(Storage, OutputBucket, Path.ChangeExtension(filename, ".parquet"), rxd, signalsCollection, Log);
 
                                 }
 
@@ -187,7 +189,7 @@ namespace Cloud
                                 if (conversion.HasFlag(Cloud.ConversionType.Csv))
                                 {
                                     Log?.Log($"Memory used before CSV: {GC.GetTotalMemory(false) / (1024 * 1024)} MB");
-                                    await CsvMultipartHelper.ToCsv(Storage, Bucket, Path.ChangeExtension(filename, ".csv"), rxd, signalsCollection, Log);
+                                    await CsvMultipartHelper.ToCsv(Storage, OutputBucket, Path.ChangeExtension(filename, ".csv"), rxd, signalsCollection, Log);
                                 }
                             }
                         }
@@ -211,11 +213,11 @@ namespace Cloud
                 if (filename != "")
                 {
                     main_files = new List<string> { filename };
-                    addon_files = await Storage.GetRxdFiles(Bucket, $"{Config.SynchConfig.addon_loger1}/{main_files[0].Split('/')[1]}");                    
+                    addon_files = await Storage.GetRxdFiles(InputBucket, $"{Config.SynchConfig.addon_loger1}/{main_files[0].Split('/')[1]}");                    
                 }
                 else
                 {
-                    main_files = await Storage.GetRxdFiles(Bucket, Config.SynchConfig.main_logger);
+                    main_files = await Storage.GetRxdFiles(InputBucket, Config.SynchConfig.main_logger);
                     List<uint> foldersInt = main_files.Select(file => uint.Parse(file.Split('/')[1])).Distinct().ToList();
                     foldersInt.Sort();
                     foreach (var item in foldersInt)
@@ -233,8 +235,8 @@ namespace Cloud
                     }
                     if (idx < main_files.Count)
                     {
-                        main_files = await Storage.GetRxdFiles(Bucket, $"{Config.SynchConfig.main_logger}/{foldersInt[idx]}");
-                        addon_files = await Storage.GetRxdFiles(Bucket, $"{Config.SynchConfig.addon_loger1}/{foldersInt[idx]}");
+                        main_files = await Storage.GetRxdFiles(InputBucket, $"{Config.SynchConfig.main_logger}/{foldersInt[idx]}");
+                        addon_files = await Storage.GetRxdFiles(InputBucket, $"{Config.SynchConfig.addon_loger1}/{foldersInt[idx]}");
                     }
                 }
                 
@@ -253,7 +255,7 @@ namespace Cloud
                     foreach (var masterFile in main_files)
                     {
                         Log?.Log($"Loading RXD master");
-                        var masterStream = await Storage.GetFile(Bucket, masterFile);
+                        var masterStream = await Storage.GetFile(InputBucket, masterFile);
                         BinRXD master = BinRXD.Load("http://" + masterFile, masterStream);
                         if (master is not null)
                         {
@@ -272,7 +274,7 @@ namespace Cloud
                             else
                             {
                                 Log?.Log($"Mdf Stream Size: {mdfStream?.Length}");
-                                if (await Storage.UploadFile(Bucket, Path.ChangeExtension(masterFile, ".mf4"), mdfStream))
+                                if (await Storage.UploadFile(OutputBucket, Path.ChangeExtension(masterFile, ".mf4"), mdfStream))
                                     Log?.Log($"Mdf written successfuly");
                                 else
                                     Log?.Log($"Mdf write to S3 failed");
@@ -293,14 +295,14 @@ namespace Cloud
             return master;
         }
 
-        private async Task<List<DBC?>> LoadDBCList(string bucket)
+        private async Task<List<DBC?>> LoadDBCList(string InputBucket)
         {
             Log?.Log("Loading DBC");
             List<DBC?> listDbc = new();
             for (int i = 0; i < 4; i++)
             {
                 string dbcPath = Path.Combine(LoggerDir, $"dbc_can{i}.dbc").Replace("\\", "/");
-                Stream s3Stream = await Storage.GetFile(bucket, dbcPath);
+                Stream s3Stream = await Storage.GetFile(InputBucket, dbcPath);
                 if (s3Stream is null)
                 {
                     Log?.Log($"DBC File Not Found! {dbcPath}");
@@ -337,23 +339,23 @@ namespace Cloud
             return listDbc;
         }
 
-        public async Task<Stream> GetFile(string bucket, string file)
+        public async Task<Stream> GetFile(string Bucket, string file)
         {
-            return await Storage.GetFile(bucket, file);
+            return await Storage.GetFile(Bucket, file);
         }
 
-        public async Task<bool> XmlToRxcAsync(string bucket, string filename)
+        public async Task<bool> XmlToRxcAsync(string InputBucket, string filename)
         {
             //The xsd schema must be in the same folder as the xml file            
-            Stream? xsd = await Storage.GetFile(bucket, LoggerDir + "/ReXConfig.xsd");
-            Stream? xml = await Storage.GetFile(bucket, filename);
+            Stream? xsd = await Storage.GetFile(InputBucket, LoggerDir + "/ReXConfig.xsd");
+            Stream? xml = await Storage.GetFile(InputBucket, filename);
             if (xsd != null && xml != null)
             {
                 XmlConverter xmlConverter = new();
                 Stream? rxc = xmlConverter.ConvertXMLToRxc(xsd, xml, Log);
                 if (rxc != null)
                 {
-                    if (await Storage.UploadFile(Bucket, Path.ChangeExtension(filename, ".rxc"), rxc))
+                    if (await Storage.UploadFile(OutputBucket, Path.ChangeExtension(filename, ".rxc"), rxc))
                         Log?.Log("RXC File Uploaded Successfully");                    
                     xsd?.Dispose();
                     xml?.Dispose();
