@@ -197,7 +197,7 @@ public class Function
             await LambdaGlobals.S3Client.GetObjectMetadataAsync(LambdaGlobals.Bucket, LambdaGlobals.FileName);
 
             bool res = false;
-            LambdaGlobals.Context?.Logger.LogInformation($"Bucket :{LambdaGlobals.Bucket}   Path: {filename}");
+            LambdaGlobals.Context?.Logger.LogInformation($"Bucket :{LambdaGlobals.Bucket}  OutputBucket: {LambdaGlobals.OutputBucket}  Path: {filename}");
             //if (LambdaGlobals.FileName.Contains(".json") && convert.HasFlag(Cloud.ConversionType.Snapshot))
             //    res = (bool)await WriteSnapshot(LambdaGlobals.Bucket);
             if (LambdaGlobals.FileName.Contains(".rxd") || LambdaGlobals.FileName.Contains("Configuration.xml") || LambdaGlobals.FileName.Contains(".json"))
