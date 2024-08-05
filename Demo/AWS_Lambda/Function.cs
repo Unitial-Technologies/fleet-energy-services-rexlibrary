@@ -194,6 +194,9 @@ public class Function
             if(Config.ConfigJson.ContainsKey("outputBucket")){
                 LambdaGlobals.OutputBucket = Config.ConfigJson.outputBucket;
             }
+            if(Config.ConfigJson.ContainsKey("deleteInputFile")){
+                LambdaGlobals.DeleteInputFile = Config.ConfigJson.deleteInputFile;
+            }
             await LambdaGlobals.S3Client.GetObjectMetadataAsync(LambdaGlobals.Bucket, LambdaGlobals.FileName);
 
             bool res = false;
@@ -215,10 +218,16 @@ public class Function
                 res = (bool) await rxdConverter.Convert(LambdaGlobals.LoggerDir, LambdaGlobals.FileName, convert);
             }
 
-            if (res)
+            if (res){
+                if(LambdaGlobals.DeleteInputFile){
+                    LambdaGlobals.Context?.Logger.LogInformation($"Deleting file :{LambdaGlobals.FileName}");
+                    await LambdaGlobals.S3Client.DeleteObjectAsync(LambdaGlobals.Bucket, LambdaGlobals.FileName);
+                }
                 return CreateResponse(HttpStatusCode.OK, "Successfully converted input");
-            else
+            }
+            else{
                 return CreateResponse(HttpStatusCode.InternalServerError, "Error converting input. Check log for details.");
+            }
         }
         catch (Exception exc)
         {

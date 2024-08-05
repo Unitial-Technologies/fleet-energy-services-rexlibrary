@@ -13,6 +13,7 @@ namespace AWSLambdaFileConvert
         internal static string FilePath { get; set; } = "";
         internal static string FileName { get; set; } = "";
         internal static string LoggerDir { get; set; } = "";
+        internal static bool DeleteInputFile { get; set; } = false;
         
     }
 }
